@@ -4,6 +4,7 @@ import { LoginPage } from "./pages/Login";
 import { SetsPage } from "./pages/Sets";
 import { SetChecklistPage } from "./pages/SetChecklist";
 import { MatchesPage } from "./pages/Matches";
+import { PublicCollectionPage } from "./pages/PublicCollection";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -46,6 +47,7 @@ export default function App() {
       <main className="app-main">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/c/:shareId" element={<PublicCollectionPage />} />
           <Route
             path="/sets"
             element={

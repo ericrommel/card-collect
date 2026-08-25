@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import * as api from "../lib/api";
 import type { Availability, CatalogSet, SetProgress, UserCopy } from "../lib/api";
+import { SharingPanel } from "../components/SharingPanel";
 
 const AVAILABILITY_OPTIONS: Availability[] = ["KEEP", "TRADE", "SELL", "GIVE_AWAY"];
 
@@ -125,6 +126,8 @@ export function SetChecklistPage() {
           <span>{progress.total_count} total</span>
         </div>
       </div>
+
+      {setId && <SharingPanel setId={setId} />}
 
       <div className="filters">
         {(["all", "owned", "missing", "duplicates"] as Filter[]).map((f) => (
