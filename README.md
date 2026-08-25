@@ -3,7 +3,9 @@
 A safety-first collectible-card collection and exchange platform. This is the
 first vertical slice: users track a collection, see what they own/miss/have
 duplicated, mark physical copies with an availability state, and get matched
-with other collectors for mutually useful trades or one-way donations.
+with other collectors for mutually useful trades or one-way donations. Users
+can also publish a limited, read-only, revocable public view of their
+progress for a set (V0.1) — see "Collection sharing" below.
 
 The first supported catalog is a synthetic One Piece Card Game set, but the
 domain model is generic (see [docs/architecture.md](docs/architecture.md)).
@@ -47,6 +49,18 @@ This starts both the API (http://localhost:4000) and the web app
 Sign in with any seeded demo user via the "quick sign in" buttons on the
 login page (`alice@example.com` / `bob@example.com` / `carol@example.com`,
 password `password123`), or register a new account.
+
+## Collection sharing
+
+From a set's checklist page, use the "Sharing" panel to enable a public
+link, choose which fields it shows (completion %, owned, missing,
+duplicates, trade offers, give-away offers), copy or open it, and disable
+or regenerate it at any time. The public page (`/c/:shareId`) works logged
+out and shows only what you opted into — no email, account id, or location
+is ever exposed. See
+[docs/architecture.md](docs/architecture.md#collection-sharing-v01) for the
+design and [docs/risks.md](docs/risks.md) for the residual risk (link
+possession is the only access control in V0.1 — no expiry yet).
 
 ## Test
 

@@ -444,6 +444,45 @@ is evidence it is needed — premature for V0's scale.
 
 ---
 
+## P2 — Public Share Links Have No Expiry or Access Log (V0.1)
+
+**Status:** OPEN
+
+Collection sharing (V0.1) grants access to anyone who has the link — there
+is no expiry, no per-viewer authentication, and no record of who has
+viewed a share. This is deliberate for V0.1 (matches the milestone's
+"normal shareable URL" scope, no social-platform integration), but it
+means:
+
+- a link forwarded outside the intended audience keeps working until the
+  owner notices and hits "Regenerate";
+- there's no way for the owner to see whether/how many times a link has
+  been viewed, so a leaked link may go unnoticed indefinitely;
+- for a minor's account, a persistent, unexpiring, unlogged link is a
+  sharper version of the general "oversharing personal information" risk
+  in the P0 Child Safety register above, even though the shared fields
+  themselves (owned/missing/duplicate/trade/give-away card lists,
+  completion %) are not personal contact information.
+
+### Initial mitigations already in place
+
+- shared fields are strictly limited to non-identifying collection data —
+  no email, no internal id, no location, no age (see
+  [architecture.md](architecture.md#collection-sharing-v01));
+- the public page is marked `noindex, nofollow` so a leaked link is at
+  least not additionally surfaced by search engines;
+- regeneration is one click and immediately invalidates the old link.
+
+### Future investigation
+
+- optional link expiry (time-based or view-count-based);
+- a lightweight access log visible to the owner ("last viewed 2 days ago")
+  without identifying the viewer;
+- guardian-mediated sharing controls for accounts flagged as minors, once
+  age/guardian concepts exist (see the P0 Child Safety entry above).
+
+---
+
 ## P3 — New Collectible Expansion
 
 **Status:** ACCEPTED

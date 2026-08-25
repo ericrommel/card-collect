@@ -166,6 +166,88 @@ can render the full set list from one call.
 - No email, user id, or other account metadata is ever included — only
   `display_name` and card/availability data.
 
+## My sharing (auth required, always scoped to the caller)
+
+Lets a user publish a limited, read-only, revocable view of their progress
+for one Set. See [architecture.md](architecture.md#collection-sharing-v01)
+for the design rationale.
+
+### `GET /my/sets/:id/share` (auth required)
+
+→ `200 { "share": null }` if sharing was never configured for this set, else:
+
+```json
+{
+  "share": {
+    "enabled": true,
+    "share_id": "H1aiHFVjz0XYZ0zVZw95xZG0",
+    "visibility": {
+      "completion": true,
+      "owned": true,
+      "missing": true,
+      "duplicates": true,
+      "trade": true,
+      "give_away": true
+    }
+  }
+}
+```
+
+`share_id` is always returned once a row exists, even while `enabled` is
+`false` — this is the owner's own view of their settings, not the public
+endpoint, so there's nothing to hide from them here.
+
+### `PUT /my/sets/:id/share`
+
+```json
+{ "enabled": true, "visibility": { "owned": false, "missing": false } }
+```
+
+Both fields optional; `visibility` only needs the keys you're changing.
+First call for a given set creates the row (with a fresh `share_id` and all
+visibility flags defaulting to `true`); later calls update it in place —
+toggling `enabled` off and back on **keeps the same `share_id`** (a
+"disable" is a pause, not a reset). → `200 { "share": {...} }` (same shape
+as `GET`), or `404` if the set doesn't exist.
+
+### `POST /my/sets/:id/share/regenerate`
+
+No body. Rotates `share_id` to a new random token, invalidating the
+previous public link immediately. Preserves `enabled` and all visibility
+flags. → `200 { "share": {...} }`.
+
+## Public collections (no auth)
+
+### `GET /public/collections/:shareId`
+
+Read-only, unauthenticated. → `200` with only the fields the owner's
+visibility settings permit:
+
+```json
+{
+  "collector": { "display_name": "Alice (Luffy Fan)" },
+  "set": { "name": "Starter Voyage", "code": "SV-01", "total_count": 24 },
+  "completion_percentage": 66.7,
+  "owned": [{ "number": "SV01-001", "name": "Straw Hat Captain", "rarity": "L" }],
+  "missing": [{ "number": "SV01-020", "name": "Voyage's End Treasure", "rarity": "SEC" }],
+  "duplicates": [{ "number": "SV01-003", "name": "Sniper's Steady Aim", "rarity": "C", "duplicate_quantity": 1 }],
+  "trade_offers": [{ "number": "SV01-003", "name": "Sniper's Steady Aim", "rarity": "C" }],
+  "give_away_offers": [{ "number": "SV01-012", "name": "Grand Line Current", "rarity": "C" }]
+}
+```
+
+Every field except `collector` and `set` is **omitted entirely** (not
+`null`) when the owner has that visibility flag off — a client should
+treat an absent key as "the owner chose not to show this," not as an
+empty list.
+
+→ `404` if `shareId` was never issued, belongs to a disabled/revoked share,
+or doesn't exist — these three cases are indistinguishable by design (see
+architecture.md). No email, internal user id, location, or any field
+outside the shape above is ever present.
+
+Only `GET` is defined on this path; `PUT`/`POST`/`DELETE` all 404.
+
 ## Not implemented in V0
 
 Payments, shipping, checkout, public marketplace transactions, unrestricted

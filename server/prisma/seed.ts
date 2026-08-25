@@ -52,6 +52,7 @@ const CARDS: CardSeed[] = [
 ];
 
 async function reset() {
+  await prisma.collectionShare.deleteMany();
   await prisma.userCopy.deleteMany();
   await prisma.variant.deleteMany();
   await prisma.collectible.deleteMany();

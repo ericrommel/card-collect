@@ -51,13 +51,15 @@ CollectibleUniverse  (e.g. "One Piece Card Game")
 
 ```text
 domain/         Pure, framework-free business logic (no I/O):
-                  progress.ts   — completion/duplicate calculations
-                  matching.ts   — mutual-match / donation computation
+                  progress.ts     — completion/duplicate calculations
+                  matching.ts     — mutual-match / donation computation
+                  sharingView.ts  — builds the public share DTO from a narrow input type
 modules/
   auth/         registration, login, JWT issuance, password hashing
   catalog/      CatalogProvider abstraction + its local-DB implementation
   collection/   a user's UserCopy CRUD + per-set progress
   matching/     combines catalog + collection data through domain/matching.ts
+  sharing/      per-set public share settings (auth) + public read-only lookup (no auth)
 middleware/     requireAuth, centralized error handling, async wrapper
 ```
 
@@ -133,6 +135,69 @@ function — no email, user id, or other account metadata.
   structurally impossible to accidentally leak `passwordHash` or another
   user's email through a route that wasn't reviewed for it.
 
+## Collection sharing (V0.1)
+
+A user can publish a limited, read-only, revocable view of their progress
+for one Set — `modules/sharing/`. Design decisions:
+
+- **Scoped to (owner, set), not "the whole collection".** Every field the
+  milestone asks to expose (completion %, owned, missing, duplicates,
+  trade/give-away offers) is already computed per-set by
+  `domain/progress.ts`. A `CollectionShare` row is unique on
+  `(ownerId, setId)` — at most one share configuration per user per set —
+  which keeps the feature a direct extension of the existing progress
+  model instead of inventing a separate cross-set "collection" concept
+  V0 doesn't otherwise have.
+- **The public token is not the row's id.** `shareId` (a 24-character
+  `crypto.randomBytes(18)` base64url string, see
+  `modules/sharing/shareId.ts`) is a separate column from the row's cuid
+  `id`. This is what makes "regenerate" a clean operation: rotating the
+  public link is just overwriting `shareId` on the same row, so the
+  owner's visibility preferences survive a rotation. It also means the
+  public URL never reveals or depends on an internal database id.
+- **`enabled` is the only thing a public request honors.** Disabling
+  ("revoke") just flips `enabled: false`; regenerating rotates `shareId`
+  without touching `enabled`. A disabled row's old `shareId` and a
+  `shareId` that was never created are **both** a 404 from
+  `GET /api/public/collections/:shareId` — the same "don't let a
+  response distinguish revoked from never-existed" rule already used for
+  `UserCopy` ownership checks (see Authentication / authorization below),
+  now applied to a link an attacker might be guessing or replaying.
+- **No IDOR surface to guard against for the owner-facing routes.** Unlike
+  `UserCopy`, which is addressed by its own id and therefore needs the
+  404-on-mismatch pattern, the `/api/my/sets/:id/share*` routes take no
+  id that could belong to another user — `setId` is public catalog data
+  and the owner is always `req.userId` from the JWT. There is structurally
+  no request shape through which user B could address user A's share row.
+  `server/tests/integration/sharing.test.ts` proves this behaviorally
+  (B's writes never affect A's row) rather than via a guessable-id check,
+  because there is no guessable id in this path.
+- **The public response is built from an explicit DTO, not a Prisma
+  row.** `domain/sharingView.ts#buildPublicShareView` takes a narrow,
+  hand-written `PublicShareInput` type (display name, card refs, counts)
+  and returns only the fields the owner's visibility flags allow. Adding
+  a new column to `User`, `UserCopy`, or `CollectionShare` later — email
+  verification status, a future `condition` detail, anything — cannot
+  leak through this path, because there is no code that forwards a
+  Prisma object into the response; every field has to be deliberately
+  threaded through `PublicShareInput` first.
+- **No location, age, or contact fields exist anywhere in the schema**,
+  so there's nothing for the public endpoint to accidentally expose on
+  that front in V0 — `server/tests/integration/sharing.test.ts` asserts
+  the response never contains location-shaped keys as a regression
+  guard, not because a leak is currently possible.
+- **The public endpoint is GET-only.** `modules/sharing/publicRoutes.ts`
+  registers a single `GET /:shareId` route; there is no PUT/POST/DELETE
+  on `/api/public/*` at all, so "public endpoints cannot mutate
+  collection data" holds because the route table makes it impossible,
+  not because of a runtime permission check.
+- **The web client marks the public page `noindex, nofollow`**
+  (`web/src/pages/PublicCollection.tsx`) so a shared link isn't
+  accidentally picked up by a search-engine crawler — sharing here means
+  "anyone with the link," not "publicly listed." See the new risk logged
+  in [risks.md](risks.md) about link possession being the only access
+  control in V0.1 (no expiry, no per-viewer restriction).
+
 ## How a future mobile client fits
 
 The backend has no web-only assumptions: JSON in/out, bearer-token auth
@@ -143,8 +208,10 @@ would:
 
 - store the JWT from `/api/auth/login` in secure on-device storage instead
   of `localStorage`;
-- call the same `catalog`, `my/collection`, `my/sets/:id/progress`, and
-  `my/matches` endpoints documented in [docs/api.md](docs/api.md);
+- call the same `catalog`, `my/collection`, `my/sets/:id/progress`,
+  `my/matches`, and `my/sets/:id/share` endpoints documented in
+  [docs/api.md](docs/api.md) — a native share sheet would just point at the
+  same `public_url` the web client constructs from `share_id`;
 - add its own camera/scanning UI on top of `POST /my/collection/copies` —
   scanning is out of scope for V0, but the copy-creation endpoint it would
   feed into already exists and doesn't assume a particular input method.

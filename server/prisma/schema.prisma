@@ -18,7 +18,8 @@ model User {
   displayName  String
   createdAt    DateTime @default(now())
 
-  copies UserCopy[]
+  copies           UserCopy[]
+  collectionShares CollectionShare[]
 
   @@map("users")
 }
@@ -46,7 +47,8 @@ model Set {
   universeId String
   universe   CollectibleUniverse @relation(fields: [universeId], references: [id])
 
-  collectibles Collectible[]
+  collectibles     Collectible[]
+  collectionShares CollectionShare[]
 
   @@map("sets")
 }
@@ -107,4 +109,38 @@ model UserCopy {
   variant   Variant @relation(fields: [variantId], references: [id])
 
   @@map("user_copies")
+}
+
+/// A user's public-sharing configuration for one Set. At most one row per
+/// (owner, set) — see modules/sharing. `shareId` is the public, guessable-
+/// resistant identifier used in the public URL; it is deliberately a
+/// separate random token from `id` (the internal row id) so it can be
+/// rotated ("regenerate") without disturbing the row's identity or the
+/// owner's saved visibility preferences. `enabled` is the single on/off
+/// switch a public GET honors — a disabled row's shareId resolves to 404,
+/// never to a "sharing is off" response, so a client can't distinguish a
+/// revoked link from one that never existed.
+model CollectionShare {
+  id      String  @id @default(cuid())
+  shareId String  @unique
+  enabled Boolean @default(false)
+
+  showCompletion Boolean @default(true)
+  showOwned      Boolean @default(true)
+  showMissing    Boolean @default(true)
+  showDuplicates Boolean @default(true)
+  showTrade      Boolean @default(true)
+  showGiveAway   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  setId String
+  set   Set    @relation(fields: [setId], references: [id])
+
+  @@unique([ownerId, setId])
+  @@map("collection_shares")
 }

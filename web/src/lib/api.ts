@@ -135,6 +135,42 @@ export interface CollectorMatch {
   set_completion_after_estimate: number;
 }
 
+export interface ShareVisibility {
+  completion: boolean;
+  owned: boolean;
+  missing: boolean;
+  duplicates: boolean;
+  trade: boolean;
+  give_away: boolean;
+}
+
+export interface ShareSettings {
+  enabled: boolean;
+  share_id: string;
+  visibility: ShareVisibility;
+}
+
+export interface PublicCollectibleRef {
+  number: string;
+  name: string;
+  rarity: string | null;
+}
+
+export interface PublicDuplicateRef extends PublicCollectibleRef {
+  duplicate_quantity: number;
+}
+
+export interface PublicShareView {
+  collector: { display_name: string };
+  set: { name: string; code: string; total_count: number };
+  completion_percentage?: number;
+  owned?: PublicCollectibleRef[];
+  missing?: PublicCollectibleRef[];
+  duplicates?: PublicDuplicateRef[];
+  trade_offers?: PublicCollectibleRef[];
+  give_away_offers?: PublicCollectibleRef[];
+}
+
 // ---- Auth ----
 
 export function register(email: string, password: string, displayName: string) {
@@ -201,4 +237,30 @@ export function setProgress(setId: string) {
 
 export function myMatches(setId: string) {
   return apiFetch<{ matches: CollectorMatch[] }>(`/my/matches?setId=${encodeURIComponent(setId)}`);
+}
+
+// ---- Sharing ----
+
+export function getShareSettings(setId: string) {
+  return apiFetch<{ share: ShareSettings | null }>(`/my/sets/${setId}/share`);
+}
+
+export function updateShareSettings(
+  setId: string,
+  changes: { enabled?: boolean; visibility?: Partial<ShareVisibility> },
+) {
+  return apiFetch<{ share: ShareSettings }>(`/my/sets/${setId}/share`, {
+    method: "PUT",
+    body: JSON.stringify(changes),
+  });
+}
+
+export function regenerateShare(setId: string) {
+  return apiFetch<{ share: ShareSettings }>(`/my/sets/${setId}/share/regenerate`, { method: "POST" });
+}
+
+// ---- Public (no auth) ----
+
+export function getPublicCollection(shareId: string) {
+  return apiFetch<PublicShareView>(`/public/collections/${encodeURIComponent(shareId)}`);
 }
