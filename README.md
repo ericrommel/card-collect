@@ -1,11 +1,19 @@
-# Cards Collect — V0
+# Cards Collect
 
-A safety-first collectible-card collection and exchange platform. This is the
-first vertical slice: users track a collection, see what they own/miss/have
-duplicated, mark physical copies with an availability state, and get matched
-with other collectors for mutually useful trades or one-way donations. Users
-can also publish a limited, read-only, revocable public view of their
-progress for a set (V0.1) — see "Collection sharing" below.
+A safety-first collectible-card collection and exchange platform.
+
+```text
+V0    — Collection tracking (owned/missing/duplicates/completion) + matching
+V0.1  — Safe, revocable public collection sharing
+V0.2  — Smart Trade Score: deterministic, explainable ranking of matches
+```
+
+Users track a collection, see what they own/miss/have duplicated, mark
+physical copies with an availability state, and get matched with other
+collectors for mutually useful trades or one-way donations — ranked by a
+deterministic Trade Score that explains itself (see "Matches" below).
+Users can also publish a limited, read-only, revocable public view of
+their progress for a set (V0.1) — see "Collection sharing" below.
 
 The first supported catalog is a synthetic One Piece Card Game set, but the
 domain model is generic (see [docs/architecture.md](docs/architecture.md)).
@@ -49,6 +57,19 @@ This starts both the API (http://localhost:4000) and the web app
 Sign in with any seeded demo user via the "quick sign in" buttons on the
 login page (`alice@example.com` / `bob@example.com` / `carol@example.com`,
 password `password123`), or register a new account.
+
+## Matches
+
+From a set's checklist page, "View matches" ranks every other collector by
+a **Trade Score** (0-100) — how much closer a proposed trade or donation
+gets you (and, for trades, them) to completing the set. Each match card
+shows the score, its type (`Match` for a mutual trade, `Donation Match`
+for a one-way `GIVE_AWAY`), how many cards each side would receive, and
+the projected completion change for both sides. The score measures
+collection usefulness only — it is not a price or fairness estimate; see
+[docs/architecture.md](docs/architecture.md#trade-score-formula) for the
+formula and [docs/risks.md](docs/risks.md) for the residual risk of it
+being misread as one.
 
 ## Collection sharing
 

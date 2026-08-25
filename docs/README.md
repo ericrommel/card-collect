@@ -188,15 +188,27 @@ All sharing must follow privacy-safe defaults, particularly for minor accounts.
 - fraud-proof card ownership verification;
 - advanced reputation systems.
 
-## Proposed Delivery Sequence
+## Delivery Sequence
+
+Actual milestone history (see `docs/architecture.md` for what each one
+built):
 
 ```text
 V0    Collection + duplicates + missing + matching
-V0.1  Camera identification
-V0.2  AI condition assessment
-V0.3  Safe location-aware matching
-V0.4  Sharing and public/private collection pages
-V0.5  Reputation, moderated communication, trade workflow
+V0.1  Safe, revocable public collection sharing
+V0.2  Smart Trade Score — deterministic, explainable match ranking
+```
+
+The sequence below was the _original, pre-implementation_ proposal for
+what would come after V0. It turned out safe sharing (V0.1) and match
+ranking (V0.2) were higher-value next steps than camera identification —
+kept here as historical context, not a live commitment:
+
+```text
+V0.x  Camera identification
+V0.x  AI condition assessment
+V0.x  Safe location-aware matching
+V0.x  Reputation, moderated communication, trade workflow
 V1    Real-world trade support
 Later Marketplace / provenance / advanced verification
 ```

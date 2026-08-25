@@ -1,4 +1,16 @@
-# Architecture — V0
+# Architecture
+
+## Roadmap
+
+```text
+V0    — Collection tracking (owned/missing/duplicates/completion) + basic mutual-match/donation matching
+V0.1  — Safe, revocable public collection sharing
+V0.2  — Smart Trade Score: deterministic, explainable ranking of matches
+```
+
+This document covers the cumulative architecture through V0.2. Sections
+are labeled with the milestone that introduced them where it isn't
+obvious from context.
 
 ## Stack
 
@@ -52,21 +64,27 @@ CollectibleUniverse  (e.g. "One Piece Card Game")
 ```text
 domain/         Pure, framework-free business logic (no I/O):
                   progress.ts     — completion/duplicate calculations
-                  matching.ts     — mutual-match / donation computation
+                  matching.ts     — WHICH collectibles could move between two collectors (candidate generation)
+                  tradeScore.ts   — scores a candidate + ranks/tie-breaks the resulting list (V0.2)
                   sharingView.ts  — builds the public share DTO from a narrow input type
 modules/
   auth/         registration, login, JWT issuance, password hashing
   catalog/      CatalogProvider abstraction + its local-DB implementation
   collection/   a user's UserCopy CRUD + per-set progress
-  matching/     combines catalog + collection data through domain/matching.ts
+  matching/     composes catalog + collection data through domain/matching.ts + domain/tradeScore.ts
   sharing/      per-set public share settings (auth) + public read-only lookup (no auth)
 middleware/     requireAuth, centralized error handling, async wrapper
 ```
 
-`domain/` has no dependency on Express, Prisma, or HTTP — `progress.ts` and
-`matching.ts` are pure functions over plain objects, which is what makes them
-cheap to unit test (see `server/tests/domain/`) and safe to reuse if a
-mobile-specific backend surface is ever added.
+`domain/` has no dependency on Express, Prisma, or HTTP — every file in it
+is pure functions over plain objects, which is what makes them cheap to
+unit test (see `server/tests/domain/`) and safe to reuse if a
+mobile-specific backend surface is ever added. `matching.ts` (candidate
+generation) and `tradeScore.ts` (scoring + ranking) are intentionally
+separate files: matching.ts decides _whether_ an exchange is possible at
+all, tradeScore.ts decides _how good_ it is — neither one needs to know
+how the other works, and `matching.test.ts` / `tradeScore.test.ts` test
+them independently.
 
 Each `modules/*` folder owns one bounded concern and talks to the database
 only for its own concern — e.g. `collection/service.ts` never reaches into
@@ -95,29 +113,125 @@ Card names/numbers in the seed data are original synthetic content (see
 any dependency on licensed catalog text — see
 [risks.md](risks.md#p1--official-card-image-rights).
 
-## Matching flow
+## Matching flow (V0.2: candidates → score → rank)
 
-`modules/matching/service.ts` → `computeMatchesForUser(userId, setId)`:
+`modules/matching/service.ts` → `computeMatchesForUser(userId, setId)`
+composes three independent steps for every other user in the system:
 
-1. Load the Set's Collectibles once via `CatalogProvider`.
-2. Compute the requesting user's missing-collectible set via
-   `domain/progress.ts`.
-3. For every other user: compute their missing-collectible set the same
-   way, and their `TRADE`/`GIVE_AWAY` copies (`KEEP` and `SELL` are never
-   offered — see `collection/service.ts#isOfferable`).
-4. Pass both users' missing sets and offerable copies into
-   `domain/matching.ts#computeMatch`, which is the actual match logic:
-   - `you_can_receive` = the other user's offerable copies that cover what
-     I'm missing.
-   - `you_can_offer` = my offerable copies that cover what they're missing.
-   - `is_mutual_match` = both non-empty.
-   - `donation_opportunities` = the `GIVE_AWAY` subset of `you_can_receive`,
-     computed independently of `you_can_offer` so a one-way donation still
-     surfaces even when I have nothing to trade back.
-5. Results with no signal in either direction are dropped from the response.
+1. **Candidate generation** (`domain/matching.ts`) — decides _whether_ an
+   exchange is possible, from each side's per-set missing-collectible set
+   (`domain/progress.ts`) and availability-tagged copies:
+   - `findMutualTradeCandidate` — a candidate exists only when **both**
+     directions are non-empty, using **only `TRADE`-availability copies
+     on both sides**. One-sided `TRADE` availability produces no
+     candidate — never silently reframed as a donation.
+   - `findDonationCandidate` — the other collector's **`GIVE_AWAY`-only**
+     copies that cover what I'm missing. Always one-way; there is no code
+     path that promotes a donation into a trade.
+   - `TRADE` and `GIVE_AWAY` are tracked as fully independent pools per
+     physical copy — owning one of each of the same collectible makes it
+     eligible for _both_ a trade and a donation (as different physical
+     copies), never double-counted as one. `KEEP` and `SELL` copies are
+     never read by either function.
+2. **Scoring** (`domain/tradeScore.ts`) — turns a candidate plus each
+   side's `{totalCount, ownedCount}` snapshot into a `TradeScoreBreakdown`
+   (score + the structured components below), via
+   `domain/progress.ts#estimateCompletionAfter` for the projected
+   completion — computed in memory from plain numbers, never by writing
+   to `UserCopy` or reading it back.
+3. **Ranking** (`domain/tradeScore.ts#compareMatches`) — sorts the full
+   list; see "Ranking and tie-breaking" below.
 
-Only `display_name`, card identities, and availability ever leave this
-function — no email, user id, or other account metadata.
+Only `display_name`, catalog collectible identifiers (never a `UserCopy`
+id), and progress numbers ever leave this function — no email, user id,
+or other account metadata. This is the same function/endpoint from V0,
+evolved in place — not a parallel matching implementation.
+
+### Trade Score formula
+
+The score is a **collection-usefulness index, not a measure of objective
+market or financial trade fairness** — it only ever looks at how much
+closer each side gets to completing the set, using data the app already
+has (missing cards, `TRADE`/`GIVE_AWAY` copies, completion before/after).
+Full implementation: `domain/tradeScore.ts`.
+
+1. **Per side, compute the raw completion gain** in percentage points
+   (0-100) on the set's own scale: `completionAfter - completionBefore`,
+   where `completionAfter` comes from `estimateCompletionAfter` given the
+   candidate's proposed collectibles.
+2. **Scale each gain with a square root:**
+   `scaledGain = 100 * sqrt(rawGainPercent / 100)`. This is the one
+   nonlinear step in the formula, and it exists for a specific reason: a
+   raw percentage-of-set-size gain is dominated by set size (a 5-card
+   gain is huge on a 10-card set and tiny on a 200-card set) and, even
+   within one set, linear scaling makes the score read as "basically a
+   card count," which the milestone explicitly asks to avoid. Square
+   root is monotonic (every "more gain → higher score" property below
+   still holds exactly) but compresses the top of the range and expands
+   the bottom, so a modest, genuinely useful gain still lands in a
+   legible, non-trivial part of the 0-100 scale instead of clustering
+   near 0.
+3. **`DONATION` score = `round(scaledGain(currentUser))`, clamped to
+   [0, 100].** One-sided by construction: no balance factor, no bonus.
+4. **`MUTUAL_TRADE` score:**
+   - `base = average(scaledGain(currentUser), scaledGain(otherCollector))`
+   - `balanceRatio = min(scaledCurrent, scaledOther) / max(scaledCurrent, scaledOther)`
+     (1.0 = perfectly balanced, → 0 = one side gets almost nothing)
+   - `balanceMultiplier = 0.4 + 0.6 * balanceRatio` (ranges 0.4–1.0) — an
+     unbalanced trade is never zeroed out (it's still a real trade that
+     helps someone), but a severely unbalanced one is capped well below
+     a balanced trade of the same average benefit.
+   - `score = round(base * balanceMultiplier * 1.15)`, clamped to
+     [0, 100]. The flat **1.15× reciprocity bonus** is what makes a
+     mutual trade generally outrank an equal-benefit one-way donation —
+     helping both collectors is worth more than delivering the same
+     benefit to only one of them.
+5. Every constant above (`0.4` balance floor, `1.15` reciprocity bonus,
+   the sqrt scaling) is a named constant at the top of `tradeScore.ts`,
+   not inlined magic numbers — tune them there if the ranking ever needs
+   to feel different, without touching candidate generation or the API
+   shape.
+
+This formula is deliberately simple enough to hand-verify: given two
+sides' owned/total counts and a candidate's card lists, you can compute
+the score with a calculator. `server/tests/domain/tradeScore.test.ts`
+pins down the required properties (more gain → higher score; balanced
+beats severely unbalanced at equal average benefit; a mutual trade beats
+an equivalent donation; determinism) rather than exact score values, so
+the constants can be retuned later without every test needing a rewrite.
+
+### Structured breakdown (explainability)
+
+Every match includes enough structure for a client to explain the score
+without recomputing it — see `docs/api.md` for the exact JSON. In short:
+`type` (`MUTUAL_TRADE` | `DONATION`), `current_user` /
+`other_collector` (`cards_received`, `completion_before`,
+`completion_after`, `completion_gain`), `balance.difference` (mutual
+trades only), and `proposed_exchange.you_receive` /
+`proposed_exchange.they_receive` as catalog `CollectibleRef`s
+(`id`/`number`/`name`/`rarity` — never a `UserCopy` id).
+
+### Ranking and tie-breaking
+
+`domain/tradeScore.ts#compareMatches`, applied to the full result list
+before it leaves `computeMatchesForUser`:
+
+1. highest `score`;
+2. largest `current_user.completion_gain`;
+3. largest "mutual" completion gain — `other_collector.completion_gain`
+   for a `MUTUAL_TRADE`, or `0` for a `DONATION` (which has no other
+   side);
+4. the other collector's `display_name`, ascending — chosen as the final
+   tie-breaker specifically because it is a stable, business-meaningful
+   field, never a raw database id or the database's incidental row
+   order (explicitly disallowed by the milestone). Two collectors
+   sharing an identical display name is the only case left
+   under-specified; it isn't reachable with the current seed data and
+   isn't guarded against separately.
+
+No step is random, and the underlying `prisma.user.findMany` enumeration
+order (`orderBy: { id: "asc" }`) only matters as a starting point —
+`compareMatches` fully determines the final order for any set of inputs.
 
 ## Authentication / authorization
 
@@ -131,9 +245,9 @@ function — no email, user id, or other account metadata.
   IDOR/BOLA mitigation. Covered by
   `server/tests/integration/authorization.test.ts`.
 - API responses are shaped explicitly (`toSelfProfile`, `toPublicCopy`,
-  `enrich` in matching) rather than returning raw Prisma rows, so it's
-  structurally impossible to accidentally leak `passwordHash` or another
-  user's email through a route that wasn't reviewed for it.
+  `toPublicMatch` in matching) rather than returning raw Prisma rows, so
+  it's structurally impossible to accidentally leak `passwordHash` or
+  another user's email through a route that wasn't reviewed for it.
 
 ## Collection sharing (V0.1)
 

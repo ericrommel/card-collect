@@ -209,18 +209,6 @@ button.link,
   background: #fef3c7;
   color: #92400e;
 }
-.badge.mutual {
-  background: #dcfce7;
-  color: #166534;
-}
-.badge.trade {
-  background: #dbeafe;
-  color: var(--trade);
-}
-.badge.give-away {
-  background: #dcfce7;
-  color: var(--give-away);
-}
 
 .page-title-row {
   display: flex;
@@ -317,6 +305,24 @@ button.link,
   align-items: center;
   gap: 0.6rem;
 }
+.match-header h3 {
+  margin: 0;
+}
+.score-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.score-badge.trade {
+  background: #dbeafe;
+  color: var(--trade);
+}
+.score-badge.donation {
+  background: #dcfce7;
+  color: var(--give-away);
+}
 .match-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -325,7 +331,7 @@ button.link,
 .offer-list {
   list-style: none;
   padding: 0;
-  margin: 0;
+  margin: 0.4rem 0 0 0;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -336,11 +342,22 @@ button.link,
   gap: 0.5rem;
   font-size: 0.9rem;
 }
-.donation-callout {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 0.6rem 0.8rem;
+.match-completion {
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.completion-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+.completion-values .arrow {
+  color: var(--muted);
+  margin: 0 0.2rem;
 }
 
 button.primary.small {

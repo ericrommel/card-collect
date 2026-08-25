@@ -33,6 +33,15 @@ export interface ProgressResult {
 }
 
 /**
+ * Single source of truth for "owned/total -> percentage" rounding, used
+ * by both current-state progress and projected (matching) completion so
+ * the two can never drift apart.
+ */
+export function completionPercentageOf(ownedCount: number, totalCount: number): number {
+  return totalCount === 0 ? 0 : Math.round((ownedCount / totalCount) * 1000) / 10;
+}
+
+/**
  * Multiple physical copies of the same collectible must count once
  * toward completion — completion is measured over distinct collectibles
  * owned, never over raw copy count.
@@ -69,7 +78,7 @@ export function calculateProgress(
   const totalCount = setCollectibles.length;
   const ownedCount = ownedCollectibleIds.length;
   const missingCount = missingCollectibleIds.length;
-  const completionPercentage = totalCount === 0 ? 0 : Math.round((ownedCount / totalCount) * 1000) / 10;
+  const completionPercentage = completionPercentageOf(ownedCount, totalCount);
 
   return {
     totalCount,
@@ -81,4 +90,19 @@ export function calculateProgress(
     missingCollectibleIds,
     entries,
   };
+}
+
+/**
+ * Projects completion if a user received the given additional
+ * collectibles — a pure, in-memory calculation. Never touches storage,
+ * so it is safe to call speculatively (e.g. once per candidate match)
+ * without mutating anyone's actual collection.
+ */
+export function estimateCompletionAfter(
+  totalCount: number,
+  currentOwnedCount: number,
+  additionalCollectibleIds: string[],
+): number {
+  const newOwnedCount = Math.min(totalCount, currentOwnedCount + additionalCollectibleIds.length);
+  return completionPercentageOf(newOwnedCount, totalCount);
 }
