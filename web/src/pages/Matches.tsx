@@ -50,7 +50,9 @@ export function MatchesPage() {
         Other collectors whose duplicates or give-aways cover what you're missing, and vice versa.
       </p>
 
-      {matches.length === 0 && <p className="muted">No matches yet. Add more copies or mark duplicates as TRADE / GIVE_AWAY.</p>}
+      {matches.length === 0 && (
+        <p className="muted">No matches yet. Add more copies or mark duplicates as TRADE / GIVE_AWAY.</p>
+      )}
 
       <div className="matches">
         {matches.map((match) => (

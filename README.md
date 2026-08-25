@@ -57,6 +57,19 @@ npm test
 Runs the backend test suite (domain logic + an authorization/IDOR
 integration test) against a disposable SQLite test database.
 
+## Lint & format
+
+```bash
+npm run lint            # ESLint, both workspaces
+npm run format          # Prettier — write mode
+npm run format:check    # Prettier — check mode (used in CI)
+```
+
+Prettier is configured for a 120-character line width (`.prettierrc.json`);
+ESLint defers to it for formatting via `eslint-config-prettier`. CI
+(`.github/workflows/ci.yml`) runs format-check, lint, test, and build on
+every pull request into `main`.
+
 ## Project layout
 
 ```text

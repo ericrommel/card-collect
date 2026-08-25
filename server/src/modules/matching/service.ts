@@ -66,7 +66,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
   const myCopies = await getUserCopies(userId, setId);
   const myProgress = calculateProgress(
     collectibles.map((c) => ({ id: c.id })),
-    myCopies.map((c) => ({ collectibleId: c.variant.collectible.id }))
+    myCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
   );
   const myOfferable = toOfferable(myCopies);
 
@@ -78,7 +78,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
     const otherCopies = await getUserCopies(other.id, setId);
     const otherProgress = calculateProgress(
       collectibles.map((c) => ({ id: c.id })),
-      otherCopies.map((c) => ({ collectibleId: c.variant.collectible.id }))
+      otherCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
     );
     const otherOfferable = toOfferable(otherCopies);
 
@@ -86,7 +86,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       myProgress.missingCollectibleIds,
       otherProgress.missingCollectibleIds,
       myOfferable,
-      otherOfferable
+      otherOfferable,
     );
 
     const hasSignal = match.youCanReceive.length > 0 || match.youCanOffer.length > 0;
@@ -95,7 +95,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
     const completionAfter = estimateCompletionAfter(
       myProgress.totalCount,
       myProgress.ownedCount,
-      match.youCanReceive.map((o) => o.collectibleId)
+      match.youCanReceive.map((o) => o.collectibleId),
     );
 
     results.push({

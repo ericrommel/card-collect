@@ -13,10 +13,14 @@
     "build": "npm run build --workspace=server && npm run build --workspace=web",
     "test": "npm run test --workspace=server",
     "lint": "npm run lint --workspace=server && npm run lint --workspace=web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "seed": "npm run seed --workspace=server",
     "setup": "npm install && npm run migrate --workspace=server && npm run seed --workspace=server"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3"
   }
 }

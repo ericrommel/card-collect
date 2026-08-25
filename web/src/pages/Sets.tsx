@@ -33,7 +33,9 @@ export function SetsPage() {
             <span className="badge">{universeName(set.universeId)}</span>
             <h3>{set.name}</h3>
             <p className="muted">{set.code}</p>
-            {set.releaseDate && <p className="muted small">Released {new Date(set.releaseDate).toLocaleDateString()}</p>}
+            {set.releaseDate && (
+              <p className="muted small">Released {new Date(set.releaseDate).toLocaleDateString()}</p>
+            )}
           </Link>
         ))}
       </div>

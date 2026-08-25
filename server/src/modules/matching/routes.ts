@@ -20,5 +20,5 @@ matchesRouter.get(
     const userId = (req as AuthenticatedRequest).userId;
     const matches = await computeMatchesForUser(userId, parsed.data.setId);
     res.json({ matches });
-  })
+  }),
 );

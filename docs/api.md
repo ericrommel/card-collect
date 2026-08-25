@@ -94,8 +94,7 @@ unknown `variantId`.
 { "availability": "TRADE", "condition": null }
 ```
 
-Both fields optional. → `200 { "copy": PublicCopy }`. Returns **404** (not
-403) if the copy doesn't exist *or* belongs to another user — a caller
+Both fields optional. → `200 { "copy": PublicCopy }`. Returns **404** (not 403) if the copy doesn't exist _or_ belongs to another user — a caller
 cannot distinguish the two, which is deliberate (see
 [architecture.md](architecture.md#authentication--authorization)).
 

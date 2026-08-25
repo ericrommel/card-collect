@@ -135,7 +135,7 @@ async function main() {
   async function addCopy(
     ownerId: string,
     number: string,
-    availability: "KEEP" | "TRADE" | "SELL" | "GIVE_AWAY" = "KEEP"
+    availability: "KEEP" | "TRADE" | "SELL" | "GIVE_AWAY" = "KEEP",
   ) {
     await prisma.userCopy.create({
       data: { ownerId, variantId: variantId(number), availability },

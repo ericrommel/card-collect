@@ -427,7 +427,7 @@ this first.
 **Status:** OPEN
 
 `computeMatchesForUser` (see `server/src/modules/matching/service.ts`)
-computes a match against *every other user in the system* on each request,
+computes a match against _every other user in the system_ on each request,
 each requiring its own set of database queries. This is intentional for
 V0 — it is simple, correct, and fast enough for a handful of demo users —
 but it is O(n) in total user count per request and will not scale as the

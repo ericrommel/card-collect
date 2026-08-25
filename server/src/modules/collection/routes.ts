@@ -42,7 +42,7 @@ collectionRouter.get(
     const { setId } = listQuerySchema.parse(req.query);
     const copies = await getUserCopies(userId(req), setId);
     res.json({ copies: copies.map(toPublicCopy) });
-  })
+  }),
 );
 
 const createCopySchema = z.object({
@@ -72,7 +72,7 @@ collectionRouter.post(
     });
 
     res.status(201).json({ copy: toPublicCopy(copy) });
-  })
+  }),
 );
 
 const updateCopySchema = z.object({
@@ -109,7 +109,7 @@ collectionRouter.patch(
     });
 
     res.json({ copy: toPublicCopy(updated) });
-  })
+  }),
 );
 
 collectionRouter.delete(
@@ -118,7 +118,7 @@ collectionRouter.delete(
     await loadOwnedCopyOrNotFound(req.params.id, userId(req));
     await prisma.userCopy.delete({ where: { id: req.params.id } });
     res.status(204).send();
-  })
+  }),
 );
 
 const progressParamsSchema = z.object({ id: z.string().min(1) });
@@ -152,5 +152,5 @@ mySetsRouter.get(
         is_owned: entry.isOwned,
       })),
     });
-  })
+  }),
 );

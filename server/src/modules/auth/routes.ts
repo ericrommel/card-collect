@@ -47,7 +47,7 @@ authRouter.post(
 
     const token = signToken(user.id);
     res.status(201).json({ token, user: toSelfProfile(user) });
-  })
+  }),
 );
 
 authRouter.post(
@@ -62,7 +62,7 @@ authRouter.post(
 
     const token = signToken(user.id);
     res.json({ token, user: toSelfProfile(user) });
-  })
+  }),
 );
 
 authRouter.get(
@@ -75,5 +75,5 @@ authRouter.get(
       throw ApiError.unauthorized();
     }
     res.json({ user: toSelfProfile(user) });
-  })
+  }),
 );

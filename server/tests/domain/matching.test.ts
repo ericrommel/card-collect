@@ -50,7 +50,7 @@ describe("computeMatch", () => {
       [
         { collectibleId: "X", availability: "TRADE" },
         { collectibleId: "X", availability: "TRADE" },
-      ]
+      ],
     );
     expect(result.youCanReceive).toHaveLength(1);
   });

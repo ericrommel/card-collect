@@ -54,7 +54,7 @@ export async function computeSetProgressForUser(userId: string, setId: string): 
 
   const progress = calculateProgress(
     collectibles.map((c) => ({ id: c.id })),
-    copies.map((c) => ({ collectibleId: c.variant.collectible.id }))
+    copies.map((c) => ({ collectibleId: c.variant.collectible.id })),
   );
 
   const entryByCollectible = new Map(progress.entries.map((e) => [e.collectibleId, e]));

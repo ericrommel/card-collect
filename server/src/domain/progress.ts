@@ -39,14 +39,11 @@ export interface ProgressResult {
  */
 export function calculateProgress(
   setCollectibles: ProgressCollectible[],
-  userCopies: ProgressUserCopy[]
+  userCopies: ProgressUserCopy[],
 ): ProgressResult {
   const quantityByCollectible = new Map<string, number>();
   for (const copy of userCopies) {
-    quantityByCollectible.set(
-      copy.collectibleId,
-      (quantityByCollectible.get(copy.collectibleId) ?? 0) + 1
-    );
+    quantityByCollectible.set(copy.collectibleId, (quantityByCollectible.get(copy.collectibleId) ?? 0) + 1);
   }
 
   const ownedCollectibleIds: string[] = [];
@@ -72,8 +69,7 @@ export function calculateProgress(
   const totalCount = setCollectibles.length;
   const ownedCount = ownedCollectibleIds.length;
   const missingCount = missingCollectibleIds.length;
-  const completionPercentage =
-    totalCount === 0 ? 0 : Math.round((ownedCount / totalCount) * 1000) / 10;
+  const completionPercentage = totalCount === 0 ? 0 : Math.round((ownedCount / totalCount) * 1000) / 10;
 
   return {
     totalCount,
