@@ -1,0 +1,110 @@
+// Prisma schema for the Collectible Card Exchange Platform V0.
+// SQLite is used for deterministic, dependency-free local development.
+// See docs/architecture.md for the rationale behind this domain model.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime @default(now())
+
+  copies UserCopy[]
+
+  @@map("users")
+}
+
+/// A collectible brand/game, e.g. "One Piece Card Game", "Pokémon TCG".
+/// Kept generic so new universes can be added without schema changes.
+model CollectibleUniverse {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  sets Set[]
+
+  @@map("collectible_universes")
+}
+
+/// A released set/expansion within a universe.
+model Set {
+  id          String    @id @default(cuid())
+  providerId  String? // external catalog identifier, if sourced from a CatalogProvider
+  name        String
+  code        String    @unique
+  releaseDate DateTime?
+
+  universeId String
+  universe   CollectibleUniverse @relation(fields: [universeId], references: [id])
+
+  collectibles Collectible[]
+
+  @@map("sets")
+}
+
+/// A single card/sticker/entry within a set. Distinct from Variant: a
+/// Collectible is "what number/name this card is", a Variant is "which
+/// physical print of it". Set completion is measured over Collectibles.
+model Collectible {
+  id         String  @id @default(cuid())
+  providerId String?
+  number     String
+  name       String
+  rarity     String?
+  metadata   String? // JSON-encoded free-form attributes (color, type, etc.)
+
+  setId String
+  set   Set    @relation(fields: [setId], references: [id])
+
+  variants Variant[]
+
+  @@unique([setId, number])
+  @@map("collectibles")
+}
+
+/// An alternate physical print of a Collectible (base, alt art, manga
+/// rare, reprint, language variant, ...). V0 seeds one default Variant
+/// per Collectible but the model does not assume that cardinality.
+model Variant {
+  id        String  @id @default(cuid())
+  name      String
+  isDefault Boolean @default(true)
+
+  collectibleId String
+  collectible   Collectible @relation(fields: [collectibleId], references: [id])
+
+  userCopies UserCopy[]
+
+  @@unique([collectibleId, name])
+  @@map("variants")
+}
+
+/// SQLite has no native enum type, so availability is stored as a
+/// string constrained to KEEP | TRADE | SELL | GIVE_AWAY by the zod
+/// schemas at the API boundary (see modules/collection/routes.ts).
+/// One physical copy owned by one user. Multiple UserCopy rows for the
+/// same Variant + owner represent duplicates.
+model UserCopy {
+  id           String   @id @default(cuid())
+  availability String   @default("KEEP")
+  condition    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  variantId String
+  variant   Variant @relation(fields: [variantId], references: [id])
+
+  @@map("user_copies")
+}
