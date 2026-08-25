@@ -11,7 +11,7 @@ catalogRouter.get(
   asyncHandler(async (_req, res) => {
     const universes = await catalogProvider.listUniverses();
     res.json({ universes });
-  })
+  }),
 );
 
 const listSetsQuerySchema = z.object({
@@ -24,7 +24,7 @@ catalogRouter.get(
     const { universeId } = listSetsQuerySchema.parse(req.query);
     const sets = await catalogProvider.listSets(universeId);
     res.json({ sets });
-  })
+  }),
 );
 
 catalogRouter.get(
@@ -33,7 +33,7 @@ catalogRouter.get(
     const set = await catalogProvider.getSet(req.params.id);
     if (!set) throw ApiError.notFound("Set not found");
     res.json({ set });
-  })
+  }),
 );
 
 catalogRouter.get(
@@ -43,5 +43,5 @@ catalogRouter.get(
     if (!set) throw ApiError.notFound("Set not found");
     const collectibles = await catalogProvider.listCollectibles(req.params.id);
     res.json({ collectibles });
-  })
+  }),
 );

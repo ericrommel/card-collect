@@ -1,10 +1,5 @@
 import { prisma } from "../../db.js";
-import type {
-  CatalogCollectible,
-  CatalogProvider,
-  CatalogSet,
-  CatalogUniverse,
-} from "./catalogProvider.js";
+import type { CatalogCollectible, CatalogProvider, CatalogSet, CatalogUniverse } from "./catalogProvider.js";
 
 /**
  * CatalogProvider implementation backed by the local seeded database

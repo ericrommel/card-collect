@@ -2,13 +2,13 @@
 
 ## Stack
 
-| Layer    | Choice                                    | Why                                                                                   |
-| -------- | ------------------------------------------ | -------------------------------------------------------------------------------------- |
-| Backend  | Node.js + TypeScript + Express             | Boring, well-understood, minimal ceremony for a small API surface.                     |
-| Database | SQLite via Prisma                          | Zero-install deterministic local dev; Prisma migrations give a clear upgrade path to Postgres later without rewriting the domain layer. |
-| Auth     | JWT (bcrypt-hashed passwords)               | Stateless bearer tokens work identically for a browser and a future native mobile client; no server-side session store to run. |
-| Frontend | React + Vite + TypeScript                   | Standard SPA toolchain; talks to the API over plain JSON, no server-rendering coupling. |
-| Tests    | Vitest + Supertest                          | Fast, TypeScript-native; Supertest drives the real Express app for integration/authorization tests. |
+| Layer    | Choice                         | Why                                                                                                                                     |
+| -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend  | Node.js + TypeScript + Express | Boring, well-understood, minimal ceremony for a small API surface.                                                                      |
+| Database | SQLite via Prisma              | Zero-install deterministic local dev; Prisma migrations give a clear upgrade path to Postgres later without rewriting the domain layer. |
+| Auth     | JWT (bcrypt-hashed passwords)  | Stateless bearer tokens work identically for a browser and a future native mobile client; no server-side session store to run.          |
+| Frontend | React + Vite + TypeScript      | Standard SPA toolchain; talks to the API over plain JSON, no server-rendering coupling.                                                 |
+| Tests    | Vitest + Supertest             | Fast, TypeScript-native; Supertest drives the real Express app for integration/authorization tests.                                     |
 
 This is a **modular monolith**: one deployable backend, organized into
 domain-oriented modules, not a set of services. Microservices would add
@@ -124,8 +124,7 @@ function — no email, user id, or other account metadata.
 - Every `my/*` route requires a valid token and scopes all reads/writes to
   `req.userId` pulled from that token — never from a client-supplied id.
 - Cross-user mutation of a `UserCopy` is blocked by ownership check in
-  `collection/routes.ts#loadOwnedCopyOrNotFound`, which returns **404** (not
-  403) when the copy belongs to someone else — this avoids letting a client
+  `collection/routes.ts#loadOwnedCopyOrNotFound`, which returns **404** (not 403) when the copy belongs to someone else — this avoids letting a client
   distinguish "not yours" from "doesn't exist" by response code, a basic
   IDOR/BOLA mitigation. Covered by
   `server/tests/integration/authorization.test.ts`.

@@ -76,10 +76,7 @@ describe("authorization", () => {
     const tokenA = await registerUser(`ownerlist-${Date.now()}@example.com`);
     const tokenB = await registerUser(`otherlist-${Date.now()}@example.com`);
 
-    await request(app)
-      .post("/api/my/collection/copies")
-      .set("Authorization", `Bearer ${tokenA}`)
-      .send({ variantId });
+    await request(app).post("/api/my/collection/copies").set("Authorization", `Bearer ${tokenA}`).send({ variantId });
 
     const listAsB = await request(app).get("/api/my/collection").set("Authorization", `Bearer ${tokenB}`);
     expect(listAsB.status).toBe(200);

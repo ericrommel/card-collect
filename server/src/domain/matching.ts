@@ -48,17 +48,13 @@ export function computeMatch(
   aMissingCollectibleIds: Iterable<string>,
   bMissingCollectibleIds: Iterable<string>,
   aOfferableCopies: OfferableCopy[],
-  bOfferableCopies: OfferableCopy[]
+  bOfferableCopies: OfferableCopy[],
 ): MatchResult {
   const aMissing = new Set(aMissingCollectibleIds);
   const bMissing = new Set(bMissingCollectibleIds);
 
-  const youCanReceive = dedupeByCollectible(
-    bOfferableCopies.filter((copy) => aMissing.has(copy.collectibleId))
-  );
-  const youCanOffer = dedupeByCollectible(
-    aOfferableCopies.filter((copy) => bMissing.has(copy.collectibleId))
-  );
+  const youCanReceive = dedupeByCollectible(bOfferableCopies.filter((copy) => aMissing.has(copy.collectibleId)));
+  const youCanOffer = dedupeByCollectible(aOfferableCopies.filter((copy) => bMissing.has(copy.collectibleId)));
   const donationOpportunities = youCanReceive.filter((offer) => offer.availability === "GIVE_AWAY");
 
   return {
@@ -73,7 +69,7 @@ export function computeMatch(
 export function estimateCompletionAfter(
   totalCount: number,
   currentOwnedCount: number,
-  additionalCollectibleIds: string[]
+  additionalCollectibleIds: string[],
 ): number {
   if (totalCount === 0) return 0;
   const newOwnedCount = Math.min(totalCount, currentOwnedCount + additionalCollectibleIds.length);
