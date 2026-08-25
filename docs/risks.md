@@ -483,6 +483,45 @@ means:
 
 ---
 
+## P2 — Trade Score Could Be Misread as a Fairness/Value Guarantee (V0.2)
+
+**Status:** OPEN
+
+The Trade Score (`domain/tradeScore.ts`) ranks matches by set-completion
+usefulness only — it has no concept of card rarity value, market price,
+or condition. A user (especially a younger one, or one new to the
+hobby) could reasonably but incorrectly read a prominent "94% Match"
+badge as "this trade is fair" or "these cards are worth about the same,"
+when the score says nothing about value at all: a common card and a
+rare secret card each "count as 1 missing card" identically.
+
+This is explicitly flagged in the implementation
+([architecture.md](architecture.md#trade-score-formula): "a
+collection-usefulness index, not a measure of objective market or
+financial trade fairness"), but a doc comment doesn't stop a UI label
+from being over-trusted by an end user who never reads the docs.
+
+### Initial mitigations already in place
+
+- the web UI labels it "Match" / "Donation Match," not "Fair Trade" or
+  "Value Match";
+- no price/value data exists anywhere in the app for V0.2 (see the
+  existing Pricing Data Reliability and AI Cost risks above) — there is
+  currently no data source the score _could_ draw a value signal from
+  even if it wanted to.
+
+### Future investigation
+
+- if a short explanatory label or tooltip ("based on what completes
+  your set, not card value") is warranted once real users see the
+  feature;
+- revisit if/when any price-intelligence feature (see `ideas.md` I9) is
+  ever built — at that point the naming and framing need explicit
+  re-review so a usefulness score and a value/fairness score are _never_
+  visually conflated.
+
+---
+
 ## P3 — New Collectible Expansion
 
 **Status:** ACCEPTED

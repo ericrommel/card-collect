@@ -1,77 +1,91 @@
 /**
- * Pure matching-engine logic. Given two users' missing-collectible sets
- * for a shared Set, and each user's "offerable" copies (TRADE or
- * GIVE_AWAY — never KEEP, never SELL in V0), compute what each side can
- * receive/offer and any one-way donation opportunities.
+ * Identifies WHICH collectibles could move between two collectors for a
+ * shared Set — candidate generation only. Scoring a candidate
+ * (domain/tradeScore.ts) is a deliberately separate concern: this module
+ * never computes a score, and tradeScore.ts never decides eligibility.
+ *
+ * TRADE and GIVE_AWAY are tracked as fully independent pools, per copy:
+ *  - A mutual trade only ever draws from TRADE-availability copies, on
+ *    both sides. A copy marked GIVE_AWAY is a commitment to give it away
+ *    unconditionally and is never used as trade leverage.
+ *  - A donation only ever draws from the OTHER collector's
+ *    GIVE_AWAY-availability copies, matched against the current user's
+ *    missing cards. It is one-way by construction — there is no code
+ *    path in this file that promotes a donation into a trade, or a
+ *    trade into a donation.
+ * KEEP and SELL copies are never read by either function below.
  */
 
-export type OfferableAvailability = "TRADE" | "GIVE_AWAY";
+export type CopyAvailability = "KEEP" | "TRADE" | "SELL" | "GIVE_AWAY";
 
-export interface OfferableCopy {
+export interface AvailabilityTaggedCopy {
   collectibleId: string;
-  availability: OfferableAvailability;
+  availability: CopyAvailability;
 }
 
-export interface MatchOffer {
-  collectibleId: string;
-  availability: OfferableAvailability;
-}
-
-export interface MatchResult {
-  /** Collectibles the requesting user (A) needs and the other user (B) can provide. */
-  youCanReceive: MatchOffer[];
-  /** Collectibles the other user (B) needs and the requesting user (A) can provide. */
-  youCanOffer: MatchOffer[];
-  /**
-   * One-way GIVE_AWAY opportunities within youCanReceive. Computed
-   * independently of youCanOffer so they surface even when A has
-   * nothing to trade back.
-   */
-  donationOpportunities: MatchOffer[];
-  isMutualMatch: boolean;
-}
-
-function dedupeByCollectible(copies: OfferableCopy[]): MatchOffer[] {
-  const seen = new Map<string, MatchOffer>();
+/**
+ * Distinct collectible ids with at least one copy in the given
+ * availability state. A collectible only needs to be proposed once no
+ * matter how many eligible physical copies exist — this is what keeps
+ * "cardsReceived" a count of collectibles, not of copies, and is why
+ * owning e.g. two TRADE copies of the same card never lets it be
+ * over-allocated across a proposal.
+ */
+function distinctCollectiblesWithAvailability(
+  copies: AvailabilityTaggedCopy[],
+  availability: "TRADE" | "GIVE_AWAY",
+): Set<string> {
+  const ids = new Set<string>();
   for (const copy of copies) {
-    if (!seen.has(copy.collectibleId)) {
-      seen.set(copy.collectibleId, { collectibleId: copy.collectibleId, availability: copy.availability });
-    } else if (copy.availability === "GIVE_AWAY") {
-      // Prefer surfacing a GIVE_AWAY over a TRADE for the same collectible.
-      seen.set(copy.collectibleId, { collectibleId: copy.collectibleId, availability: copy.availability });
-    }
+    if (copy.availability === availability) ids.add(copy.collectibleId);
   }
-  return [...seen.values()];
+  return ids;
 }
 
-export function computeMatch(
-  aMissingCollectibleIds: Iterable<string>,
-  bMissingCollectibleIds: Iterable<string>,
-  aOfferableCopies: OfferableCopy[],
-  bOfferableCopies: OfferableCopy[],
-): MatchResult {
-  const aMissing = new Set(aMissingCollectibleIds);
-  const bMissing = new Set(bMissingCollectibleIds);
-
-  const youCanReceive = dedupeByCollectible(bOfferableCopies.filter((copy) => aMissing.has(copy.collectibleId)));
-  const youCanOffer = dedupeByCollectible(aOfferableCopies.filter((copy) => bMissing.has(copy.collectibleId)));
-  const donationOpportunities = youCanReceive.filter((offer) => offer.availability === "GIVE_AWAY");
-
-  return {
-    youCanReceive,
-    youCanOffer,
-    donationOpportunities,
-    isMutualMatch: youCanReceive.length > 0 && youCanOffer.length > 0,
-  };
+export interface MutualTradeCandidate {
+  /** Collectibles the current user would receive — from the other collector's TRADE copies, filtered to the current user's missing set. */
+  currentUserReceives: string[];
+  /** Collectibles the other collector would receive — from the current user's TRADE copies, filtered to the other collector's missing set. */
+  otherCollectorReceives: string[];
 }
 
-/** Estimate a user's set completion if they received the given additional collectibles. */
-export function estimateCompletionAfter(
-  totalCount: number,
-  currentOwnedCount: number,
-  additionalCollectibleIds: string[],
-): number {
-  if (totalCount === 0) return 0;
-  const newOwnedCount = Math.min(totalCount, currentOwnedCount + additionalCollectibleIds.length);
-  return Math.round((newOwnedCount / totalCount) * 1000) / 10;
+/**
+ * A mutual trade candidate exists only when BOTH directions are
+ * non-empty. One-sided TRADE availability produces no candidate at all
+ * — never silently reframed as a donation or a one-way trade.
+ */
+export function findMutualTradeCandidate(
+  currentUserMissingIds: Iterable<string>,
+  otherCollectorMissingIds: Iterable<string>,
+  currentUserCopies: AvailabilityTaggedCopy[],
+  otherCollectorCopies: AvailabilityTaggedCopy[],
+): MutualTradeCandidate | null {
+  const currentMissing = new Set(currentUserMissingIds);
+  const otherMissing = new Set(otherCollectorMissingIds);
+
+  const otherTradeable = distinctCollectiblesWithAvailability(otherCollectorCopies, "TRADE");
+  const currentTradeable = distinctCollectiblesWithAvailability(currentUserCopies, "TRADE");
+
+  const currentUserReceives = [...otherTradeable].filter((id) => currentMissing.has(id));
+  const otherCollectorReceives = [...currentTradeable].filter((id) => otherMissing.has(id));
+
+  if (currentUserReceives.length === 0 || otherCollectorReceives.length === 0) {
+    return null;
+  }
+  return { currentUserReceives, otherCollectorReceives };
+}
+
+/**
+ * Collectibles the other collector has marked GIVE_AWAY that the
+ * current user is missing. Returns [] (never null) when there is
+ * nothing to donate — callers treat an empty array as "no donation
+ * candidate for this pair."
+ */
+export function findDonationCandidate(
+  currentUserMissingIds: Iterable<string>,
+  otherCollectorCopies: AvailabilityTaggedCopy[],
+): string[] {
+  const currentMissing = new Set(currentUserMissingIds);
+  const offered = distinctCollectiblesWithAvailability(otherCollectorCopies, "GIVE_AWAY");
+  return [...offered].filter((id) => currentMissing.has(id));
 }

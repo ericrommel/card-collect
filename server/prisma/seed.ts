@@ -149,6 +149,7 @@ async function main() {
   }
   await addCopy(alice.id, "SV01-003", "TRADE"); // duplicate #3
   await addCopy(alice.id, "SV01-007", "TRADE"); // duplicate #7
+  await addCopy(alice.id, "SV01-010", "TRADE"); // duplicate #10 — what Bob needs back in the mutual trade
   await addCopy(alice.id, "SV01-012", "GIVE_AWAY"); // duplicate #12, given away
 
   // --- Bob: owns 1-8 and 17-24, with duplicates offered for trade/donation.
