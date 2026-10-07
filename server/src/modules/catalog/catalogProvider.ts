@@ -12,6 +12,8 @@ export interface CatalogUniverse {
   id: string;
   name: string;
   slug: string;
+  /** Present for sample catalogs that must not be mistaken for an official set. */
+  notice: string | null;
 }
 
 export interface CatalogSet {

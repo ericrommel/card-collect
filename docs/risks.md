@@ -117,7 +117,9 @@ Risks:
 
 Use a provider abstraction such as `CatalogProvider` and avoid coupling the domain model to one external API.
 
-Investigate licensing before commercial production use, but do not block the V0 prototype.
+The running app does not call an external catalog. It seeds original sample metadata (Starter Voyage and Harbor Atlas) and labels both as not official. Real publisher lists stay out until a license exists. See [decisions.md](decisions.md).
+
+Investigate licensing before commercial production use. Do not block local use on that license.
 
 ---
 
@@ -134,7 +136,7 @@ Risks:
 
 ### Initial Mitigation
 
-The core application must work without official catalog images.
+The core application must work without official catalog images. The web client draws a geometric face from the card's number and name. That drawing is not artwork from a publisher.
 
 Support separate image sources:
 

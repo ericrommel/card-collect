@@ -6,6 +6,7 @@ import { catalogRouter } from "./modules/catalog/routes.js";
 import { collectionRouter, mySetsRouter } from "./modules/collection/routes.js";
 import { matchesRouter } from "./modules/matching/routes.js";
 import { exchangesRouter } from "./modules/exchanges/routes.js";
+import { dashboardRouter } from "./modules/dashboard/routes.js";
 import { mySharingRouter } from "./modules/sharing/routes.js";
 import { publicSharingRouter } from "./modules/sharing/publicRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -22,6 +23,7 @@ export function createApp() {
   app.use("/api/catalog", catalogRouter);
   app.use("/api/my/collection", collectionRouter);
   app.use("/api/my/sets", mySetsRouter);
+  app.use("/api/my/dashboard", dashboardRouter);
   app.use("/api/my/sets", mySharingRouter);
   app.use("/api/my/matches", matchesRouter);
   app.use("/api/my/exchanges", exchangesRouter);

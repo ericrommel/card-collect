@@ -1,5 +1,13 @@
 # Collectible Card Exchange Platform
 
+## Where the product is
+
+Implemented: accounts and httpOnly sessions, a collection dashboard, a visual set explorer with bulk edits, manual condition, Trade Score matches, trades and donations with reservation and dual confirmation, and revocable public sharing.
+
+Sample data only: Starter Voyage (synthetic, 24 cards) and Harbor Atlas (original, 396 cards). These are not official sets. Card faces are generated patterns.
+
+Not implemented: licensed publisher catalogs, camera identification, AI condition estimates, native Android or iOS apps, payments, chat, and precise location. See [decisions.md](decisions.md).
+
 ## Product Vision
 
 Build a safety-first platform for people to manage, complete, exchange, donate, and eventually sell collectible cards across web, Android, and iOS.
@@ -221,4 +229,4 @@ Later Marketplace / provenance / advanced verification
 
 ## Success Criterion for the First Vertical Slice
 
-A working demo should allow two users to maintain One Piece collections and automatically discover a mutually useful exchange based on missing cards and available duplicates.
+A working demo should allow two users to maintain collections and automatically discover a mutually useful exchange based on missing cards and available duplicates. The seeded demo does this on Starter Voyage, and also on the larger Harbor Atlas sets. The cards are synthetic. They are not an official One Piece set.

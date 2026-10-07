@@ -2,13 +2,11 @@
 
 Base URL (local dev): `http://localhost:4000/api`
 
-All request/response bodies are JSON. All `my/*` routes require:
-
-```text
-Authorization: Bearer <token>
-```
-
-obtained from `/auth/register` or `/auth/login`. Tokens expire after 7 days.
+All request/response bodies are JSON. All `my/*` routes require the
+httpOnly session cookie set by `/auth/register` or `/auth/login`, or
+`Authorization: Bearer <token>` when the client logged in with
+`X-Auth-Mode: bearer`. Tokens expire after 7 days. The web app uses the
+cookie only.
 
 Error responses have the shape `{ "error": "message" }` (400/401/403/404/409)
 or `{ "error": "Invalid request", "details": {...} }` for validation errors.
@@ -64,7 +62,10 @@ A cookie-authenticated request whose `Origin` is not the app's origin is
 
 ### `GET /catalog/universes`
 
-→ `200 { "universes": [{ "id", "name", "slug" }] }`
+→ `200 { "universes": [{ "id", "name", "slug", "notice" }] }`
+
+`notice` is a short disclaimer for a sample catalog, or `null`. It is
+derived from the slug, not stored on the universe row.
 
 ### `GET /catalog/sets?universeId=<id>`
 
@@ -147,7 +148,7 @@ changing or removing the copy. `exchange_id` is null when the copy is free.
   "completion_percentage": 66.7,
   "checklist": [
     {
-      "collectible": { "id", "number", "name", "rarity", "variants": [...] },
+      "collectible": { "id", "number", "name", "rarity", "metadata", "variants": [...] },
       "owned_quantity": 2,
       "duplicate_quantity": 1,
       "is_owned": true
@@ -157,7 +158,78 @@ changing or removing the copy. `exchange_id` is null when the copy is free.
 ```
 
 `checklist` covers every Collectible in the set, owned or not, so a client
-can render the full set list from one call.
+can render the full set list from one call. `metadata` is the parsed JSON
+object stored on the collectible, or `null`.
+
+### `POST /my/sets/:id/copies` (auth required)
+
+Adds physical copies for many collectibles in one set. The whole request
+runs in one transaction.
+
+```json
+{ "collectible_ids": ["..."], "availability": "KEEP", "condition": null, "mode": "ensure_one" }
+```
+
+- `collectible_ids`: 1 to 200 ids. The same id may appear twice; `add`
+  creates two copies, `ensure_one` creates at most one.
+- `availability` defaults to `KEEP`. `condition` defaults to `null`.
+- `mode` is `add` (default) or `ensure_one`. `ensure_one` skips a
+  collectible the caller already owns and counts it in `skipped_count`.
+
+→ `201 { "created_count": 18, "skipped_count": 2 }`
+
+`404` if the set does not exist. `400` if any id is not in that set, a
+card has no default variant, or more than 200 ids are sent.
+
+### `PATCH /my/collection/copies/bulk` (auth required)
+
+```json
+{ "copy_ids": ["..."], "availability": "TRADE", "condition": "Played" }
+```
+
+1 to 200 unique ids. At least one of `availability` or `condition` is
+required; `condition: null` clears it. → `200 { "updated_count": 3 }`.
+
+The batch is one transaction. `404` if any id is missing or owned by
+someone else (the response does not say which). `409` if any copy is
+reserved. Neither case updates the others.
+
+### `DELETE /my/collection/copies/bulk` (auth required)
+
+```json
+{ "copy_ids": ["..."] }
+```
+
+→ `200 { "deleted_count": 3 }`. Same 404/409 rules as the bulk patch: one
+reserved or unknown id rejects the whole batch.
+
+## Dashboard (auth required)
+
+### `GET /my/dashboard`
+
+Real aggregates only. The response is the object itself, not wrapped.
+
+- `totals` — `set_count`, `started_set_count`, `total_count`,
+  `owned_count`, `missing_count`, `duplicate_count`,
+  `completion_percentage`, `copy_count`, `trade_copies`, `sell_copies`,
+  `donation_copies`, `reserved_copies`. Completion is owned/total across
+  the whole catalog, not an average of set percentages.
+- `sets[]` — the same counts per set, plus `universe_id`, `universe_name`,
+  `universe_slug`, `notice`, `release_date`, `code`, `name`.
+- `highlights.trades` and `highlights.donations` — up to three each, only
+  from sets the caller has started, ranked by score. Each row includes
+  `you_receive_count`, `you_give_count`, previews of at most three cards,
+  and completion before/after. Donations omit the other collector's
+  completion. `open_exchange_id` is present when that match is already
+  proposed.
+- `exchanges` — `open_count`, `needs_action_count`, and `recent` (up to
+  five `Exchange` views, newest update first). The caller needs to act
+  when they are the counterparty on a proposal, or when the exchange is
+  accepted and they have not confirmed.
+- `recent_copies` — up to eight of the caller's copies, newest first.
+  Includes the copy id. This route is owner-only.
+
+The payload does not include email addresses.
 
 ## My matches (V0.2: ranked by Trade Score)
 

@@ -6,6 +6,7 @@ import { ApiError } from "../../middleware/apiError.js";
 import { requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
 import { CONDITION_GRADES } from "../../domain/condition.js";
 import { computeSetProgressForUser, getUserCopies, type CopyWithDetails } from "./service.js";
+import { addCopiesForCollectibles, deleteCopiesBulk, updateCopiesBulk, BULK_LIMIT } from "./bulk.js";
 
 export const collectionRouter = Router();
 collectionRouter.use(requireAuth);
@@ -83,6 +84,37 @@ const updateCopySchema = z.object({
   condition: z.enum(CONDITION_GRADES).nullable().optional(),
 });
 
+const bulkCopyIdsSchema = z.object({
+  copy_ids: z.array(z.string().min(1)).min(1).max(BULK_LIMIT),
+});
+
+const bulkUpdateSchema = bulkCopyIdsSchema.extend({
+  availability: z.enum(["KEEP", "TRADE", "SELL", "GIVE_AWAY"]).optional(),
+  condition: z.enum(CONDITION_GRADES).nullable().optional(),
+});
+
+collectionRouter.patch(
+  "/copies/bulk",
+  asyncHandler(async (req, res) => {
+    const body = bulkUpdateSchema.parse(req.body);
+    const result = await updateCopiesBulk(userId(req), {
+      copyIds: body.copy_ids,
+      availability: body.availability,
+      condition: body.condition,
+    });
+    res.json({ updated_count: result.updatedCount });
+  }),
+);
+
+collectionRouter.delete(
+  "/copies/bulk",
+  asyncHandler(async (req, res) => {
+    const body = bulkCopyIdsSchema.parse(req.body);
+    const result = await deleteCopiesBulk(userId(req), body.copy_ids);
+    res.json({ deleted_count: result.deletedCount });
+  }),
+);
+
 function assertCopyIsMutable(copy: CopyWithDetails) {
   if (copy.reservedByExchangeId) {
     throw ApiError.conflict("This copy is reserved for an open exchange. Cancel that exchange before changing it.");
@@ -134,8 +166,30 @@ collectionRouter.delete(
 
 const progressParamsSchema = z.object({ id: z.string().min(1) });
 
+const bulkCreateSchema = z.object({
+  collectible_ids: z.array(z.string().min(1)).min(1).max(BULK_LIMIT),
+  availability: z.enum(["KEEP", "TRADE", "SELL", "GIVE_AWAY"]).optional(),
+  condition: z.enum(CONDITION_GRADES).nullable().optional(),
+  mode: z.enum(["add", "ensure_one"]).optional(),
+});
+
 export const mySetsRouter = Router();
 mySetsRouter.use(requireAuth);
+
+mySetsRouter.post(
+  "/:id/copies",
+  asyncHandler(async (req, res) => {
+    const { id } = progressParamsSchema.parse(req.params);
+    const body = bulkCreateSchema.parse(req.body);
+    const result = await addCopiesForCollectibles(userId(req), id, {
+      collectibleIds: body.collectible_ids,
+      availability: body.availability ?? "KEEP",
+      condition: body.condition ?? null,
+      mode: body.mode ?? "add",
+    });
+    res.status(201).json({ created_count: result.createdCount, skipped_count: result.skippedCount });
+  }),
+);
 
 mySetsRouter.get(
   "/:id/progress",
@@ -156,6 +210,7 @@ mySetsRouter.get(
           number: entry.collectible.number,
           name: entry.collectible.name,
           rarity: entry.collectible.rarity,
+          metadata: entry.collectible.metadata,
           variants: entry.collectible.variants,
         },
         owned_quantity: entry.ownedQuantity,

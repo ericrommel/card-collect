@@ -1,31 +1,24 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { CardFace } from "../components/CardFace";
 import * as api from "../lib/api";
+import { rarityLabel } from "../lib/labels";
 import { ApiError } from "../lib/api";
-import type { PublicCollectibleRef, PublicDuplicateRef, PublicShareView } from "../lib/api";
+import type { PublicCollectibleRef, PublicShareView } from "../lib/api";
 
-function CardList({ items }: { items: PublicCollectibleRef[] }) {
+function PublicGrid({ items }: { items: (PublicCollectibleRef & { duplicate_quantity?: number })[] }) {
   if (items.length === 0) return <p className="muted small">None</p>;
   return (
-    <ul className="offer-list">
+    <ul className="public-grid">
       {items.map((item) => (
-        <li key={item.number}>
-          <span className="card-number">{item.number}</span> {item.name}
-          {item.rarity && <span className="badge small">{item.rarity}</span>}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function DuplicateList({ items }: { items: PublicDuplicateRef[] }) {
-  if (items.length === 0) return <p className="muted small">None</p>;
-  return (
-    <ul className="offer-list">
-      {items.map((item) => (
-        <li key={item.number}>
-          <span className="card-number">{item.number}</span> {item.name}
-          <span className="badge dup small">+{item.duplicate_quantity}</span>
+        <li key={`${item.number}-${item.name}`}>
+          <CardFace size="sm" number={item.number} name={item.name} rarity={item.rarity} />
+          <span className="tile-name">{item.name}</span>
+          <span className="tile-sub">
+            {item.number}
+            {item.rarity ? ` · ${rarityLabel(item.rarity)}` : ""}
+          </span>
+          {item.duplicate_quantity ? <span className="badge dup">+{item.duplicate_quantity} extra</span> : null}
         </li>
       ))}
     </ul>
@@ -86,12 +79,16 @@ export function PublicCollectionPage() {
   }
 
   return (
-    <div>
+    <div className="page-stack">
+      <p className="eyebrow">
+        <Link to="/login">Cards Collect</Link>
+      </p>
       <div className="card public-header">
-        <span className="badge">{view.set.name}</span>
+        <span className="badge">{view.set.code}</span>
         <h1>{view.collector.display_name}'s collection</h1>
         <p className="muted">
-          {view.set.name} ({view.set.code}) — {view.set.total_count} cards in this set
+          {view.set.name} · {view.set.total_count} cards. This page is read-only and shows only what they chose to
+          share.
         </p>
       </div>
 
@@ -111,32 +108,32 @@ export function PublicCollectionPage() {
       <div className="public-sections">
         {view.owned && (
           <div className="card">
-            <h3>Owned</h3>
-            <CardList items={view.owned} />
+            <h3>Owned ({view.owned.length})</h3>
+            <PublicGrid items={view.owned} />
           </div>
         )}
         {view.missing && (
           <div className="card">
-            <h3>Missing</h3>
-            <CardList items={view.missing} />
+            <h3>Missing ({view.missing.length})</h3>
+            <PublicGrid items={view.missing} />
           </div>
         )}
         {view.duplicates && (
           <div className="card">
-            <h3>Duplicates</h3>
-            <DuplicateList items={view.duplicates} />
+            <h3>Duplicates ({view.duplicates.length})</h3>
+            <PublicGrid items={view.duplicates} />
           </div>
         )}
         {view.trade_offers && (
           <div className="card">
-            <h3>Available for trade</h3>
-            <CardList items={view.trade_offers} />
+            <h3>For trade ({view.trade_offers.length})</h3>
+            <PublicGrid items={view.trade_offers} />
           </div>
         )}
         {view.give_away_offers && (
           <div className="card">
-            <h3>Available to give away</h3>
-            <CardList items={view.give_away_offers} />
+            <h3>Donations ({view.give_away_offers.length})</h3>
+            <PublicGrid items={view.give_away_offers} />
           </div>
         )}
       </div>
