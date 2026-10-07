@@ -120,19 +120,36 @@ export interface SetProgress {
   checklist: ChecklistEntry[];
 }
 
-export interface MatchOffer {
-  collectible: { id: string; number: string; name: string; rarity: string | null };
-  availability: "TRADE" | "GIVE_AWAY";
+export type MatchType = "MUTUAL_TRADE" | "DONATION";
+
+export interface MatchCollectibleRef {
+  id: string;
+  number: string;
+  name: string;
+  rarity: string | null;
+}
+
+export interface MatchSideProgress {
+  cards_received: number;
+  completion_before: number;
+  completion_after: number;
+  completion_gain: number;
 }
 
 export interface CollectorMatch {
   collector: { display_name: string };
-  is_mutual_match: boolean;
-  you_can_receive: MatchOffer[];
-  you_can_offer: MatchOffer[];
-  donation_opportunities: MatchOffer[];
-  set_completion_before: number;
-  set_completion_after_estimate: number;
+  type: MatchType;
+  score: number;
+  current_user: MatchSideProgress;
+  /** MUTUAL_TRADE only. */
+  other_collector?: MatchSideProgress;
+  /** MUTUAL_TRADE only. */
+  balance?: { difference: number };
+  proposed_exchange: {
+    you_receive: MatchCollectibleRef[];
+    /** Always [] for DONATION. */
+    they_receive: MatchCollectibleRef[];
+  };
 }
 
 export interface ShareVisibility {

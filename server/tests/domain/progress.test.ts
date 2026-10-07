@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateProgress } from "../../src/domain/progress.js";
+import { calculateProgress, estimateCompletionAfter } from "../../src/domain/progress.js";
 
 function collectibles(count: number) {
   return Array.from({ length: count }, (_, i) => ({ id: `c${i + 1}` }));
@@ -51,5 +51,18 @@ describe("calculateProgress", () => {
     expect(result.ownedCount).toBe(0);
     expect(result.missingCount).toBe(5);
     expect(result.completionPercentage).toBe(0);
+  });
+});
+
+describe("estimateCompletionAfter", () => {
+  it("adds newly received collectibles up to the set total", () => {
+    expect(estimateCompletionAfter(10, 6, ["a", "b"])).toBe(80);
+    expect(estimateCompletionAfter(10, 9, ["a", "b", "c"])).toBe(100); // capped at total
+  });
+
+  it("never mutates the collectible id list it was given", () => {
+    const ids = Object.freeze(["a", "b"]);
+    expect(() => estimateCompletionAfter(10, 6, ids as unknown as string[])).not.toThrow();
+    expect(ids).toEqual(["a", "b"]);
   });
 });

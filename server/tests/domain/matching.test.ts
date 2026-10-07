@@ -1,65 +1,88 @@
 import { describe, expect, it } from "vitest";
-import { computeMatch, estimateCompletionAfter } from "../../src/domain/matching.js";
+import {
+  findDonationCandidate,
+  findMutualTradeCandidate,
+  type AvailabilityTaggedCopy,
+} from "../../src/domain/matching.js";
 import { isOfferable } from "../../src/modules/collection/service.js";
 
-describe("computeMatch", () => {
-  it("finds a mutual match when A needs X/offers Y and B needs Y/offers X", () => {
-    const aMissing = ["X"];
-    const bMissing = ["Y"];
-    const aOffers = [{ collectibleId: "Y", availability: "TRADE" as const }];
-    const bOffers = [{ collectibleId: "X", availability: "TRADE" as const }];
+function copy(collectibleId: string, availability: AvailabilityTaggedCopy["availability"]): AvailabilityTaggedCopy {
+  return { collectibleId, availability };
+}
 
-    const result = computeMatch(aMissing, bMissing, aOffers, bOffers);
+describe("findMutualTradeCandidate", () => {
+  it("finds a candidate when A needs X/offers Y and B needs Y/offers X (both via TRADE)", () => {
+    const candidate = findMutualTradeCandidate(["X"], ["Y"], [copy("Y", "TRADE")], [copy("X", "TRADE")]);
 
-    expect(result.isMutualMatch).toBe(true);
-    expect(result.youCanReceive.map((o) => o.collectibleId)).toContain("X");
-    expect(result.youCanOffer.map((o) => o.collectibleId)).toContain("Y");
+    expect(candidate).not.toBeNull();
+    expect(candidate!.currentUserReceives).toContain("X");
+    expect(candidate!.otherCollectorReceives).toContain("Y");
   });
 
-  it("does not report a match when offers are not complementary", () => {
-    const aMissing = ["X"];
-    const bMissing = ["Y"];
-    const aOffers = [{ collectibleId: "Z", availability: "TRADE" as const }]; // A can't help B
-    const bOffers = [{ collectibleId: "W", availability: "TRADE" as const }]; // B can't help A
-
-    const result = computeMatch(aMissing, bMissing, aOffers, bOffers);
-
-    expect(result.isMutualMatch).toBe(false);
-    expect(result.youCanReceive).toHaveLength(0);
-    expect(result.youCanOffer).toHaveLength(0);
+  it("returns null when offers are not complementary", () => {
+    const candidate = findMutualTradeCandidate(["X"], ["Y"], [copy("Z", "TRADE")], [copy("W", "TRADE")]);
+    expect(candidate).toBeNull();
   });
 
-  it("surfaces a donation opportunity even when the receiver has nothing to offer back", () => {
-    const aMissing = ["X"];
-    const bMissing = ["Y"]; // A owns nothing B needs
-    const aOffers: never[] = [];
-    const bOffers = [{ collectibleId: "X", availability: "GIVE_AWAY" as const }];
-
-    const result = computeMatch(aMissing, bMissing, aOffers, bOffers);
-
-    expect(result.isMutualMatch).toBe(false); // no reciprocal trade
-    expect(result.donationOpportunities.map((o) => o.collectibleId)).toEqual(["X"]);
-    expect(result.youCanReceive.map((o) => o.collectibleId)).toEqual(["X"]);
+  it("returns null (never a fabricated one-way trade) when only one side can help", () => {
+    // B offers X (which A needs) but A offers nothing B needs.
+    const candidate = findMutualTradeCandidate(["X"], ["Y"], [], [copy("X", "TRADE")]);
+    expect(candidate).toBeNull();
   });
 
-  it("deduplicates repeated offers of the same collectible", () => {
-    const result = computeMatch(
+  it("never uses KEEP copies as trade leverage", () => {
+    const candidate = findMutualTradeCandidate(["X"], ["Y"], [copy("Y", "TRADE")], [copy("X", "KEEP")]);
+    expect(candidate).toBeNull(); // X is only KEEP on B's side, not TRADE
+  });
+
+  it("never uses SELL copies as trade leverage", () => {
+    const candidate = findMutualTradeCandidate(["X"], ["Y"], [copy("Y", "TRADE")], [copy("X", "SELL")]);
+    expect(candidate).toBeNull();
+  });
+
+  it("never uses GIVE_AWAY copies as trade leverage — TRADE and GIVE_AWAY are independent pools", () => {
+    // B has X marked GIVE_AWAY (not TRADE) — must not count toward a mutual trade.
+    const candidate = findMutualTradeCandidate(["X"], ["Y"], [copy("Y", "TRADE")], [copy("X", "GIVE_AWAY")]);
+    expect(candidate).toBeNull();
+  });
+
+  it("does not over-allocate when multiple copies of the same collectible exist", () => {
+    // B owns 2 TRADE copies of X, plus a KEEP copy — X must still appear only once.
+    const candidate = findMutualTradeCandidate(
       ["X"],
-      [],
-      [],
-      [
-        { collectibleId: "X", availability: "TRADE" },
-        { collectibleId: "X", availability: "TRADE" },
-      ],
+      ["Y"],
+      [copy("Y", "TRADE")],
+      [copy("X", "TRADE"), copy("X", "TRADE"), copy("X", "KEEP")],
     );
-    expect(result.youCanReceive).toHaveLength(1);
+    expect(candidate!.currentUserReceives).toEqual(["X"]);
   });
 });
 
-describe("estimateCompletionAfter", () => {
-  it("adds newly received collectibles up to the set total", () => {
-    expect(estimateCompletionAfter(10, 6, ["a", "b"])).toBe(80);
-    expect(estimateCompletionAfter(10, 9, ["a", "b", "c"])).toBe(100); // capped at total
+describe("findDonationCandidate", () => {
+  it("surfaces a donation even when the receiver has nothing to offer back", () => {
+    const ids = findDonationCandidate(["X"], [copy("X", "GIVE_AWAY")]);
+    expect(ids).toEqual(["X"]);
+  });
+
+  it("returns [] when nothing GIVE_AWAY matches what's missing", () => {
+    expect(findDonationCandidate(["X"], [copy("Y", "GIVE_AWAY")])).toEqual([]);
+  });
+
+  it("never treats a KEEP copy as a donation", () => {
+    expect(findDonationCandidate(["X"], [copy("X", "KEEP")])).toEqual([]);
+  });
+
+  it("never treats a SELL copy as a donation", () => {
+    expect(findDonationCandidate(["X"], [copy("X", "SELL")])).toEqual([]);
+  });
+
+  it("never treats a TRADE copy as a donation — TRADE and GIVE_AWAY are independent pools", () => {
+    expect(findDonationCandidate(["X"], [copy("X", "TRADE")])).toEqual([]);
+  });
+
+  it("deduplicates repeated GIVE_AWAY copies of the same collectible", () => {
+    const ids = findDonationCandidate(["X"], [copy("X", "GIVE_AWAY"), copy("X", "GIVE_AWAY")]);
+    expect(ids).toEqual(["X"]);
   });
 });
 

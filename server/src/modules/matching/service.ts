@@ -1,78 +1,104 @@
 import { prisma } from "../../db.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
-import { getUserCopies, isOfferable } from "../collection/service.js";
+import { getUserCopies } from "../collection/service.js";
 import { calculateProgress } from "../../domain/progress.js";
-import { computeMatch, estimateCompletionAfter, type MatchOffer, type OfferableCopy } from "../../domain/matching.js";
+import { findDonationCandidate, findMutualTradeCandidate, type AvailabilityTaggedCopy } from "../../domain/matching.js";
+import {
+  compareMatches,
+  scoreDonation,
+  scoreMutualTrade,
+  type CollectibleRef,
+  type MatchType,
+  type ScoredMatch,
+  type SideProgress,
+} from "../../domain/tradeScore.js";
 import { ApiError } from "../../middleware/apiError.js";
-import type { CatalogCollectible } from "../catalog/catalogProvider.js";
 
-export interface PublicMatchOffer {
-  collectible: {
-    id: string;
-    number: string;
-    name: string;
-    rarity: string | null;
-  };
-  availability: "TRADE" | "GIVE_AWAY";
+export interface PublicSideProgress {
+  cards_received: number;
+  completion_before: number;
+  completion_after: number;
+  completion_gain: number;
 }
 
-export interface CollectorMatch {
+export interface PublicMatch {
   collector: { display_name: string };
-  is_mutual_match: boolean;
-  you_can_receive: PublicMatchOffer[];
-  you_can_offer: PublicMatchOffer[];
-  donation_opportunities: PublicMatchOffer[];
-  set_completion_before: number;
-  set_completion_after_estimate: number;
+  type: MatchType;
+  score: number;
+  current_user: PublicSideProgress;
+  /** MUTUAL_TRADE only. */
+  other_collector?: PublicSideProgress;
+  /** MUTUAL_TRADE only. */
+  balance?: { difference: number };
+  proposed_exchange: {
+    you_receive: CollectibleRef[];
+    /** Always [] for DONATION — never a fabricated reciprocal side. */
+    they_receive: CollectibleRef[];
+  };
 }
 
-function toOfferable(copies: Awaited<ReturnType<typeof getUserCopies>>): OfferableCopy[] {
-  return copies
-    .filter((c) => isOfferable(c.availability))
-    .map((c) => ({
-      collectibleId: c.variant.collectible.id,
-      availability: c.availability as "TRADE" | "GIVE_AWAY",
-    }));
+function toAvailabilityTagged(copies: Awaited<ReturnType<typeof getUserCopies>>): AvailabilityTaggedCopy[] {
+  return copies.map((c) => ({
+    collectibleId: c.variant.collectible.id,
+    availability: c.availability as AvailabilityTaggedCopy["availability"],
+  }));
 }
 
-function enrich(offers: MatchOffer[], collectiblesById: Map<string, CatalogCollectible>): PublicMatchOffer[] {
-  return offers.map((offer) => {
-    const collectible = collectiblesById.get(offer.collectibleId);
-    return {
-      collectible: {
-        id: offer.collectibleId,
-        number: collectible?.number ?? "",
-        name: collectible?.name ?? "Unknown",
-        rarity: collectible?.rarity ?? null,
-      },
-      availability: offer.availability,
-    };
-  });
+function toPublicSide(side: SideProgress): PublicSideProgress {
+  return {
+    cards_received: side.cardsReceived,
+    completion_before: side.completionBefore,
+    completion_after: side.completionAfter,
+    completion_gain: side.completionGain,
+  };
+}
+
+function toPublicMatch(match: ScoredMatch): PublicMatch {
+  return {
+    collector: { display_name: match.collectorDisplayName },
+    type: match.type,
+    score: match.score,
+    current_user: toPublicSide(match.currentUser),
+    ...(match.otherCollector ? { other_collector: toPublicSide(match.otherCollector) } : {}),
+    ...(match.balance ? { balance: match.balance } : {}),
+    proposed_exchange: {
+      you_receive: match.proposedExchange.currentUserReceives,
+      they_receive: match.proposedExchange.otherCollectorReceives,
+    },
+  };
 }
 
 /**
- * Computes proposed exchanges between the requesting user and every
- * other collector, scoped to one Set. Only "safe" fields (display name,
- * card identities, availability) ever leave this function — no email,
- * user id, or contact info.
+ * Computes and ranks candidate exchanges between the requesting user and
+ * every other collector, scoped to one Set. Only "safe" fields (display
+ * name, catalog collectible identifiers, progress numbers) ever leave
+ * this function — no email, user id, UserCopy id, or contact info. See
+ * docs/architecture.md#trade-score-formula for how `score` is derived,
+ * and domain/tradeScore.ts#compareMatches for the ranking/tie-break
+ * rules applied below.
  */
-export async function computeMatchesForUser(userId: string, setId: string): Promise<CollectorMatch[]> {
+export async function computeMatchesForUser(userId: string, setId: string): Promise<PublicMatch[]> {
   const set = await catalogProvider.getSet(setId);
   if (!set) throw ApiError.notFound("Set not found");
 
   const collectibles = await catalogProvider.listCollectibles(setId);
-  const collectiblesById = new Map(collectibles.map((c) => [c.id, c]));
+  const collectiblesById = new Map<string, CollectibleRef>(
+    collectibles.map((c) => [c.id, { id: c.id, number: c.number, name: c.name, rarity: c.rarity }]),
+  );
 
   const myCopies = await getUserCopies(userId, setId);
   const myProgress = calculateProgress(
     collectibles.map((c) => ({ id: c.id })),
     myCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
   );
-  const myOfferable = toOfferable(myCopies);
+  const mySnapshot = { totalCount: myProgress.totalCount, ownedCount: myProgress.ownedCount };
+  const myTaggedCopies = toAvailabilityTagged(myCopies);
 
-  const otherUsers = await prisma.user.findMany({ where: { id: { not: userId } } });
+  // Deterministic base enumeration; final ordering is fully decided by
+  // compareMatches below regardless of this query's row order.
+  const otherUsers = await prisma.user.findMany({ where: { id: { not: userId } }, orderBy: { id: "asc" } });
 
-  const results: CollectorMatch[] = [];
+  const scored: ScoredMatch[] = [];
 
   for (const other of otherUsers) {
     const otherCopies = await getUserCopies(other.id, setId);
@@ -80,34 +106,28 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       collectibles.map((c) => ({ id: c.id })),
       otherCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
     );
-    const otherOfferable = toOfferable(otherCopies);
+    const otherSnapshot = { totalCount: otherProgress.totalCount, ownedCount: otherProgress.ownedCount };
+    const otherTaggedCopies = toAvailabilityTagged(otherCopies);
 
-    const match = computeMatch(
+    const tradeCandidate = findMutualTradeCandidate(
       myProgress.missingCollectibleIds,
       otherProgress.missingCollectibleIds,
-      myOfferable,
-      otherOfferable,
+      myTaggedCopies,
+      otherTaggedCopies,
     );
+    if (tradeCandidate) {
+      const breakdown = scoreMutualTrade(mySnapshot, otherSnapshot, tradeCandidate, collectiblesById);
+      scored.push({ ...breakdown, collectorDisplayName: other.displayName });
+    }
 
-    const hasSignal = match.youCanReceive.length > 0 || match.youCanOffer.length > 0;
-    if (!hasSignal) continue;
-
-    const completionAfter = estimateCompletionAfter(
-      myProgress.totalCount,
-      myProgress.ownedCount,
-      match.youCanReceive.map((o) => o.collectibleId),
-    );
-
-    results.push({
-      collector: { display_name: other.displayName },
-      is_mutual_match: match.isMutualMatch,
-      you_can_receive: enrich(match.youCanReceive, collectiblesById),
-      you_can_offer: enrich(match.youCanOffer, collectiblesById),
-      donation_opportunities: enrich(match.donationOpportunities, collectiblesById),
-      set_completion_before: myProgress.completionPercentage / 100,
-      set_completion_after_estimate: completionAfter / 100,
-    });
+    const donationIds = findDonationCandidate(myProgress.missingCollectibleIds, otherTaggedCopies);
+    if (donationIds.length > 0) {
+      const breakdown = scoreDonation(mySnapshot, donationIds, collectiblesById);
+      scored.push({ ...breakdown, collectorDisplayName: other.displayName });
+    }
   }
 
-  return results;
+  scored.sort(compareMatches);
+
+  return scored.map(toPublicMatch);
 }

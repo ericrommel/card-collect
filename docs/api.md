@@ -130,41 +130,82 @@ cannot distinguish the two, which is deliberate (see
 `checklist` covers every Collectible in the set, owned or not, so a client
 can render the full set list from one call.
 
-## My matches
+## My matches (V0.2: ranked by Trade Score)
 
 ### `GET /my/matches?setId=<id>` (auth required)
 
-`setId` is required — matching is always scoped to one Set. → `200`:
+`setId` is required — matching is always scoped to one Set. Results are
+**pre-ranked** (highest `score` first — see
+[architecture.md](architecture.md#trade-score-formula) for the formula and
+the full tie-break order); the client does not need to sort. → `200`:
 
 ```json
 {
   "matches": [
     {
       "collector": { "display_name": "Bob (Zoro Fan)" },
-      "is_mutual_match": true,
-      "you_can_receive": [
-        { "collectible": { "id", "number", "name", "rarity" }, "availability": "TRADE" }
-      ],
-      "you_can_offer": [
-        { "collectible": {...}, "availability": "GIVE_AWAY" }
-      ],
-      "donation_opportunities": [
-        { "collectible": {...}, "availability": "GIVE_AWAY" }
-      ],
-      "set_completion_before": 0.708,
-      "set_completion_after_estimate": 0.833
+      "type": "MUTUAL_TRADE",
+      "score": 47,
+      "current_user": {
+        "cards_received": 2,
+        "completion_before": 66.7,
+        "completion_after": 75.0,
+        "completion_gain": 8.3
+      },
+      "other_collector": {
+        "cards_received": 1,
+        "completion_before": 66.7,
+        "completion_after": 70.8,
+        "completion_gain": 4.1
+      },
+      "balance": { "difference": 1 },
+      "proposed_exchange": {
+        "you_receive": [{ "id", "number", "name", "rarity" }],
+        "they_receive": [{ "id", "number", "name", "rarity" }]
+      }
+    },
+    {
+      "collector": { "display_name": "Bob (Zoro Fan)" },
+      "type": "DONATION",
+      "score": 20,
+      "current_user": {
+        "cards_received": 1,
+        "completion_before": 66.7,
+        "completion_after": 70.8,
+        "completion_gain": 4.1
+      },
+      "proposed_exchange": {
+        "you_receive": [{ "id", "number", "name", "rarity" }],
+        "they_receive": []
+      }
     }
   ]
 }
 ```
 
-- Only collectors with at least one signal (something you can receive or
-  offer) are included — no zero-signal noise.
-- `donation_opportunities` is a subset of `you_can_receive`, surfaced
-  separately; it is non-empty even when `you_can_offer` is empty (a pure
-  one-way donation).
-- No email, user id, or other account metadata is ever included — only
-  `display_name` and card/availability data.
+- `type` is always exactly `"MUTUAL_TRADE"` or `"DONATION"` — a donation
+  is never silently reframed as a one-sided trade, and vice versa. The
+  same pair of collectors can appear as **two separate entries** (one of
+  each type) if both a trade and a donation are independently possible
+  between them — see architecture.md for why `TRADE` and `GIVE_AWAY`
+  copies are tracked as independent pools.
+- `other_collector` and `balance` are present **only** for
+  `MUTUAL_TRADE`; `proposed_exchange.they_receive` is always `[]` for
+  `DONATION` (never a fabricated reciprocal side).
+- `completion_before`/`completion_after`/`score` are plain numbers on a
+  0-100 scale (not the 0-1 fraction the pre-V0.2 shape used).
+- `proposed_exchange` collectible refs use the same catalog identifiers
+  as `/catalog/sets/:id/collectibles` — never a `UserCopy` id, which
+  would identify one specific physical copy belonging to another user.
+- Only collectors with at least one candidate (a possible trade or
+  donation) are included — no zero-signal noise.
+- No email, user id, location, or other account metadata is ever
+  included — only `display_name` and card/progress data.
+
+This response shape replaces the pre-V0.2 `is_mutual_match` /
+`you_can_receive` / `you_can_offer` / `donation_opportunities` /
+`set_completion_before` shape — the same endpoint, evolved in place, not
+a parallel matching API.
 
 ## My sharing (auth required, always scoped to the caller)
 

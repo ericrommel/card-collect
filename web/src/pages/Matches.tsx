@@ -1,21 +1,83 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import * as api from "../lib/api";
-import type { CatalogSet, CollectorMatch, MatchOffer } from "../lib/api";
+import type { CatalogSet, CollectorMatch, MatchCollectibleRef } from "../lib/api";
 
-function OfferList({ offers, emptyLabel }: { offers: MatchOffer[]; emptyLabel: string }) {
-  if (offers.length === 0) return <p className="muted small">{emptyLabel}</p>;
+function CardChips({ items }: { items: MatchCollectibleRef[] }) {
+  if (items.length === 0) return null;
   return (
     <ul className="offer-list">
-      {offers.map((offer) => (
-        <li key={offer.collectible.id}>
-          <span className="card-number">{offer.collectible.number}</span> {offer.collectible.name}
-          <span className={`badge small ${offer.availability === "GIVE_AWAY" ? "give-away" : "trade"}`}>
-            {offer.availability}
-          </span>
+      {items.map((item) => (
+        <li key={item.id}>
+          <span className="card-number">{item.number}</span> {item.name}
+          {item.rarity && <span className="badge small">{item.rarity}</span>}
         </li>
       ))}
     </ul>
+  );
+}
+
+function CompletionRow({ label, before, after }: { label: string; before: number; after: number }) {
+  return (
+    <div className="completion-row">
+      <span className="muted small">{label}</span>
+      <span className="completion-values">
+        {before}% <span className="arrow">&rarr;</span> <strong>{after}%</strong>
+      </span>
+    </div>
+  );
+}
+
+function MatchCard({ match }: { match: CollectorMatch }) {
+  const isDonation = match.type === "DONATION";
+
+  return (
+    <div className="card match-card">
+      <div className="match-header">
+        <span className={`score-badge ${isDonation ? "donation" : "trade"}`}>
+          {match.score}% {isDonation ? "Donation Match" : "Match"}
+        </span>
+        <h3>{match.collector.display_name}</h3>
+      </div>
+
+      <div className="match-columns">
+        <div>
+          <p>
+            {isDonation ? "You can receive" : "You receive"} <strong>{match.current_user.cards_received}</strong>{" "}
+            missing {match.current_user.cards_received === 1 ? "card" : "cards"}
+          </p>
+          <CardChips items={match.proposed_exchange.you_receive} />
+        </div>
+        <div>
+          {isDonation ? (
+            <p className="muted">No return cards required</p>
+          ) : (
+            <>
+              <p>
+                They receive <strong>{match.other_collector?.cards_received}</strong> missing{" "}
+                {match.other_collector?.cards_received === 1 ? "card" : "cards"}
+              </p>
+              <CardChips items={match.proposed_exchange.they_receive} />
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="match-completion">
+        <CompletionRow
+          label="Your collection"
+          before={match.current_user.completion_before}
+          after={match.current_user.completion_after}
+        />
+        {!isDonation && match.other_collector && (
+          <CompletionRow
+            label="Their collection"
+            before={match.other_collector.completion_before}
+            after={match.other_collector.completion_after}
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -47,7 +109,7 @@ export function MatchesPage() {
       </p>
       <h2>Matches for {set?.name ?? "this set"}</h2>
       <p className="muted">
-        Other collectors whose duplicates or give-aways cover what you're missing, and vice versa.
+        Ranked by how much closer each trade or donation gets you (and, for trades, them) to completing the set.
       </p>
 
       {matches.length === 0 && (
@@ -55,36 +117,8 @@ export function MatchesPage() {
       )}
 
       <div className="matches">
-        {matches.map((match) => (
-          <div key={match.collector.display_name} className="card match-card">
-            <div className="match-header">
-              <h3>{match.collector.display_name}</h3>
-              {match.is_mutual_match && <span className="badge mutual">Mutual match</span>}
-            </div>
-
-            <div className="match-columns">
-              <div>
-                <h4>You can receive</h4>
-                <OfferList offers={match.you_can_receive} emptyLabel="Nothing yet" />
-              </div>
-              <div>
-                <h4>You can offer</h4>
-                <OfferList offers={match.you_can_offer} emptyLabel="Nothing yet" />
-              </div>
-            </div>
-
-            {match.donation_opportunities.length > 0 && (
-              <div className="donation-callout">
-                <h4>Donation opportunity</h4>
-                <OfferList offers={match.donation_opportunities} emptyLabel="" />
-              </div>
-            )}
-
-            <p className="muted small">
-              Your completion: {(match.set_completion_before * 100).toFixed(1)}% &rarr;{" "}
-              {(match.set_completion_after_estimate * 100).toFixed(1)}% if you receive everything above
-            </p>
-          </div>
+        {matches.map((match, i) => (
+          <MatchCard key={`${match.collector.display_name}-${match.type}-${i}`} match={match} />
         ))}
       </div>
     </div>
