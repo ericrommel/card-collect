@@ -11,6 +11,7 @@ let variantIds: string[];
 async function registerUser(email: string) {
   const res = await request(app)
     .post("/api/auth/register")
+    .set("X-Auth-Mode", "bearer")
     .send({ email, password: "password123", displayName: email.split("@")[0] });
   expect(res.status).toBe(201);
   return res.body.token as string;

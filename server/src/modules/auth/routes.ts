@@ -3,10 +3,11 @@ import { z } from "zod";
 import { prisma } from "../../db.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { ApiError } from "../../middleware/apiError.js";
-import { requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
+import { optionalUserId, requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
 import { generateOpaqueId } from "../../lib/opaqueId.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { signToken } from "./jwt.js";
+import { clearSessionCookie, setSessionCookie } from "./sessionCookie.js";
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
@@ -27,6 +28,25 @@ function toSelfProfile(user: { id: string; email: string; displayName: string; c
     display_name: user.displayName,
     created_at: user.createdAt.toISOString(),
   };
+}
+
+function wantsBearerToken(req: import("express").Request): boolean {
+  return req.header("x-auth-mode") === "bearer";
+}
+
+/** Browser sessions travel in an httpOnly cookie. The raw JWT is returned only to a client that asks for bearer mode (tests, a future mobile app). */
+function issueSession(
+  req: import("express").Request,
+  res: import("express").Response,
+  user: Parameters<typeof toSelfProfile>[0],
+  status: number,
+) {
+  const token = signToken(user.id);
+  setSessionCookie(res, token);
+  res.status(status).json({
+    ...(wantsBearerToken(req) ? { token } : {}),
+    user: toSelfProfile(user),
+  });
 }
 
 export const authRouter = Router();
@@ -51,8 +71,7 @@ authRouter.post(
       },
     });
 
-    const token = signToken(user.id);
-    res.status(201).json({ token, user: toSelfProfile(user) });
+    issueSession(req, res, user, 201);
   }),
 );
 
@@ -66,8 +85,29 @@ authRouter.post(
       throw ApiError.unauthorized("Invalid email or password");
     }
 
-    const token = signToken(user.id);
-    res.json({ token, user: toSelfProfile(user) });
+    issueSession(req, res, user, 200);
+  }),
+);
+
+authRouter.post(
+  "/logout",
+  requireAuth,
+  asyncHandler(async (_req, res) => {
+    clearSessionCookie(res);
+    res.status(204).send();
+  }),
+);
+
+authRouter.get(
+  "/session",
+  asyncHandler(async (req, res) => {
+    const userId = optionalUserId(req);
+    if (!userId) {
+      res.json({ user: null });
+      return;
+    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    res.json({ user: user ? toSelfProfile(user) : null });
   }),
 );
 

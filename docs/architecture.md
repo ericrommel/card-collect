@@ -240,10 +240,22 @@ order (`orderBy: { id: "asc" }`) only matters as a starting point —
 
 ## Authentication / authorization
 
-- Passwords are hashed with bcrypt; sessions are JWT bearer tokens (7-day
-  expiry) verified by `middleware/requireAuth.ts`.
-- Every `my/*` route requires a valid token and scopes all reads/writes to
-  `req.userId` pulled from that token — never from a client-supplied id.
+- Passwords are hashed with bcrypt. A session is a JWT (7-day expiry)
+  verified by `middleware/requireAuth.ts`.
+- The web app does not store that JWT. Login and register set an httpOnly,
+  SameSite=Lax cookie (`cards_collect_session`). A non-browser client that
+  sends `X-Auth-Mode: bearer` also receives the token in JSON and sends it
+  back as `Authorization: Bearer`. That is the path a future mobile app
+  should use, with the token in secure on-device storage. The web client
+  never asks for bearer mode, so a script running in the page cannot read
+  the session out of the login response or out of `localStorage`.
+- A request authenticated by the cookie is rejected when its `Origin` is
+  not the app. Outside production, localhost on any port is allowed so the
+  dev server can move. SameSite=Lax already keeps the cookie off cross-site
+  POSTs. Bearer requests are not origin-checked; they are the explicit
+  non-browser credential.
+- Every `my/*` route requires the cookie or a bearer token and scopes all
+  reads/writes to `req.userId` from that token — never from a client-supplied id.
 - Cross-user mutation of a `UserCopy` is blocked by ownership check in
   `collection/routes.ts#loadOwnedCopyOrNotFound`, which returns **404** (not 403) when the copy belongs to someone else — this avoids letting a client
   distinguish "not yours" from "doesn't exist" by response code, a basic
@@ -401,18 +413,18 @@ for one Set — `modules/sharing/`. Design decisions:
 
 ## How a future mobile client fits
 
-The backend has no web-only assumptions: JSON in/out, bearer-token auth
-(no cookies), and all business logic lives server-side in `domain/` and
-`modules/*/service.ts` — the web client in `web/` is a thin consumer of the
-same `/api/*` routes a mobile app would use. A future Android/iOS client
-would:
+The backend has no web-only assumptions: JSON in/out, and all business
+logic lives server-side in `domain/` and `modules/*/service.ts`. The web
+client keeps its session in an httpOnly cookie. A future Android/iOS
+client uses the same routes with a bearer token. It would:
 
-- store the JWT from `/api/auth/login` in secure on-device storage instead
-  of `localStorage`;
+- send `X-Auth-Mode: bearer` on login and store that JWT in secure
+  on-device storage, not in a web view's `localStorage`;
 - call the same `catalog`, `my/collection`, `my/sets/:id/progress`,
-  `my/matches`, and `my/sets/:id/share` endpoints documented in
-  [docs/api.md](docs/api.md) — a native share sheet would just point at the
-  same `public_url` the web client constructs from `share_id`;
+  `my/matches`, `my/exchanges`, and `my/sets/:id/share` endpoints
+  documented in [docs/api.md](docs/api.md) — a native share sheet would
+  just point at the same `public_url` the web client constructs from
+  `share_id`;
 - add its own camera/scanning UI on top of `POST /my/collection/copies` —
   scanning is out of scope for V0, but the copy-creation endpoint it would
   feed into already exists and doesn't assume a particular input method.

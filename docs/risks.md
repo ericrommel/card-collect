@@ -400,25 +400,23 @@ Architectural decisions should preserve:
 
 ---
 
-## P2 — Client-Side Token Storage (V0 Web)
+## P2 — Client-Side Token Storage (Web)
 
-**Status:** OPEN
+**Status:** MITIGATED
 
-The V0 web client stores its JWT in `localStorage`. This is simple and
-works identically for a future mobile client's token handling model, but
-`localStorage` is readable by any script executing on the page, so a
-successful XSS elsewhere in the app would allow session theft. This is a
-sharper concern than usual given the assumption that some users are minors.
+The web client used to store its JWT in `localStorage`, which any script
+on the page could read and exfiltrate. Login and register now set an
+httpOnly SameSite=Lax cookie and the web response does not include the
+token. A future mobile client can still ask for a bearer token with
+`X-Auth-Mode: bearer` and store it in platform secure storage.
 
-### Mitigation direction
+### What this does not fix
 
-No React-rendered user-generated content exists in V0 (no free-text fields
-are rendered unescaped), which limits current XSS surface. Before adding
-any feature that renders user-supplied text/HTML, revisit this: options
-include an httpOnly refresh-token cookie with a short-lived in-memory
-access token, or strict output encoding plus a Content-Security-Policy.
-Do not add unescaped HTML rendering of user content without addressing
-this first.
+An XSS bug can still call the API as the signed-in user while the page is
+open, because the browser will attach the cookie. It cannot lift the token
+out and reuse it elsewhere. There is still no Content-Security-Policy.
+Do not render user-supplied HTML. Exchange text is structured data (card
+names from the catalog, a fixed condition list), not free-form messages.
 
 ---
 
