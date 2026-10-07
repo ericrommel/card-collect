@@ -4,6 +4,7 @@ import { prisma } from "../../db.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { ApiError } from "../../middleware/apiError.js";
 import { requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
+import { CONDITION_GRADES } from "../../domain/condition.js";
 import { computeSetProgressForUser, getUserCopies, type CopyWithDetails } from "./service.js";
 
 export const collectionRouter = Router();
@@ -18,6 +19,8 @@ function toPublicCopy(copy: CopyWithDetails) {
     id: copy.id,
     availability: copy.availability,
     condition: copy.condition,
+    reserved: copy.reservedByExchangeId != null,
+    exchange_id: copy.reservedByExchangeId,
     created_at: copy.createdAt.toISOString(),
     updated_at: copy.updatedAt.toISOString(),
     variant: {
@@ -48,7 +51,7 @@ collectionRouter.get(
 const createCopySchema = z.object({
   variantId: z.string().min(1),
   availability: z.enum(["KEEP", "TRADE", "SELL", "GIVE_AWAY"]).optional(),
-  condition: z.string().trim().max(60).optional(),
+  condition: z.enum(CONDITION_GRADES).optional(),
 });
 
 collectionRouter.post(
@@ -77,8 +80,14 @@ collectionRouter.post(
 
 const updateCopySchema = z.object({
   availability: z.enum(["KEEP", "TRADE", "SELL", "GIVE_AWAY"]).optional(),
-  condition: z.string().trim().max(60).nullable().optional(),
+  condition: z.enum(CONDITION_GRADES).nullable().optional(),
 });
+
+function assertCopyIsMutable(copy: CopyWithDetails) {
+  if (copy.reservedByExchangeId) {
+    throw ApiError.conflict("This copy is reserved for an open exchange. Cancel that exchange before changing it.");
+  }
+}
 
 async function loadOwnedCopyOrNotFound(copyId: string, ownerId: string) {
   const copy = await prisma.userCopy.findUnique({
@@ -97,7 +106,8 @@ collectionRouter.patch(
   "/copies/:id",
   asyncHandler(async (req, res) => {
     const body = updateCopySchema.parse(req.body);
-    await loadOwnedCopyOrNotFound(req.params.id, userId(req));
+    const copy = await loadOwnedCopyOrNotFound(req.params.id, userId(req));
+    assertCopyIsMutable(copy);
 
     const updated = await prisma.userCopy.update({
       where: { id: req.params.id },
@@ -115,7 +125,8 @@ collectionRouter.patch(
 collectionRouter.delete(
   "/copies/:id",
   asyncHandler(async (req, res) => {
-    await loadOwnedCopyOrNotFound(req.params.id, userId(req));
+    const copy = await loadOwnedCopyOrNotFound(req.params.id, userId(req));
+    assertCopyIsMutable(copy);
     await prisma.userCopy.delete({ where: { id: req.params.id } });
     res.status(204).send();
   }),

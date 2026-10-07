@@ -3,13 +3,16 @@
 ## Roadmap
 
 ```text
-V0    — Collection tracking (owned/missing/duplicates/completion) + basic mutual-match/donation matching
-V0.1  — Safe, revocable public collection sharing
-V0.2  — Smart Trade Score: deterministic, explainable ranking of matches
+V0         — Collection tracking (owned/missing/duplicates/completion) + basic mutual-match/donation matching
+V0.1       — Safe, revocable public collection sharing
+V0.2       — Smart Trade Score: deterministic, explainable ranking of matches
+Exchanges  — Propose, accept, and confirm a trade or donation. Copies move only after both people confirm.
 ```
 
-This document covers the cumulative architecture through V0.2. Sections
-are labeled with the milestone that introduced them where it isn't
+Milestone numbers stop at V0.2. Later capabilities are named for what they
+do. This document describes the architecture as it is, not a future plan.
+
+Sections are labeled with the milestone that introduced them where it isn't
 obvious from context.
 
 ## Stack
@@ -142,10 +145,14 @@ composes three independent steps for every other user in the system:
 3. **Ranking** (`domain/tradeScore.ts#compareMatches`) — sorts the full
    list; see "Ranking and tie-breaking" below.
 
-Only `display_name`, catalog collectible identifiers (never a `UserCopy`
-id), and progress numbers ever leave this function — no email, user id,
-or other account metadata. This is the same function/endpoint from V0,
-evolved in place — not a parallel matching implementation.
+What leaves this function: `display_name`, an opaque `collector.ref`
+(144-bit token, not the account id — see Exchanges below), catalog
+collectible identifiers (never a `UserCopy` id), and progress numbers.
+No email, account id, or contact info. A copy reserved for an open
+exchange is hidden from everyone except the two people in that exchange,
+whose match stays visible and carries `open_exchange_id`. This is the
+same function/endpoint from V0, evolved in place — not a parallel
+matching implementation.
 
 ### Trade Score formula
 
@@ -221,13 +228,11 @@ before it leaves `computeMatchesForUser`:
 3. largest "mutual" completion gain — `other_collector.completion_gain`
    for a `MUTUAL_TRADE`, or `0` for a `DONATION` (which has no other
    side);
-4. the other collector's `display_name`, ascending — chosen as the final
-   tie-breaker specifically because it is a stable, business-meaningful
-   field, never a raw database id or the database's incidental row
-   order (explicitly disallowed by the milestone). Two collectors
-   sharing an identical display name is the only case left
-   under-specified; it isn't reachable with the current seed data and
-   isn't guarded against separately.
+4. the other collector's `display_name`, ascending — a stable,
+   business-meaningful field, never a raw database id or the database's
+   incidental row order;
+5. the opaque collector ref, ascending, so two people who chose the same
+   display name still sort deterministically. The ref is not an account id.
 
 No step is random, and the underlying `prisma.user.findMany` enumeration
 order (`orderBy: { id: "asc" }`) only matters as a starting point —
@@ -248,6 +253,87 @@ order (`orderBy: { id: "asc" }`) only matters as a starting point —
   `toPublicMatch` in matching) rather than returning raw Prisma rows, so
   it's structurally impossible to accidentally leak `passwordHash` or
   another user's email through a route that wasn't reviewed for it.
+
+## Exchanges
+
+A match is a suggestion. An exchange is the agreement. `modules/exchanges/`
+lets the signed-in user turn one match into a proposal the other collector
+can accept, decline, or later confirm. There is no message field, no
+email, and no location: the product does not become a way for two people
+to contact each other.
+
+### Why this lifecycle
+
+```text
+PROPOSED → ACCEPTED → COMPLETED
+         → DECLINED
+         → CANCELLED
+```
+
+- **PROPOSED.** The person who can see the match asks. The server
+  recomputes the candidate with the same rules as matching
+  (`findMutualTradeCandidate` / `findDonationCandidate`) and pins one
+  physical copy per collectible. The client does not send a card list, so
+  it cannot ask for cards the match would not have included.
+- **ACCEPTED.** The other person agrees to those exact copies. Nothing in
+  either collection changes yet.
+- **COMPLETED.** Each person confirms the cards have actually changed
+  hands. Only the second confirmation transfers `ownerId`. Received copies
+  are reset to `KEEP` so a card you just got is not silently left on offer.
+  User-entered condition is preserved.
+- **DECLINED / CANCELLED.** The counterparty can decline a proposal. The
+  proposer can cancel a proposal. After acceptance, either person can
+  cancel until both have confirmed. Copies are released and stay with
+  their owner. There is no penalty score.
+
+There is no `IN_PROGRESS` status. The app does not ship cards or take
+payment, so a middle state would describe something the system cannot
+observe. Dual confirmation is the whole "did the handover happen" signal,
+and it is an honor system — see the risk register. Cancelling stays
+available until both confirm so nobody is stuck in a deal, including a
+younger user who changes their mind.
+
+### Which copy, and reservation
+
+When several eligible copies of one collectible exist, the oldest
+unreserved copy is the one committed (`createdAt`, then id). A newer
+duplicate stays free. While an exchange is `PROPOSED` or `ACCEPTED`, each
+committed copy has `reservedByExchangeId` set:
+
+- it cannot be deleted or have its availability or condition changed (409);
+- matching ignores it for everyone except the two participants, who still
+  see the match with `open_exchange_id`;
+- a second open exchange of the same type, set, and pair is rejected.
+
+`TRADE` copies are the only copies a mutual trade can reserve. `GIVE_AWAY`
+copies are the only copies a donation can reserve. A donation takes
+nothing from the person who asked.
+
+### Addressing the other collector
+
+Matches and exchanges identify the other person by `collector.ref` /
+`other_collector.ref`, a `publicId` generated the same way as a share
+token (`lib/opaqueId.ts`). It is not the account id, it is not accepted as
+a login, and public share pages do not include it. Guessing one is not
+practical (144 bits). A ref that does not exist and a request for an
+exchange you are not part of are both **404**.
+
+### Condition
+
+A physical copy can carry a user-entered condition: Mint, Near Mint,
+Excellent, Good, Played, or Poor, or unset. The exchange snapshots that
+value onto each line so both people see what was offered. Condition does
+not affect the Trade Score. It is not a professional grade and not an AI
+estimate. Public share pages still do not include it — `PublicShareInput`
+has to gain a field before it can appear there.
+
+### What an exchange response contains
+
+Display name, opaque ref, set name and code, the snapshotted card labels
+(number, name, rarity, condition), status, whose turn it is (`actions`),
+and the two confirmation flags. No email, no account id, no `UserCopy` id.
+The web client renders `actions` from the server so it does not reimplement
+the state machine.
 
 ## Collection sharing (V0.1)
 
@@ -291,10 +377,11 @@ for one Set — `modules/sharing/`. Design decisions:
   hand-written `PublicShareInput` type (display name, card refs, counts)
   and returns only the fields the owner's visibility flags allow. Adding
   a new column to `User`, `UserCopy`, or `CollectionShare` later — email
-  verification status, a future `condition` detail, anything — cannot
-  leak through this path, because there is no code that forwards a
-  Prisma object into the response; every field has to be deliberately
-  threaded through `PublicShareInput` first.
+  verification status, the user-entered `condition` that exchanges do
+  show to the two participants, anything — cannot leak through this path,
+  because there is no code that forwards a Prisma object into the
+  response; every field has to be deliberately threaded through
+  `PublicShareInput` first. Condition is intentionally not threaded.
 - **No location, age, or contact fields exist anywhere in the schema**,
   so there's nothing for the public endpoint to accidentally expose on
   that front in V0 — `server/tests/integration/sharing.test.ts` asserts

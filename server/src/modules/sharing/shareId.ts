@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { generateOpaqueId } from "../../lib/opaqueId.js";
 
 /**
  * A public share identifier: 18 random bytes (144 bits) as base64url,
@@ -8,5 +8,5 @@ import { randomBytes } from "node:crypto";
  * guess a neighboring share.
  */
 export function generateShareId(): string {
-  return randomBytes(18).toString("base64url");
+  return generateOpaqueId();
 }

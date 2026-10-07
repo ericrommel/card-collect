@@ -1,14 +1,20 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../db.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
+import type { AvailabilityTaggedCopy } from "../../domain/matching.js";
 import { calculateProgress, type ProgressResult } from "../../domain/progress.js";
 import type { CatalogCollectible } from "../catalog/catalogProvider.js";
+
+type DbClient = Prisma.TransactionClient | typeof prisma;
 
 /** Stored as a plain string (SQLite has no native enum); constrained to
  * KEEP | TRADE | SELL | GIVE_AWAY by the zod schemas at the API boundary. */
 export interface CopyWithDetails {
   id: string;
+  ownerId: string;
   availability: string;
   condition: string | null;
+  reservedByExchangeId: string | null;
   createdAt: Date;
   updatedAt: Date;
   variant: {
@@ -24,8 +30,8 @@ export interface CopyWithDetails {
   };
 }
 
-export async function getUserCopies(userId: string, setId?: string): Promise<CopyWithDetails[]> {
-  return prisma.userCopy.findMany({
+export async function getUserCopies(userId: string, setId?: string, db: DbClient = prisma): Promise<CopyWithDetails[]> {
+  return db.userCopy.findMany({
     where: {
       ownerId: userId,
       ...(setId ? { variant: { collectible: { setId } } } : {}),
@@ -33,6 +39,30 @@ export async function getUserCopies(userId: string, setId?: string): Promise<Cop
     include: { variant: { include: { collectible: true } } },
     orderBy: { createdAt: "asc" },
   });
+}
+
+/**
+ * Copies matching may offer. A reserved copy still counts as owned for
+ * progress, but it is already committed to an open exchange, so it is
+ * left out of both the TRADE and GIVE_AWAY pools.
+ *
+ * `allowedReservationIds` is the exception for the two people already in
+ * that exchange: their match stays visible (with a link to the exchange)
+ * instead of disappearing the moment the copies are reserved. Everyone
+ * else still does not see those copies as available.
+ */
+export function toAvailabilityTagged(
+  copies: CopyWithDetails[],
+  allowedReservationIds?: ReadonlySet<string>,
+): AvailabilityTaggedCopy[] {
+  return copies
+    .filter(
+      (copy) => copy.reservedByExchangeId == null || (allowedReservationIds?.has(copy.reservedByExchangeId) ?? false),
+    )
+    .map((copy) => ({
+      collectibleId: copy.variant.collectible.id,
+      availability: copy.availability as AvailabilityTaggedCopy["availability"],
+    }));
 }
 
 export interface SetChecklistEntry {

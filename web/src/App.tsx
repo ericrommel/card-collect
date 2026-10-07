@@ -4,6 +4,7 @@ import { LoginPage } from "./pages/Login";
 import { SetsPage } from "./pages/Sets";
 import { SetChecklistPage } from "./pages/SetChecklist";
 import { MatchesPage } from "./pages/Matches";
+import { ExchangesPage } from "./pages/Exchanges";
 import { PublicCollectionPage } from "./pages/PublicCollection";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,8 @@ function Header() {
         Cards Collect
       </NavLink>
       <nav>
+        <NavLink to="/sets">Sets</NavLink>
+        <NavLink to="/exchanges">Exchanges</NavLink>
         <span className="muted">{user.display_name}</span>
         <button
           className="link"
@@ -69,6 +72,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <MatchesPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/exchanges"
+            element={
+              <RequireAuth>
+                <ExchangesPage />
               </RequireAuth>
             }
           />

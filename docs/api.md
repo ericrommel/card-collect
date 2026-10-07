@@ -68,7 +68,9 @@ registered.
 {
   "id": "...",
   "availability": "KEEP | TRADE | SELL | GIVE_AWAY",
-  "condition": "string | null",
+  "condition": "Mint | Near Mint | Excellent | Good | Played | Poor | null",
+  "reserved": false,
+  "exchange_id": "string | null",
   "created_at": "ISO-8601",
   "updated_at": "ISO-8601",
   "variant": {
@@ -81,12 +83,13 @@ registered.
 ### `POST /my/collection/copies`
 
 ```json
-{ "variantId": "...", "availability": "KEEP", "condition": "NM" }
+{ "variantId": "...", "availability": "KEEP", "condition": "Near Mint" }
 ```
 
-`variantId` required; `availability` defaults to `KEEP`; `condition` optional
-free text (≤60 chars). → `201 { "copy": PublicCopy }`, or `400` for an
-unknown `variantId`.
+`variantId` required; `availability` defaults to `KEEP`; `condition` is
+optional and must be one of the grades above (or omitted). Anything else
+is `400`. → `201 { "copy": PublicCopy }`, or `400` for an unknown
+`variantId`.
 
 ### `PATCH /my/collection/copies/:id`
 
@@ -94,13 +97,17 @@ unknown `variantId`.
 { "availability": "TRADE", "condition": null }
 ```
 
-Both fields optional. → `200 { "copy": PublicCopy }`. Returns **404** (not 403) if the copy doesn't exist _or_ belongs to another user — a caller
+Both fields optional. `condition: null` clears it. → `200 { "copy": PublicCopy }`. Returns **404** (not 403) if the copy doesn't exist _or_ belongs to another user — a caller
 cannot distinguish the two, which is deliberate (see
 [architecture.md](architecture.md#authentication--authorization)).
 
+`PATCH` and `DELETE` return **409** when `reserved` is true. The copy is
+committed to the exchange in `exchange_id`; cancel that exchange before
+changing or removing the copy. `exchange_id` is null when the copy is free.
+
 ### `DELETE /my/collection/copies/:id`
 
-→ `204` on success, `404` under the same rule as `PATCH`.
+→ `204` on success, `404` under the same rule as `PATCH`, `409` when the copy is reserved.
 
 ## My progress
 
@@ -143,7 +150,7 @@ the full tie-break order); the client does not need to sort. → `200`:
 {
   "matches": [
     {
-      "collector": { "display_name": "Bob (Zoro Fan)" },
+      "collector": { "display_name": "Bob (Zoro Fan)", "ref": "opaque-token" },
       "type": "MUTUAL_TRADE",
       "score": 47,
       "current_user": {
@@ -162,10 +169,11 @@ the full tie-break order); the client does not need to sort. → `200`:
       "proposed_exchange": {
         "you_receive": [{ "id", "number", "name", "rarity" }],
         "they_receive": [{ "id", "number", "name", "rarity" }]
-      }
+      },
+      "open_exchange_id": "present only when this pair already has an open exchange of this type"
     },
     {
-      "collector": { "display_name": "Bob (Zoro Fan)" },
+      "collector": { "display_name": "Bob (Zoro Fan)", "ref": "opaque-token" },
       "type": "DONATION",
       "score": 20,
       "current_user": {
@@ -199,8 +207,91 @@ the full tie-break order); the client does not need to sort. → `200`:
   would identify one specific physical copy belonging to another user.
 - Only collectors with at least one candidate (a possible trade or
   donation) are included — no zero-signal noise.
-- No email, user id, location, or other account metadata is ever
-  included — only `display_name` and card/progress data.
+- `collector.ref` is an unguessable token for proposing an exchange. It
+  is not an account id, not an email, and it is not returned by the
+  public sharing API. `open_exchange_id` is omitted when there is no open
+  exchange of that type with that collector. A copy reserved for someone
+  else's exchange is not offered here.
+- No email, account id, location, or other account metadata is ever
+  included.
+
+## My exchanges (auth required, participants only)
+
+A structured trade or donation. No message body. See
+[architecture.md](architecture.md#exchanges).
+
+`type` is `MUTUAL_TRADE` or `DONATION`. `status` is `PROPOSED`,
+`ACCEPTED`, `DECLINED`, `CANCELLED`, or `COMPLETED`. `role` is
+`proposer` or `counterparty` from the caller's point of view. `actions`
+is the list the caller may take right now (`accept`, `decline`, `cancel`,
+`confirm`). Card objects are `{ "number", "name", "rarity", "condition" }`
+snapshotted at proposal time — not `UserCopy` ids.
+
+```json
+{
+  "id": "...",
+  "type": "MUTUAL_TRADE",
+  "status": "PROPOSED",
+  "role": "counterparty",
+  "set": { "id": "...", "name": "Starter Voyage", "code": "SV-01" },
+  "other_collector": { "display_name": "Alice (Luffy Fan)", "ref": "opaque-token" },
+  "you_give": [{ "number": "SV01-019", "name": "King of the Pirates' Ambition", "rarity": "SR", "condition": "Good" }],
+  "you_receive": [{ "number": "SV01-010", "name": "Helmsman's Steady Hand", "rarity": "C", "condition": null }],
+  "you_confirmed": false,
+  "they_confirmed": false,
+  "actions": ["accept", "decline"],
+  "created_at": "ISO-8601",
+  "updated_at": "ISO-8601"
+}
+```
+
+### `GET /my/exchanges`
+
+→ `200 { "exchanges": [Exchange] }`, newest activity first. Only exchanges
+where the caller is proposer or counterparty.
+
+### `GET /my/exchanges/:id`
+
+→ `200 { "exchange": Exchange }`. **404** if the id does not exist or the
+caller is not a participant. Those two cases are the same response.
+
+### `POST /my/exchanges`
+
+```json
+{ "set_id": "...", "collector_ref": "...", "type": "MUTUAL_TRADE" }
+```
+
+The server recomputes the match and chooses the copies. The client does
+not send card ids. → `201 { "exchange": Exchange }`.
+
+- `404` unknown set, or unknown `collector_ref`.
+- `400` proposing an exchange with yourself, or a body that fails validation.
+- `409` the match is no longer available, or an open exchange of this type
+  already exists for this set and pair.
+
+A `DONATION` is always requested by the person who would receive the
+cards. Nothing is taken from them.
+
+### `POST /my/exchanges/:id/accept`
+
+### `POST /my/exchanges/:id/decline`
+
+### `POST /my/exchanges/:id/cancel`
+
+### `POST /my/exchanges/:id/confirm`
+
+→ `200 { "exchange": Exchange }` when the action is legal. **404** for a
+non-participant, same as `GET`. **409** when this person cannot take that
+action in the current status (for example the proposer calling `accept`,
+or anyone calling `confirm` before the exchange is `ACCEPTED`).
+
+`confirm` is idempotent: calling it again after you have already confirmed,
+including after `COMPLETED`, returns the current exchange. The other
+actions are not idempotent.
+
+Ownership transfers only when the second participant confirms. Decline and
+cancel release every reserved copy without moving it. Received copies are
+set to `KEEP`. Condition is unchanged.
 
 This response shape replaces the pre-V0.2 `is_mutual_match` /
 `you_can_receive` / `you_can_offer` / `donation_opportunities` /
@@ -289,8 +380,10 @@ outside the shape above is ever present.
 
 Only `GET` is defined on this path; `PUT`/`POST`/`DELETE` all 404.
 
-## Not implemented in V0
+## Not implemented
 
 Payments, shipping, checkout, public marketplace transactions, unrestricted
-chat, precise location, and reputation endpoints are intentionally absent —
-see the [product scope](README.md#mvp-scope) and [risks.md](risks.md).
+chat, in-app contact between collectors, precise location, and reputation
+endpoints are intentionally absent — see the
+[product scope](README.md#mvp-scope) and [risks.md](risks.md). Exchanges
+record an agreement about specific copies. They do not arrange the handover.

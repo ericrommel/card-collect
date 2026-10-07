@@ -504,11 +504,13 @@ from being over-trusted by an end user who never reads the docs.
 ### Initial mitigations already in place
 
 - the web UI labels it "Match" / "Donation Match," not "Fair Trade" or
-  "Value Match";
-- no price/value data exists anywhere in the app for V0.2 (see the
-  existing Pricing Data Reliability and AI Cost risks above) — there is
-  currently no data source the score _could_ draw a value signal from
-  even if it wanted to.
+  "Value Match", and the Matches page and each open exchange say the
+  score is about finishing the set, not card value or a fair price;
+- user-entered condition is shown on an exchange and is explicitly not an
+  input to the score;
+- no price/value data exists anywhere in the app (see the existing
+  Pricing Data Reliability and AI Cost risks above) — there is currently
+  no data source the score could draw a value signal from.
 
 ### Future investigation
 
@@ -519,6 +521,52 @@ from being over-trusted by an end user who never reads the docs.
   ever built — at that point the naming and framing need explicit
   re-review so a usefulness score and a value/fairness score are _never_
   visually conflated.
+
+---
+
+## P1 — Exchange Completion Is an Honor System
+
+**Status:** OPEN
+
+Exchanges let two collectors agree on specific copies and, after both
+confirm, move those copies in the database. That confirmation is a
+statement by each user. The app has no shipment, escrow, photo of the
+handover, or other evidence the physical cards changed hands. A person
+can confirm a trade that did not happen, or be pressured off-platform to
+confirm one.
+
+This matters more because some users may be children. The exchange is a
+real interaction between two accounts, even though it does not add a
+contact channel.
+
+### Initial mitigations already in place
+
+- no free-text message, email, location, or meeting suggestion is part of
+  an exchange. The UI says the app does not message the other collector
+  or arrange a meeting;
+- either participant can cancel until both have confirmed, so a deal is
+  not trapped. There is no penalty score that could be used to pressure
+  someone into confirming;
+- copies are reserved for that one exchange, so the same card cannot be
+  promised twice, and availability/condition cannot be quietly changed
+  underneath the agreement;
+- ownership changes only on the second confirmation, and received copies
+  reset to `KEEP`;
+- responses use an opaque collector ref, never an email or account id.
+  Someone who is not a participant gets the same 404 as a missing id;
+- the Trade Score is labeled as set-completion usefulness, not fairness
+  or price.
+
+### Not a safety guarantee
+
+None of the above makes an in-person meeting safe. The app does not know
+whether the two people should meet, and it does not claim to.
+
+### Future investigation
+
+Before any in-app contact, meetup suggestion, or shipping address:
+reporting, blocking, and an age/guardian model (see the P0 Child Safety
+entry). Do not add those contact features first.
 
 ---
 

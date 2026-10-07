@@ -194,10 +194,16 @@ Actual milestone history (see `docs/architecture.md` for what each one
 built):
 
 ```text
-V0    Collection + duplicates + missing + matching
-V0.1  Safe, revocable public collection sharing
-V0.2  Smart Trade Score — deterministic, explainable match ranking
+V0         Collection + duplicates + missing + matching
+V0.1       Safe, revocable public collection sharing
+V0.2       Smart Trade Score — deterministic, explainable match ranking
+Exchanges  Propose, accept, and confirm a trade or donation
 ```
+
+User-entered condition (Mint, Near Mint, Excellent, Good, Played, Poor)
+is recorded on a physical copy and shown on an exchange. It is not a
+professional grade and it does not feed the Trade Score. AI condition
+assessment is still future work.
 
 The sequence below was the _original, pre-implementation_ proposal for
 what would come after V0. It turned out safe sharing (V0.1) and match

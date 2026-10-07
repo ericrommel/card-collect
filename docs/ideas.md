@@ -54,6 +54,10 @@ Also investigate regulatory developments in Japan and other major trading-card m
 
 ## I2 — AI Condition Assessment
 
+**Status:** not started. Copies can store a user-entered condition
+(Mint, Near Mint, Excellent, Good, Played, Poor). That note is not an
+automated grade. The work below is still open.
+
 Use front and optionally back images to estimate visible physical condition.
 
 Potential outputs:
@@ -104,6 +108,10 @@ This could eventually support stronger ownership and authenticity claims.
 
 ## I4 — Smart Trade Score
 
+**Status:** the usefulness score shipped in V0.2. It uses completion
+impact only. Value, condition, distance, and reputation are still not
+inputs, on purpose — see the Trade Score risk.
+
 Rank possible exchanges rather than merely identifying compatible collectors.
 
 Possible inputs:
@@ -132,6 +140,10 @@ Distance: 3.2 km
 ---
 
 ## I5 — Donation Network
+
+**Status:** `GIVE_AWAY` is a real availability, matching surfaces donation
+candidates, and an exchange can complete a donation without a return.
+Clubs, events, and charity drives below are still open.
 
 Allow users to give duplicates away instead of selling or trading them.
 

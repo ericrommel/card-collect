@@ -84,10 +84,15 @@ export interface CatalogCollectible {
 
 export type Availability = "KEEP" | "TRADE" | "SELL" | "GIVE_AWAY";
 
+export const CONDITION_GRADES = ["Mint", "Near Mint", "Excellent", "Good", "Played", "Poor"] as const;
+export type ConditionGrade = (typeof CONDITION_GRADES)[number];
+
 export interface UserCopy {
   id: string;
   availability: Availability;
   condition: string | null;
+  reserved: boolean;
+  exchange_id: string | null;
   created_at: string;
   updated_at: string;
   variant: {
@@ -137,7 +142,7 @@ export interface MatchSideProgress {
 }
 
 export interface CollectorMatch {
-  collector: { display_name: string };
+  collector: { display_name: string; ref: string };
   type: MatchType;
   score: number;
   current_user: MatchSideProgress;
@@ -150,6 +155,34 @@ export interface CollectorMatch {
     /** Always [] for DONATION. */
     they_receive: MatchCollectibleRef[];
   };
+  /** Set when an open exchange of this type already exists with this collector. */
+  open_exchange_id?: string;
+}
+
+export type ExchangeStatus = "PROPOSED" | "ACCEPTED" | "DECLINED" | "CANCELLED" | "COMPLETED";
+export type ExchangeAction = "accept" | "decline" | "cancel" | "confirm";
+
+export interface ExchangeCard {
+  number: string;
+  name: string;
+  rarity: string | null;
+  condition: string | null;
+}
+
+export interface Exchange {
+  id: string;
+  type: MatchType;
+  status: ExchangeStatus;
+  role: "proposer" | "counterparty";
+  set: { id: string; name: string; code: string };
+  other_collector: { display_name: string; ref: string };
+  you_give: ExchangeCard[];
+  you_receive: ExchangeCard[];
+  you_confirmed: boolean;
+  they_confirmed: boolean;
+  actions: ExchangeAction[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ShareVisibility {
@@ -237,7 +270,10 @@ export function addCopy(variantId: string, availability: Availability = "KEEP") 
   });
 }
 
-export function updateCopy(copyId: string, changes: Partial<{ availability: Availability; condition: string | null }>) {
+export function updateCopy(
+  copyId: string,
+  changes: Partial<{ availability: Availability; condition: ConditionGrade | null }>,
+) {
   return apiFetch<{ copy: UserCopy }>(`/my/collection/copies/${copyId}`, {
     method: "PATCH",
     body: JSON.stringify(changes),
@@ -254,6 +290,25 @@ export function setProgress(setId: string) {
 
 export function myMatches(setId: string) {
   return apiFetch<{ matches: CollectorMatch[] }>(`/my/matches?setId=${encodeURIComponent(setId)}`);
+}
+
+// ---- Exchanges ----
+
+export function listExchanges() {
+  return apiFetch<{ exchanges: Exchange[] }>("/my/exchanges");
+}
+
+export function proposeExchange(body: { set_id: string; collector_ref: string; type: MatchType }) {
+  return apiFetch<{ exchange: Exchange }>("/my/exchanges", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function actOnExchange(exchangeId: string, action: ExchangeAction) {
+  return apiFetch<{ exchange: Exchange }>(`/my/exchanges/${encodeURIComponent(exchangeId)}/${action}`, {
+    method: "POST",
+  });
 }
 
 // ---- Sharing ----

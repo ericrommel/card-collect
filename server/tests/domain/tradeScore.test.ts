@@ -139,4 +139,10 @@ describe("compareMatches — deterministic ranking", () => {
     expect(second).toEqual(first);
     expect(first).toEqual(["Bravo", "Alpha", "Charlie"]);
   });
+
+  it("breaks a remaining display-name tie by collector ref, not by input order", () => {
+    const later = match({ score: 10, collectorDisplayName: "Sam", collectorRef: "b" });
+    const earlier = match({ score: 10, collectorDisplayName: "Sam", collectorRef: "a" });
+    expect([later, earlier].sort(compareMatches).map((m) => m.collectorRef)).toEqual(["a", "b"]);
+  });
 });

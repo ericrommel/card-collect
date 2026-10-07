@@ -1,8 +1,8 @@
 import { prisma } from "../../db.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
-import { getUserCopies } from "../collection/service.js";
+import { getUserCopies, toAvailabilityTagged } from "../collection/service.js";
 import { calculateProgress } from "../../domain/progress.js";
-import { findDonationCandidate, findMutualTradeCandidate, type AvailabilityTaggedCopy } from "../../domain/matching.js";
+import { findDonationCandidate, findMutualTradeCandidate } from "../../domain/matching.js";
 import {
   compareMatches,
   scoreDonation,
@@ -22,7 +22,7 @@ export interface PublicSideProgress {
 }
 
 export interface PublicMatch {
-  collector: { display_name: string };
+  collector: { display_name: string; ref: string };
   type: MatchType;
   score: number;
   current_user: PublicSideProgress;
@@ -35,13 +35,8 @@ export interface PublicMatch {
     /** Always [] for DONATION — never a fabricated reciprocal side. */
     they_receive: CollectibleRef[];
   };
-}
-
-function toAvailabilityTagged(copies: Awaited<ReturnType<typeof getUserCopies>>): AvailabilityTaggedCopy[] {
-  return copies.map((c) => ({
-    collectibleId: c.variant.collectible.id,
-    availability: c.availability as AvailabilityTaggedCopy["availability"],
-  }));
+  /** Present when an open exchange of this type already exists with this collector. */
+  open_exchange_id?: string;
 }
 
 function toPublicSide(side: SideProgress): PublicSideProgress {
@@ -53,9 +48,9 @@ function toPublicSide(side: SideProgress): PublicSideProgress {
   };
 }
 
-function toPublicMatch(match: ScoredMatch): PublicMatch {
+function toPublicMatch(match: ScoredMatch, openExchangeId?: string): PublicMatch {
   return {
-    collector: { display_name: match.collectorDisplayName },
+    collector: { display_name: match.collectorDisplayName, ref: match.collectorRef ?? "" },
     type: match.type,
     score: match.score,
     current_user: toPublicSide(match.currentUser),
@@ -65,14 +60,16 @@ function toPublicMatch(match: ScoredMatch): PublicMatch {
       you_receive: match.proposedExchange.currentUserReceives,
       they_receive: match.proposedExchange.otherCollectorReceives,
     },
+    ...(openExchangeId ? { open_exchange_id: openExchangeId } : {}),
   };
 }
 
 /**
  * Computes and ranks candidate exchanges between the requesting user and
- * every other collector, scoped to one Set. Only "safe" fields (display
- * name, catalog collectible identifiers, progress numbers) ever leave
- * this function — no email, user id, UserCopy id, or contact info. See
+ * every other collector, scoped to one Set. Fields that leave this
+ * function are display name, an opaque collector ref (not the account
+ * id), catalog collectible identifiers, and progress numbers — no email,
+ * user id, UserCopy id, or contact info. See
  * docs/architecture.md#trade-score-formula for how `score` is derived,
  * and domain/tradeScore.ts#compareMatches for the ranking/tie-break
  * rules applied below.
@@ -92,13 +89,26 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
     myCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
   );
   const mySnapshot = { totalCount: myProgress.totalCount, ownedCount: myProgress.ownedCount };
-  const myTaggedCopies = toAvailabilityTagged(myCopies);
 
   // Deterministic base enumeration; final ordering is fully decided by
   // compareMatches below regardless of this query's row order.
   const otherUsers = await prisma.user.findMany({ where: { id: { not: userId } }, orderBy: { id: "asc" } });
 
-  const scored: ScoredMatch[] = [];
+  const openExchanges = await prisma.exchange.findMany({
+    where: {
+      setId,
+      status: { in: ["PROPOSED", "ACCEPTED"] },
+      OR: [{ proposerId: userId }, { counterpartyId: userId }],
+    },
+    select: { id: true, type: true, proposerId: true, counterpartyId: true },
+  });
+  const openExchangeByKey = new Map<string, string>();
+  for (const exchange of openExchanges) {
+    const otherId = exchange.proposerId === userId ? exchange.counterpartyId : exchange.proposerId;
+    openExchangeByKey.set(`${otherId}:${exchange.type}`, exchange.id);
+  }
+
+  const ranked: { scored: ScoredMatch; openExchangeId?: string }[] = [];
 
   for (const other of otherUsers) {
     const otherCopies = await getUserCopies(other.id, setId);
@@ -107,7 +117,13 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       otherCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
     );
     const otherSnapshot = { totalCount: otherProgress.totalCount, ownedCount: otherProgress.ownedCount };
-    const otherTaggedCopies = toAvailabilityTagged(otherCopies);
+    const pairExchangeIds = new Set(
+      openExchanges
+        .filter((exchange) => exchange.proposerId === other.id || exchange.counterpartyId === other.id)
+        .map((exchange) => exchange.id),
+    );
+    const myTaggedCopies = toAvailabilityTagged(myCopies, pairExchangeIds);
+    const otherTaggedCopies = toAvailabilityTagged(otherCopies, pairExchangeIds);
 
     const tradeCandidate = findMutualTradeCandidate(
       myProgress.missingCollectibleIds,
@@ -117,17 +133,23 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
     );
     if (tradeCandidate) {
       const breakdown = scoreMutualTrade(mySnapshot, otherSnapshot, tradeCandidate, collectiblesById);
-      scored.push({ ...breakdown, collectorDisplayName: other.displayName });
+      ranked.push({
+        scored: { ...breakdown, collectorDisplayName: other.displayName, collectorRef: other.publicId },
+        openExchangeId: openExchangeByKey.get(`${other.id}:MUTUAL_TRADE`),
+      });
     }
 
     const donationIds = findDonationCandidate(myProgress.missingCollectibleIds, otherTaggedCopies);
     if (donationIds.length > 0) {
       const breakdown = scoreDonation(mySnapshot, donationIds, collectiblesById);
-      scored.push({ ...breakdown, collectorDisplayName: other.displayName });
+      ranked.push({
+        scored: { ...breakdown, collectorDisplayName: other.displayName, collectorRef: other.publicId },
+        openExchangeId: openExchangeByKey.get(`${other.id}:DONATION`),
+      });
     }
   }
 
-  scored.sort(compareMatches);
+  ranked.sort((a, b) => compareMatches(a.scored, b.scored));
 
-  return scored.map(toPublicMatch);
+  return ranked.map((entry) => toPublicMatch(entry.scored, entry.openExchangeId));
 }
