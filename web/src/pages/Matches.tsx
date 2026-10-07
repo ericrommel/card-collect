@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import * as api from "../lib/api";
 import type { CatalogSet, CollectorMatch, MatchCollectibleRef } from "../lib/api";
 
@@ -28,8 +28,27 @@ function CompletionRow({ label, before, after }: { label: string; before: number
   );
 }
 
-function MatchCard({ match }: { match: CollectorMatch }) {
+function MatchCard({ match, setId }: { match: CollectorMatch; setId: string }) {
+  const navigate = useNavigate();
   const isDonation = match.type === "DONATION";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function propose() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await api.proposeExchange({
+        set_id: setId,
+        collector_ref: match.collector.ref,
+        type: match.type,
+      });
+      navigate(`/exchanges#${res.exchange.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not propose this exchange");
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="card match-card">
@@ -77,6 +96,19 @@ function MatchCard({ match }: { match: CollectorMatch }) {
           />
         )}
       </div>
+
+      {error && <p className="error">{error}</p>}
+      <div className="match-actions">
+        {match.open_exchange_id ? (
+          <Link to={`/exchanges#${match.open_exchange_id}`} className="secondary">
+            View exchange
+          </Link>
+        ) : (
+          <button className="primary" disabled={busy} onClick={propose}>
+            {busy ? "Proposing..." : isDonation ? "Ask for these cards" : "Propose this trade"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -109,7 +141,8 @@ export function MatchesPage() {
       </p>
       <h2>Matches for {set?.name ?? "this set"}</h2>
       <p className="muted">
-        Ranked by how much closer each trade or donation gets you (and, for trades, them) to completing the set.
+        Ranked by how much closer each trade or donation gets you (and, for trades, them) to completing the set. The
+        score is about finishing the set, not about card value or a fair price.
       </p>
 
       {matches.length === 0 && (
@@ -117,8 +150,8 @@ export function MatchesPage() {
       )}
 
       <div className="matches">
-        {matches.map((match, i) => (
-          <MatchCard key={`${match.collector.display_name}-${match.type}-${i}`} match={match} />
+        {matches.map((match) => (
+          <MatchCard key={`${match.collector.ref}-${match.type}`} match={match} setId={setId ?? ""} />
         ))}
       </div>
     </div>

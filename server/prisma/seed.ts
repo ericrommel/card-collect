@@ -15,6 +15,7 @@
  *    can be demonstrated (she never appears as a match).
  */
 import { prisma } from "../src/db.js";
+import { generateOpaqueId } from "../src/lib/opaqueId.js";
 import { hashPassword } from "../src/modules/auth/password.js";
 
 interface CardSeed {
@@ -52,8 +53,10 @@ const CARDS: CardSeed[] = [
 ];
 
 async function reset() {
-  await prisma.collectionShare.deleteMany();
+  await prisma.exchangeLine.deleteMany();
   await prisma.userCopy.deleteMany();
+  await prisma.exchange.deleteMany();
+  await prisma.collectionShare.deleteMany();
   await prisma.variant.deleteMany();
   await prisma.collectible.deleteMany();
   await prisma.set.deleteMany();
@@ -110,6 +113,7 @@ async function main() {
       email: "alice@example.com",
       displayName: "Alice (Luffy Fan)",
       passwordHash,
+      publicId: generateOpaqueId(),
     },
   });
   const bob = await prisma.user.create({
@@ -117,6 +121,7 @@ async function main() {
       email: "bob@example.com",
       displayName: "Bob (Zoro Fan)",
       passwordHash,
+      publicId: generateOpaqueId(),
     },
   });
   const carol = await prisma.user.create({
@@ -124,6 +129,7 @@ async function main() {
       email: "carol@example.com",
       displayName: "Carol (Nami Fan)",
       passwordHash,
+      publicId: generateOpaqueId(),
     },
   });
 

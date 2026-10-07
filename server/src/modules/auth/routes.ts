@@ -4,6 +4,7 @@ import { prisma } from "../../db.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { ApiError } from "../../middleware/apiError.js";
 import { requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
+import { generateOpaqueId } from "../../lib/opaqueId.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { signToken } from "./jwt.js";
 
@@ -42,7 +43,12 @@ authRouter.post(
 
     const passwordHash = await hashPassword(body.password);
     const user = await prisma.user.create({
-      data: { email: body.email, passwordHash, displayName: body.displayName },
+      data: {
+        email: body.email,
+        passwordHash,
+        displayName: body.displayName,
+        publicId: generateOpaqueId(),
+      },
     });
 
     const token = signToken(user.id);

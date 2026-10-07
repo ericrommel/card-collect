@@ -16,10 +16,15 @@ model User {
   email        String   @unique
   passwordHash String
   displayName  String
+  /// Unguessable token used to address this collector in matches and
+  /// exchanges. Not the auth subject, not shown on public share pages.
+  publicId     String   @unique
   createdAt    DateTime @default(now())
 
-  copies           UserCopy[]
-  collectionShares CollectionShare[]
+  copies             UserCopy[]
+  collectionShares   CollectionShare[]
+  proposedExchanges  Exchange[] @relation("ExchangeProposer")
+  receivedExchanges  Exchange[] @relation("ExchangeCounterparty")
 
   @@map("users")
 }
@@ -49,6 +54,7 @@ model Set {
 
   collectibles     Collectible[]
   collectionShares CollectionShare[]
+  exchanges        Exchange[]
 
   @@map("sets")
 }
@@ -108,6 +114,14 @@ model UserCopy {
   variantId String
   variant   Variant @relation(fields: [variantId], references: [id])
 
+  /// Set while this copy is committed to a PROPOSED or ACCEPTED exchange.
+  /// Cleared on decline, cancel, or completion. Null means the copy is free
+  /// to offer again.
+  reservedByExchangeId String?
+  reservedByExchange   Exchange? @relation(fields: [reservedByExchangeId], references: [id])
+
+  exchangeLines ExchangeLine[]
+
   @@map("user_copies")
 }
 
@@ -143,4 +157,63 @@ model CollectionShare {
 
   @@unique([ownerId, setId])
   @@map("collection_shares")
+}
+
+/// A proposed trade or donation between two collectors for one set.
+/// There is no message body: an exchange is a structured offer only.
+/// Status is constrained in domain/exchange.ts to
+/// PROPOSED | ACCEPTED | DECLINED | CANCELLED | COMPLETED.
+/// Type is MUTUAL_TRADE | DONATION.
+model Exchange {
+  id     String @id @default(cuid())
+  type   String
+  status String
+
+  setId String
+  set   Set    @relation(fields: [setId], references: [id])
+
+  proposerId String
+  proposer   User   @relation("ExchangeProposer", fields: [proposerId], references: [id])
+
+  counterpartyId String
+  counterparty   User   @relation("ExchangeCounterparty", fields: [counterpartyId], references: [id])
+
+  proposerConfirmedAt     DateTime?
+  counterpartyConfirmedAt DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  /// Set when the exchange leaves the open states (decline, cancel, complete).
+  closedAt                DateTime?
+
+  lines          ExchangeLine[]
+  reservedCopies UserCopy[]
+
+  @@index([setId, status])
+  @@index([proposerId, status])
+  @@index([counterpartyId, status])
+  @@map("exchanges")
+}
+
+/// One physical copy committed to an exchange, with a snapshot of the
+/// catalog label and the user-entered condition at proposal time. `copyId`
+/// is nullable so deleting a copy later (after the exchange is closed)
+/// keeps the historical label instead of taking the exchange row with it.
+model ExchangeLine {
+  id String @id @default(cuid())
+
+  exchangeId String
+  exchange   Exchange @relation(fields: [exchangeId], references: [id], onDelete: Cascade)
+
+  copyId String?
+  copy   UserCopy? @relation(fields: [copyId], references: [id], onDelete: SetNull)
+
+  fromUserId        String
+  toUserId          String
+  collectibleNumber String
+  collectibleName   String
+  rarity            String?
+  condition         String?
+
+  @@index([exchangeId])
+  @@map("exchange_lines")
 }

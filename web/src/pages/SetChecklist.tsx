@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import * as api from "../lib/api";
-import type { Availability, CatalogSet, SetProgress, UserCopy } from "../lib/api";
+import type { Availability, CatalogSet, ConditionGrade, SetProgress, UserCopy } from "../lib/api";
+import { CONDITION_GRADES } from "../lib/api";
 import { SharingPanel } from "../components/SharingPanel";
 
 const AVAILABILITY_OPTIONS: Availability[] = ["KEEP", "TRADE", "SELL", "GIVE_AWAY"];
@@ -14,13 +15,14 @@ export function SetChecklistPage() {
   const [progress, setProgress] = useState<SetProgress | null>(null);
   const [copies, setCopies] = useState<UserCopy[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [busyCollectibleId, setBusyCollectibleId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!setId) return;
-    setError(null);
+    setLoadError(null);
     try {
       const [setsRes, progressRes, copiesRes] = await Promise.all([
         api.listSets(),
@@ -31,7 +33,7 @@ export function SetChecklistPage() {
       setProgress(progressRes);
       setCopies(copiesRes.copies);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load set");
+      setLoadError(err instanceof Error ? err.message : "Failed to load set");
     } finally {
       setLoading(false);
     }
@@ -53,11 +55,12 @@ export function SetChecklistPage() {
 
   async function handleAdd(collectibleId: string, variantId: string) {
     setBusyCollectibleId(collectibleId);
+    setActionError(null);
     try {
       await api.addCopy(variantId, "KEEP");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add copy");
+      setActionError(err instanceof Error ? err.message : "Failed to add copy");
     } finally {
       setBusyCollectibleId(null);
     }
@@ -65,11 +68,25 @@ export function SetChecklistPage() {
 
   async function handleAvailabilityChange(collectibleId: string, copyId: string, availability: Availability) {
     setBusyCollectibleId(collectibleId);
+    setActionError(null);
     try {
       await api.updateCopy(copyId, { availability });
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update copy");
+      setActionError(err instanceof Error ? err.message : "Failed to update copy");
+    } finally {
+      setBusyCollectibleId(null);
+    }
+  }
+
+  async function handleConditionChange(collectibleId: string, copyId: string, condition: ConditionGrade | null) {
+    setBusyCollectibleId(collectibleId);
+    setActionError(null);
+    try {
+      await api.updateCopy(copyId, { condition });
+      await load();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Failed to update condition");
     } finally {
       setBusyCollectibleId(null);
     }
@@ -77,18 +94,19 @@ export function SetChecklistPage() {
 
   async function handleRemove(collectibleId: string, copyId: string) {
     setBusyCollectibleId(collectibleId);
+    setActionError(null);
     try {
       await api.deleteCopy(copyId);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to remove copy");
+      setActionError(err instanceof Error ? err.message : "Failed to remove copy");
     } finally {
       setBusyCollectibleId(null);
     }
   }
 
   if (loading) return <p className="muted">Loading checklist...</p>;
-  if (error) return <p className="error">{error}</p>;
+  if (loadError) return <p className="error">{loadError}</p>;
   if (!progress) return <p className="error">Set not found.</p>;
 
   const visibleEntries = progress.checklist.filter((entry) => {
@@ -129,6 +147,12 @@ export function SetChecklistPage() {
 
       {setId && <SharingPanel setId={setId} />}
 
+      <p className="muted small">
+        Condition is your own note about a physical copy. It is not a professional grade, and it does not change the
+        match score.
+      </p>
+      {actionError && <p className="error">{actionError}</p>}
+
       <div className="filters">
         {(["all", "owned", "missing", "duplicates"] as Filter[]).map((f) => (
           <button key={f} className={filter === f ? "tab active" : "tab"} onClick={() => setFilter(f)}>
@@ -157,10 +181,11 @@ export function SetChecklistPage() {
 
               <div className="checklist-copies">
                 {myCopies.map((copy) => (
-                  <div key={copy.id} className="copy-row">
+                  <div key={copy.id} className={copy.reserved ? "copy-row reserved" : "copy-row"}>
                     <select
+                      aria-label={`Availability for ${collectible.number}`}
                       value={copy.availability}
-                      disabled={busy}
+                      disabled={busy || copy.reserved}
                       onChange={(e) =>
                         handleAvailabilityChange(collectible.id, copy.id, e.target.value as Availability)
                       }
@@ -171,13 +196,38 @@ export function SetChecklistPage() {
                         </option>
                       ))}
                     </select>
-                    <button
-                      className="link-danger"
-                      disabled={busy}
-                      onClick={() => handleRemove(collectible.id, copy.id)}
+                    <select
+                      aria-label={`Condition for ${collectible.number}`}
+                      value={copy.condition ?? ""}
+                      disabled={busy || copy.reserved}
+                      onChange={(e) =>
+                        handleConditionChange(
+                          collectible.id,
+                          copy.id,
+                          e.target.value === "" ? null : (e.target.value as ConditionGrade),
+                        )
+                      }
                     >
-                      remove
-                    </button>
+                      <option value="">Condition not set</option>
+                      {CONDITION_GRADES.map((grade) => (
+                        <option key={grade} value={grade}>
+                          {grade}
+                        </option>
+                      ))}
+                    </select>
+                    {copy.reserved && copy.exchange_id ? (
+                      <Link to={`/exchanges#${copy.exchange_id}`} className="reserved-note">
+                        In an exchange
+                      </Link>
+                    ) : (
+                      <button
+                        className="link-danger"
+                        disabled={busy}
+                        onClick={() => handleRemove(collectible.id, copy.id)}
+                      >
+                        remove
+                      </button>
+                    )}
                   </div>
                 ))}
                 {defaultVariant && (

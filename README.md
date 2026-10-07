@@ -3,9 +3,10 @@
 A safety-first collectible-card collection and exchange platform.
 
 ```text
-V0    — Collection tracking (owned/missing/duplicates/completion) + matching
-V0.1  — Safe, revocable public collection sharing
-V0.2  — Smart Trade Score: deterministic, explainable ranking of matches
+V0         — Collection tracking (owned/missing/duplicates/completion) + matching
+V0.1       — Safe, revocable public collection sharing
+V0.2       — Smart Trade Score: deterministic, explainable ranking of matches
+Exchanges  — Propose, accept, and confirm a trade or donation
 ```
 
 Users track a collection, see what they own/miss/have duplicated, mark
@@ -70,6 +71,23 @@ collection usefulness only — it is not a price or fairness estimate; see
 [docs/architecture.md](docs/architecture.md#trade-score-formula) for the
 formula and [docs/risks.md](docs/risks.md) for the residual risk of it
 being misread as one.
+
+## Exchanges
+
+From a match, "Propose this trade" or "Ask for these cards" opens an
+exchange. The other collector accepts or declines. Cards stay where they
+are until **both** people confirm that the cards have actually changed
+hands — then those copies move and are marked `KEEP`. Either person can
+cancel until that second confirmation. The app does not send a message,
+share an email, or suggest a meeting place.
+
+A copy in an open exchange is reserved: it cannot be edited or deleted,
+and other collectors are not offered it. On the checklist you can also
+note a condition (Mint through Poor). That note is your description, not
+a grade, and it does not change the match score. The exchange shows the
+condition that was set when you proposed.
+
+Open exchanges are listed under "Exchanges" in the header.
 
 ## Collection sharing
 

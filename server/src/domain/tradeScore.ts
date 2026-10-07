@@ -140,6 +140,11 @@ export function scoreDonation(
 
 export interface ScoredMatch extends TradeScoreBreakdown {
   collectorDisplayName: string;
+  /**
+   * Opaque collector ref. Used only as the final tie-break when two
+   * collectors share a display name. Never a database id.
+   */
+  collectorRef?: string;
 }
 
 /**
@@ -151,6 +156,8 @@ export interface ScoredMatch extends TradeScoreBreakdown {
  *  4. the other collector's display name, ascending — a stable,
  *     business-level field, never a raw database id or query/insertion
  *     order.
+ *  5. the opaque collector ref, ascending, so two people who picked the
+ *     same display name still get a stable order.
  * No step here is random or depends on how the database happened to
  * return rows.
  */
@@ -162,5 +169,7 @@ export function compareMatches(a: ScoredMatch, b: ScoredMatch): number {
   const aOtherGain = a.otherCollector?.completionGain ?? 0;
   const bOtherGain = b.otherCollector?.completionGain ?? 0;
   if (bOtherGain !== aOtherGain) return bOtherGain - aOtherGain;
-  return a.collectorDisplayName.localeCompare(b.collectorDisplayName);
+  const byName = a.collectorDisplayName.localeCompare(b.collectorDisplayName);
+  if (byName !== 0) return byName;
+  return (a.collectorRef ?? "").localeCompare(b.collectorRef ?? "");
 }

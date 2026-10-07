@@ -55,6 +55,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
   padding: 0.75rem 1.5rem;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -64,11 +66,21 @@ button {
   font-size: 1.1rem;
   text-decoration: none;
   color: var(--text);
+  white-space: nowrap;
 }
 .app-header nav {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+}
+.app-header nav a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+.app-header nav a.active {
+  color: var(--primary);
 }
 
 .app-main {
@@ -284,6 +296,7 @@ button.link,
 .copy-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.4rem;
   background: var(--bg);
   border-radius: 6px;
@@ -415,4 +428,57 @@ button.primary.small {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+}
+
+.match-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.exchange-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  scroll-margin-top: 1rem;
+}
+.status-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: var(--bg);
+  color: var(--muted);
+}
+.status-proposed,
+.status-accepted {
+  background: #fef3c7;
+  color: #92400e;
+}
+.status-completed {
+  background: #dcfce7;
+  color: var(--give-away);
+}
+.status-declined,
+.status-cancelled {
+  background: #f3f4f6;
+  color: var(--muted);
+}
+.confirm-panel {
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+.copy-row.reserved {
+  outline: 1px dashed var(--border);
+}
+.reserved-note {
+  font-size: 0.8rem;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.copy-row select {
+  max-width: 11rem;
 }

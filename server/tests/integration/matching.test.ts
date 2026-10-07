@@ -80,7 +80,11 @@ describe("GET /api/my/matches — ranked trade/donation matches", () => {
     expect(matches[0].type).toBe("MUTUAL_TRADE");
 
     // 14. documented breakdown present for the trade.
-    expect(trade.collector).toEqual({ display_name: trader.email.split("@")[0] });
+    // `ref` is an opaque collector token, not the account id.
+    expect(trade.collector).toMatchObject({ display_name: trader.email.split("@")[0] });
+    expect((trade.collector as { ref: string }).ref).toMatch(/^[A-Za-z0-9_-]{20,}$/);
+    expect((trade.collector as { ref: string }).ref).not.toBe(trader.userId);
+    expect(trade.open_exchange_id).toBeUndefined();
     expect(trade.current_user).toMatchObject({ cards_received: 2 }); // c4, c5
     expect(trade.other_collector).toMatchObject({ cards_received: 1 }); // c2
     expect(trade.balance).toEqual({ difference: 1 });
