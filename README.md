@@ -2,26 +2,37 @@
 
 A safety-first collectible-card collection and exchange platform.
 
+Signed-in collectors land on a dashboard of their sets, completion, duplicates,
+matches, and exchanges. Each set opens as a card grid: search, filter, select
+many cards, and add or update copies in one action. A list view is available
+when a grid is the wrong shape.
+
+Two sample catalogs ship with the seed. **Starter Voyage** is a 24-card
+synthetic set. **Harbor Atlas** is an original 396-card catalog (three sets)
+for trying a large collection. Neither is an official product, and the card
+faces are generated patterns, not publisher artwork. The domain model stays
+generic (see [docs/architecture.md](docs/architecture.md) and
+[docs/decisions.md](docs/decisions.md)).
+
 ```text
 V0         — Collection tracking (owned/missing/duplicates/completion) + matching
 V0.1       — Safe, revocable public collection sharing
 V0.2       — Smart Trade Score: deterministic, explainable ranking of matches
 Exchanges  — Propose, accept, and confirm a trade or donation
+Explorer   — Dashboard, visual collection browser, bulk copy changes, large sample catalog
 ```
 
-Users track a collection, see what they own/miss/have duplicated, mark
+Users track a collection, see what they own, miss, and have duplicated, mark
 physical copies with an availability state, and get matched with other
 collectors for mutually useful trades or one-way donations — ranked by a
 deterministic Trade Score that explains itself (see "Matches" below).
 Users can also publish a limited, read-only, revocable public view of
 their progress for a set (V0.1) — see "Collection sharing" below.
 
-The first supported catalog is a synthetic One Piece Card Game set, but the
-domain model is generic (see [docs/architecture.md](docs/architecture.md)).
-
 For the product vision and full V0 requirements, see [docs/README.md](docs/README.md).
 For known risks, see [docs/risks.md](docs/risks.md). For deferred ideas, see
-[docs/ideas.md](docs/ideas.md).
+[docs/ideas.md](docs/ideas.md). For decisions already taken, see
+[docs/decisions.md](docs/decisions.md).
 
 ## Stack
 
@@ -59,18 +70,34 @@ Sign in with any seeded demo user via the "quick sign in" buttons on the
 login page (`alice@example.com` / `bob@example.com` / `carol@example.com`,
 password `password123`), or register a new account.
 
+## Collection
+
+Home shows only numbers the API computed: owned, missing, extras, copies
+offered for trade, sale, or donation, and exchanges that need a response.
+Match highlights are limited to sets you have already started. Overall
+completion counts every catalogued card, including sets you have not
+opened, and the page says so.
+
+Inside a set, filter by owned, missing, duplicates, rarity, availability,
+condition, and sample metadata. Sort, switch between grid and list, and
+select cards. **Mark owned** adds one Keep copy for each selected card you
+do not already own. **Add a copy** always adds another physical copy.
+Availability and condition apply to the copies you already have. A copy
+reserved for an open exchange cannot be changed. Select one card to edit
+it, or two cards to compare them.
+
 ## Matches
 
-From a set's checklist page, "View matches" ranks every other collector by
-a **Trade Score** (0-100) — how much closer a proposed trade or donation
-gets you (and, for trades, them) to completing the set. Each match card
-shows the score, its type (`Match` for a mutual trade, `Donation Match`
-for a one-way `GIVE_AWAY`), how many cards each side would receive, and
-the projected completion change for both sides. The score measures
-collection usefulness only — it is not a price or fairness estimate; see
+From a set, Matches ranks every other collector by a **Trade Score**
+(0-100) — how much closer a proposed trade or donation gets you (and, for
+trades, them) to completing the set. Each match shows the score, whether
+it is a trade or a donation, what each person would receive, and the
+projected completion change. The score measures collection usefulness
+only — it is not a price or fairness estimate; see
 [docs/architecture.md](docs/architecture.md#trade-score-formula) for the
 formula and [docs/risks.md](docs/risks.md) for the residual risk of it
-being misread as one.
+being misread as one. The home page shows the top few of these for sets
+you have started.
 
 ## Exchanges
 
@@ -82,16 +109,17 @@ cancel until that second confirmation. The app does not send a message,
 share an email, or suggest a meeting place.
 
 A copy in an open exchange is reserved: it cannot be edited or deleted,
-and other collectors are not offered it. On the checklist you can also
-note a condition (Mint through Poor). That note is your description, not
-a grade, and it does not change the match score. The exchange shows the
-condition that was set when you proposed.
+and other collectors are not offered it. On the card you can also note a
+condition (Mint through Poor). That note is your description, not a grade,
+and it does not change the match score. The exchange shows the condition
+that was set when you proposed.
 
-Open exchanges are listed under "Exchanges" in the header.
+Open exchanges are listed under Exchanges. Past exchanges, including the
+completed sample trade, are on the Past tab.
 
 ## Collection sharing
 
-From a set's checklist page, use the "Sharing" panel to enable a public
+From a set, open "Share this collection" to enable a public
 link, choose which fields it shows (completion %, owned, missing,
 duplicates, trade offers, give-away offers), copy or open it, and disable
 or regenerate it at any time. The public page (`/c/:shareId`) works logged

@@ -21,7 +21,7 @@ obvious from context.
 | -------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend  | Node.js + TypeScript + Express | Boring, well-understood, minimal ceremony for a small API surface.                                                                      |
 | Database | SQLite via Prisma              | Zero-install deterministic local dev; Prisma migrations give a clear upgrade path to Postgres later without rewriting the domain layer. |
-| Auth     | JWT (bcrypt-hashed passwords)  | Stateless bearer tokens work identically for a browser and a future native mobile client; no server-side session store to run.          |
+| Auth     | JWT in an httpOnly cookie      | The web app never stores the token. A non-browser client can still ask for a bearer token. No server-side session store.                |
 | Frontend | React + Vite + TypeScript      | Standard SPA toolchain; talks to the API over plain JSON, no server-rendering coupling.                                                 |
 | Tests    | Vitest + Supertest             | Fast, TypeScript-native; Supertest drives the real Express app for integration/authorization tests.                                     |
 
@@ -73,9 +73,11 @@ domain/         Pure, framework-free business logic (no I/O):
 modules/
   auth/         registration, login, JWT issuance, password hashing
   catalog/      CatalogProvider abstraction + its local-DB implementation
-  collection/   a user's UserCopy CRUD + per-set progress
+  collection/   a user's UserCopy CRUD, bulk copy changes, and per-set progress
+  dashboard/    home summary assembled from catalog, copies, matches, and exchanges
   matching/     composes catalog + collection data through domain/matching.ts + domain/tradeScore.ts
   sharing/      per-set public share settings (auth) + public read-only lookup (no auth)
+catalog/        original sample-catalog generator used by the seed (not a provider)
 middleware/     requireAuth, centralized error handling, async wrapper
 ```
 
@@ -99,8 +101,9 @@ things those modules already expose.
 
 External catalog licensing is an [open risk](risks.md#p1--catalog-data-licensing).
 `modules/catalog/catalogProvider.ts` defines a `CatalogProvider` interface
-(`listUniverses`, `listSets`, `getSet`, `listCollectibles`); nothing outside
-`modules/catalog/` imports Prisma models for catalog reads. V0 ships one
+(`listUniverses`, `listSets`, `getSet`, `listCollectibles`). Catalog routes
+read only through that interface. The dashboard also counts set membership
+directly, because it needs ids and not full card bodies. V0 ships one
 implementation, `LocalDbCatalogProvider`, backed by the seeded SQLite
 database — the "small internal seeded database" option from the brief,
 chosen over an external API adapter because it's the only option that gives
@@ -111,10 +114,40 @@ Swapping in a licensed external API later means writing a new class that
 implements the same interface and normalizes/caches that API's responses —
 no changes to routes, matching, or progress calculation.
 
-Card names/numbers in the seed data are original synthetic content (see
-`server/prisma/seed.ts`), not copied from the official card list, to avoid
-any dependency on licensed catalog text — see
+Card names and numbers in the seed are original (see `server/prisma/seed.ts`
+and `server/src/catalog/sampleCatalog.ts`). They are not copied from an
+official card list. Two universes are seeded:
+
+- `one-piece-card-game` / Starter Voyage (`SV-01`, 24 cards) — a small
+  synthetic set with the original Alice/Bob trade and Bob's donation.
+- `harbor-atlas` / Lantern Harbor (`HA-01`, 180), Glass Market (`HA-02`,
+  120), and North Archive (`HA-03`, 96) — an original large catalog so the
+  collection screen can be tried with hundreds of cards.
+
+`sampleNoticeForSlug` attaches a disclaimer to those slugs. The database
+does not store the notice. Unknown slugs get `null`, so a future licensed
+catalog is not stamped with the sample warning.
+
+The web app draws a geometric SVG from the card number and name
+(`web/src/components/CardFace.tsx`). That is not catalog artwork. See
+[decisions.md](decisions.md) and
 [risks.md](risks.md#p1--official-card-image-rights).
+
+## Collection explorer and dashboard
+
+`GET /api/my/dashboard` is the signed-in home. Totals are sums over real
+rows. Overall completion is owned collectibles divided by every catalogued
+collectible, including sets the user has not started. Match highlights are
+computed only for sets with `owned_count > 0`, then cut to the top three
+trades and top three donations. An untouched set can still have donations;
+those stay on that set's Matches page.
+
+`/sets/:setId` loads the progress checklist and the caller's copies once.
+Search, filters, and sort run in the browser. Bulk adds, updates, and
+deletes go to the bulk copy routes, at most 200 ids per request. The
+server applies one batch in a single transaction and rejects the whole
+batch when any copy is not the caller's or is reserved, so a partial
+update cannot stick. See [api.md](api.md).
 
 ## Matching flow (V0.2: candidates → score → rank)
 

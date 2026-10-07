@@ -17,6 +17,14 @@
 import { prisma } from "../src/db.js";
 import { generateOpaqueId } from "../src/lib/opaqueId.js";
 import { hashPassword } from "../src/modules/auth/password.js";
+import {
+  DEMO_COMPLETED_TRADE,
+  HARBOR_UNIVERSE,
+  buildHarborSets,
+  planDemoCopies,
+  type DemoCollector,
+} from "../src/catalog/sampleCatalog.js";
+import { proposeExchange } from "../src/modules/exchanges/service.js";
 
 interface CardSeed {
   number: string;
@@ -143,9 +151,10 @@ async function main() {
     ownerId: string,
     number: string,
     availability: "KEEP" | "TRADE" | "SELL" | "GIVE_AWAY" = "KEEP",
+    condition: string | null = null,
   ) {
     await prisma.userCopy.create({
-      data: { ownerId, variantId: variantId(number), availability },
+      data: { ownerId, variantId: variantId(number), availability, condition },
     });
   }
 
@@ -153,10 +162,10 @@ async function main() {
   for (let n = 1; n <= 16; n++) {
     await addCopy(alice.id, CARDS[n - 1].number, "KEEP");
   }
-  await addCopy(alice.id, "SV01-003", "TRADE"); // duplicate #3
-  await addCopy(alice.id, "SV01-007", "TRADE"); // duplicate #7
-  await addCopy(alice.id, "SV01-010", "TRADE"); // duplicate #10 — what Bob needs back in the mutual trade
-  await addCopy(alice.id, "SV01-012", "GIVE_AWAY"); // duplicate #12, given away
+  await addCopy(alice.id, "SV01-003", "TRADE", "Excellent"); // duplicate #3
+  await addCopy(alice.id, "SV01-007", "TRADE", "Good"); // duplicate #7
+  await addCopy(alice.id, "SV01-010", "TRADE", "Near Mint"); // duplicate #10 — what Bob needs in the mutual trade
+  await addCopy(alice.id, "SV01-012", "GIVE_AWAY", "Played"); // duplicate #12, given away
 
   // --- Bob: owns 1-8 and 17-24, with duplicates offered for trade/donation.
   for (let n = 1; n <= 8; n++) {
@@ -165,9 +174,9 @@ async function main() {
   for (let n = 17; n <= 24; n++) {
     await addCopy(bob.id, CARDS[n - 1].number, "KEEP");
   }
-  await addCopy(bob.id, "SV01-019", "TRADE"); // duplicate #19
-  await addCopy(bob.id, "SV01-021", "TRADE"); // duplicate #21
-  await addCopy(bob.id, "SV01-024", "GIVE_AWAY"); // extra #24, given away
+  await addCopy(bob.id, "SV01-019", "TRADE", "Near Mint"); // duplicate #19
+  await addCopy(bob.id, "SV01-021", "TRADE", "Excellent"); // duplicate #21
+  await addCopy(bob.id, "SV01-024", "GIVE_AWAY", "Good"); // extra #24, given away
 
   // --- Carol: a small starter collection with nothing offerable, so she
   // never appears in anyone's match list (demonstrates no-false-positive filtering).
@@ -175,10 +184,169 @@ async function main() {
     await addCopy(carol.id, CARDS[n - 1].number, "KEEP");
   }
 
+  const harbor = await seedHarborAtlas({
+    alice: alice.id,
+    bob: bob.id,
+    carol: carol.id,
+    bobRef: bob.publicId,
+  });
+
   console.log("Seed complete:");
   console.log(`  Universe: ${universe.name}`);
   console.log(`  Set: ${set.name} (${set.code}) — ${CARDS.length} collectibles`);
+  console.log(`  Universe: ${harbor.universeName}`);
+  for (const sample of harbor.sets) {
+    console.log(`  Set: ${sample.name} (${sample.code}) — ${sample.cards} collectibles`);
+  }
+  console.log(`  Pending trade: ${harbor.pendingExchangeId}`);
+  console.log(`  Completed trade: ${harbor.completedExchangeId}`);
   console.log("  Users: alice@example.com / bob@example.com / carol@example.com (password: password123)");
+}
+
+function chunks<T>(items: T[], size: number): T[][] {
+  const batches: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    batches.push(items.slice(index, index + size));
+  }
+  return batches;
+}
+
+async function seedHarborAtlas(users: Record<DemoCollector, string> & { bobRef: string }) {
+  const universe = await prisma.collectibleUniverse.create({
+    data: { name: HARBOR_UNIVERSE.name, slug: HARBOR_UNIVERSE.slug },
+  });
+  const samples = buildHarborSets();
+  const variantIdByKey = new Map<string, string>();
+
+  for (const sample of samples) {
+    const set = await prisma.set.create({
+      data: {
+        universeId: universe.id,
+        providerId: `sample:${sample.code}`,
+        name: sample.name,
+        code: sample.code,
+        releaseDate: new Date(sample.releaseDate),
+      },
+    });
+    for (const batch of chunks(sample.cards, 60)) {
+      await prisma.collectible.createMany({
+        data: batch.map((card) => ({
+          setId: set.id,
+          providerId: `sample:${card.number}`,
+          number: card.number,
+          name: card.name,
+          rarity: card.rarity,
+          metadata: JSON.stringify(card.metadata),
+        })),
+      });
+    }
+    const collectibles = await prisma.collectible.findMany({
+      where: { setId: set.id },
+      select: { id: true, number: true },
+    });
+    for (const batch of chunks(collectibles, 80)) {
+      await prisma.variant.createMany({
+        data: batch.map((collectible) => ({
+          collectibleId: collectible.id,
+          name: "Base",
+          isDefault: true,
+        })),
+      });
+    }
+    const variants = await prisma.variant.findMany({
+      where: { collectible: { setId: set.id }, isDefault: true },
+      select: { id: true, collectible: { select: { number: true } } },
+    });
+    for (const variant of variants) {
+      variantIdByKey.set(`${sample.code}:${variant.collectible.number}`, variant.id);
+    }
+  }
+
+  const plan = planDemoCopies();
+  const copyRows = plan.map((item) => {
+    const variantId = variantIdByKey.get(`${item.setCode}:${item.number}`);
+    if (!variantId) throw new Error(`Missing sample variant ${item.setCode} ${item.number}`);
+    return {
+      ownerId: users[item.owner],
+      variantId,
+      availability: item.availability,
+      condition: item.condition,
+    };
+  });
+  for (const batch of chunks(copyRows, 80)) {
+    await prisma.userCopy.createMany({ data: batch });
+  }
+
+  const completedExchangeId = await recordCompletedHarborTrade(users.alice, users.bob);
+  const harbor = await prisma.set.findUniqueOrThrow({ where: { code: "HA-01" } });
+  const pending = await proposeExchange(users.alice, {
+    setId: harbor.id,
+    collectorRef: users.bobRef,
+    type: "MUTUAL_TRADE",
+  });
+
+  return {
+    universeName: universe.name,
+    sets: samples.map((sample) => ({ name: sample.name, code: sample.code, cards: sample.cards.length })),
+    pendingExchangeId: pending.id,
+    completedExchangeId,
+  };
+}
+
+async function loadDemoCopy(ownerId: string, number: string) {
+  const copy = await prisma.userCopy.findFirst({
+    where: {
+      ownerId,
+      availability: "KEEP",
+      variant: { collectible: { number, set: { code: DEMO_COMPLETED_TRADE.setCode } } },
+    },
+    include: { variant: { include: { collectible: true } } },
+  });
+  if (!copy) throw new Error(`Missing completed-trade copy ${number} for ${ownerId}`);
+  return copy;
+}
+
+async function recordCompletedHarborTrade(aliceId: string, bobId: string) {
+  const aliceReceived = await loadDemoCopy(aliceId, DEMO_COMPLETED_TRADE.aliceReceivedNumber);
+  const bobReceived = await loadDemoCopy(bobId, DEMO_COMPLETED_TRADE.bobReceivedNumber);
+  const set = await prisma.set.findUniqueOrThrow({ where: { code: DEMO_COMPLETED_TRADE.setCode } });
+  const agreed = new Date("2026-09-12T15:00:00.000Z");
+  const created = await prisma.exchange.create({
+    data: {
+      type: "MUTUAL_TRADE",
+      status: "COMPLETED",
+      setId: set.id,
+      proposerId: aliceId,
+      counterpartyId: bobId,
+      proposerConfirmedAt: agreed,
+      counterpartyConfirmedAt: agreed,
+      closedAt: agreed,
+      createdAt: new Date("2026-09-12T14:40:00.000Z"),
+      lines: {
+        create: [
+          {
+            copyId: aliceReceived.id,
+            fromUserId: bobId,
+            toUserId: aliceId,
+            collectibleNumber: aliceReceived.variant.collectible.number,
+            collectibleName: aliceReceived.variant.collectible.name,
+            rarity: aliceReceived.variant.collectible.rarity,
+            condition: aliceReceived.condition,
+          },
+          {
+            copyId: bobReceived.id,
+            fromUserId: aliceId,
+            toUserId: bobId,
+            collectibleNumber: bobReceived.variant.collectible.number,
+            collectibleName: bobReceived.variant.collectible.name,
+            rarity: bobReceived.variant.collectible.rarity,
+            condition: bobReceived.condition,
+          },
+        ],
+      },
+    },
+  });
+  return created.id;
 }
 
 main()

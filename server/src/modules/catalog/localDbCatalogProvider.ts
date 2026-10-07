@@ -1,4 +1,5 @@
 import { prisma } from "../../db.js";
+import { sampleNoticeForSlug } from "../../catalog/sampleCatalog.js";
 import type { CatalogCollectible, CatalogProvider, CatalogSet, CatalogUniverse } from "./catalogProvider.js";
 
 /**
@@ -9,7 +10,12 @@ import type { CatalogCollectible, CatalogProvider, CatalogSet, CatalogUniverse }
 export class LocalDbCatalogProvider implements CatalogProvider {
   async listUniverses(): Promise<CatalogUniverse[]> {
     const rows = await prisma.collectibleUniverse.findMany({ orderBy: { name: "asc" } });
-    return rows.map((row) => ({ id: row.id, name: row.name, slug: row.slug }));
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      notice: sampleNoticeForSlug(row.slug),
+    }));
   }
 
   async listSets(universeId?: string): Promise<CatalogSet[]> {

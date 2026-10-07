@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import * as api from "../lib/api";
 import type { CatalogSet, CollectorMatch, MatchCollectibleRef } from "../lib/api";
+import { rarityLabel } from "../lib/labels";
 
 function CardChips({ items }: { items: MatchCollectibleRef[] }) {
   if (items.length === 0) return null;
@@ -10,7 +11,7 @@ function CardChips({ items }: { items: MatchCollectibleRef[] }) {
       {items.map((item) => (
         <li key={item.id}>
           <span className="card-number">{item.number}</span> {item.name}
-          {item.rarity && <span className="badge small">{item.rarity}</span>}
+          {item.rarity && <span className="badge small">{rarityLabel(item.rarity)}</span>}
         </li>
       ))}
     </ul>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as api from "../lib/api";
 import type { Exchange, ExchangeAction, ExchangeCard } from "../lib/api";
+import { EXCHANGE_STATUS_LABEL, rarityLabel } from "../lib/labels";
 
 const ACTION_LABEL: Record<ExchangeAction, string> = {
   accept: "Accept",
@@ -35,7 +36,7 @@ function CardList({ cards }: { cards: ExchangeCard[] }) {
       {cards.map((card) => (
         <li key={`${card.number}-${card.name}`}>
           <span className="card-number">{card.number}</span> {card.name}
-          {card.rarity && <span className="badge small">{card.rarity}</span>}
+          {card.rarity && <span className="badge small">{rarityLabel(card.rarity)}</span>}
           <span className="badge small">{card.condition ?? "Condition not set"}</span>
         </li>
       ))}
@@ -69,7 +70,9 @@ function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChang
         <span className={`score-badge ${exchange.type === "DONATION" ? "donation" : "trade"}`}>
           {exchange.type === "DONATION" ? "Donation" : "Trade"}
         </span>
-        <span className={`status-badge status-${exchange.status.toLowerCase()}`}>{exchange.status}</span>
+        <span className={`status-badge status-${exchange.status.toLowerCase()}`}>
+          {EXCHANGE_STATUS_LABEL[exchange.status]}
+        </span>
         <h3>{exchange.other_collector.display_name}</h3>
       </div>
       <p className="muted small">
@@ -186,10 +189,10 @@ export function ExchangesPage() {
         handover.
       </p>
       <div className="filters">
-        <button className={filter === "open" ? "tab active" : "tab"} onClick={() => setFilter("open")}>
+        <button type="button" className={filter === "open" ? "tab active" : "tab"} onClick={() => setFilter("open")}>
           Open
         </button>
-        <button className={filter === "past" ? "tab active" : "tab"} onClick={() => setFilter("past")}>
+        <button type="button" className={filter === "past" ? "tab active" : "tab"} onClick={() => setFilter("past")}>
           Past
         </button>
       </div>

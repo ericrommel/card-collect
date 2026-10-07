@@ -45,6 +45,7 @@ export interface Universe {
   id: string;
   name: string;
   slug: string;
+  notice: string | null;
 }
 
 export interface CatalogSet {
@@ -282,6 +283,119 @@ export function deleteCopy(copyId: string) {
 
 export function setProgress(setId: string) {
   return apiFetch<SetProgress>(`/my/sets/${setId}/progress`);
+}
+
+export const BULK_CHUNK = 200;
+
+export function bulkCreateCopies(
+  setId: string,
+  body: {
+    collectible_ids: string[];
+    availability?: Availability;
+    condition?: ConditionGrade | null;
+    mode?: "add" | "ensure_one";
+  },
+) {
+  return apiFetch<{ created_count: number; skipped_count: number }>(`/my/sets/${setId}/copies`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function bulkUpdateCopies(body: {
+  copy_ids: string[];
+  availability?: Availability;
+  condition?: ConditionGrade | null;
+}) {
+  return apiFetch<{ updated_count: number }>("/my/collection/copies/bulk", {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function bulkDeleteCopies(copyIds: string[]) {
+  return apiFetch<{ deleted_count: number }>("/my/collection/copies/bulk", {
+    method: "DELETE",
+    body: JSON.stringify({ copy_ids: copyIds }),
+  });
+}
+
+export interface DashboardSetSummary {
+  id: string;
+  code: string;
+  name: string;
+  release_date: string | null;
+  universe_id: string;
+  universe_name: string;
+  universe_slug: string;
+  notice: string | null;
+  total_count: number;
+  owned_count: number;
+  missing_count: number;
+  duplicate_count: number;
+  completion_percentage: number;
+  copy_count: number;
+  trade_copies: number;
+  sell_copies: number;
+  donation_copies: number;
+  reserved_copies: number;
+}
+
+export interface DashboardHighlight {
+  set: { id: string; name: string; code: string };
+  collector: { display_name: string; ref: string };
+  type: MatchType;
+  score: number;
+  open_exchange_id?: string;
+  you_receive_count: number;
+  you_give_count: number;
+  you_receive_preview: MatchCollectibleRef[];
+  you_give_preview: MatchCollectibleRef[];
+  your_completion_before: number;
+  your_completion_after: number;
+  their_completion_before?: number;
+  their_completion_after?: number;
+}
+
+export interface Dashboard {
+  totals: {
+    set_count: number;
+    started_set_count: number;
+    total_count: number;
+    owned_count: number;
+    missing_count: number;
+    duplicate_count: number;
+    completion_percentage: number;
+    copy_count: number;
+    trade_copies: number;
+    sell_copies: number;
+    donation_copies: number;
+    reserved_copies: number;
+  };
+  sets: DashboardSetSummary[];
+  exchanges: {
+    open_count: number;
+    needs_action_count: number;
+    recent: Exchange[];
+  };
+  highlights: {
+    trades: DashboardHighlight[];
+    donations: DashboardHighlight[];
+  };
+  recent_copies: {
+    id: string;
+    collectible_number: string;
+    collectible_name: string;
+    set_id: string;
+    set_code: string;
+    availability: Availability;
+    condition: string | null;
+    created_at: string;
+  }[];
+}
+
+export function getDashboard() {
+  return apiFetch<Dashboard>("/my/dashboard");
 }
 
 export function myMatches(setId: string) {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CardFace } from "../components/CardFace";
 import { useAuth } from "../state/AuthContext";
 import { ApiError } from "../lib/api";
 
@@ -30,7 +31,7 @@ export function LoginPage() {
       } else {
         await register(email, password, displayName);
       }
-      navigate("/sets");
+      navigate("/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
     } finally {
@@ -43,7 +44,7 @@ export function LoginPage() {
     setBusy(true);
     try {
       await login(demoEmail, DEMO_PASSWORD);
-      navigate("/sets");
+      navigate("/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not sign in as demo user");
     } finally {
@@ -53,9 +54,21 @@ export function LoginPage() {
 
   return (
     <div className="auth-page">
+      <div className="auth-intro">
+        <p className="eyebrow">Cards Collect</p>
+        <h1>Know what you own. Find the trade that finishes the set.</h1>
+        <p className="muted">
+          Track copies, conditions, and duplicates. Propose a trade or a donation without sharing your email or where
+          you are.
+        </p>
+        <div className="auth-faces" aria-hidden="true">
+          <CardFace number="HA01-001" name="Lantern Keeper" rarity="Common" ink="Sea" />
+          <CardFace number="HA01-020" name="Braid Keeper" rarity="Legendary" ink="Sea" />
+          <CardFace number="SV01-010" name="Helmsman's Steady Hand" rarity="C" />
+        </div>
+      </div>
       <div className="card auth-card">
-        <h1>Cards Collect</h1>
-        <p className="muted">Track your collection. Find your trade.</p>
+        <h2>{mode === "login" ? "Sign in" : "Create account"}</h2>
 
         <div className="tabs">
           <button className={mode === "login" ? "tab active" : "tab"} onClick={() => setMode("login")}>
