@@ -8,6 +8,7 @@ const app = createApp();
 async function registerUser(email: string, displayName?: string) {
   const res = await request(app)
     .post("/api/auth/register")
+    .set("X-Auth-Mode", "bearer")
     .send({ email, password: "password123", displayName: displayName ?? email.split("@")[0] });
   expect(res.status).toBe(201);
   return {

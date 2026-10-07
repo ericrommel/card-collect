@@ -32,8 +32,7 @@ function Header() {
         <button
           className="link"
           onClick={() => {
-            logout();
-            navigate("/login");
+            void logout().then(() => navigate("/login"));
           }}
         >
           Sign out

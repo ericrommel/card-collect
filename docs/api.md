@@ -21,10 +21,16 @@ or `{ "error": "Invalid request", "details": {...} }` for validation errors.
 { "email": "alice@example.com", "password": "password123", "displayName": "Alice" }
 ```
 
-→ `201 { "token": "...", "user": { "id", "email", "display_name", "created_at" } }`
+→ `201 { "user": { "id", "email", "display_name", "created_at" } }`
+
+Also sets an httpOnly `cards_collect_session` cookie (SameSite=Lax, 7
+days, `Secure` in production). The JSON does **not** include the JWT.
 
 `password` must be 8-200 characters. Returns `409` if the email is already
 registered.
+
+Send `X-Auth-Mode: bearer` to also receive `"token"` in the JSON. That
+header is for a non-browser client. The web app does not send it.
 
 ### `POST /auth/login`
 
@@ -32,11 +38,27 @@ registered.
 { "email": "alice@example.com", "password": "password123" }
 ```
 
-→ `200 { "token": "...", "user": {...} }`, or `401` on bad credentials.
+→ `200 { "user": {...} }` plus the same session cookie, or `401` on bad
+credentials. `X-Auth-Mode: bearer` adds `"token"` to the body, same as
+register.
+
+### `POST /auth/logout` (auth required)
+
+Clears the session cookie. → `204`.
+
+### `GET /auth/session`
+
+→ `200 { "user": null }` when the caller has no session, or `{ "user": {...} }`
+when the cookie or bearer token is valid. A cookie from a disallowed
+origin is treated as no session. This is the call the web app makes on
+load. It does not respond with 401.
 
 ### `GET /auth/me` (auth required)
 
-→ `200 { "user": {...} }` — the caller's own profile only.
+Accepts the session cookie or `Authorization: Bearer <token>`. → `200 { "user": {...} }` — the caller's own profile only.
+
+A cookie-authenticated request whose `Origin` is not the app's origin is
+`403`. Bearer requests are not checked this way.
 
 ## Catalog (read-only, no auth required)
 
