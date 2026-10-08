@@ -468,16 +468,20 @@ for one Set — `modules/sharing/`. Design decisions:
   guard, not because a leak is currently possible.
 - **The public endpoint is GET-only.** `modules/sharing/publicRoutes.ts`
   registers a single `GET /:shareId` route; there is no PUT/POST/DELETE
-  on `/api/public/*` at all, so "public endpoints cannot mutate
-  collection data" holds because the route table makes it impossible,
-  not because of a runtime permission check.
+  on `/api/public/*`. A successful GET writes two fields on that share
+  row: how many times the page loaded, and when. It does not record who
+  opened it, and it does not change cards, visibility, or the link. A
+  miss does not write. The public JSON omits the count. A second load
+  within one second is not written again. At most 60 writes happen per
+  link per minute in this process; later opens still return the page.
 - **The site asks crawlers not to index it.** `web/index.html` includes
   `noindex, nofollow`, and the dev server sends the same `X-Robots-Tag`.
   A crawler that does not run JavaScript still receives that tag with the
   generic page, not a collection. The public page also sets the tag after
   it renders. Sharing means "anyone with the link," not "publicly listed."
   See the risk in [risks.md](risks.md): during those 30 days, link
-  possession is still the only access control, and there is no view log.
+  possession is still the only access control. The owner can see a count
+  and a last-opened time, not who opened the link.
   A production host should keep that header when it serves the built files.
 
 ## How a future mobile client fits

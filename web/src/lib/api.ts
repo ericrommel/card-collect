@@ -193,6 +193,8 @@ export interface ShareSettings {
   share_id: string;
   expires_at: string | null;
   link_lifetime_days: number;
+  view_count: number;
+  last_viewed_at: string | null;
   visibility: ShareVisibility;
 }
 

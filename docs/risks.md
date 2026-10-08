@@ -450,43 +450,45 @@ is evidence it is needed — premature for V0's scale.
 
 ---
 
-## P2 — Public Share Links Have No Access Log (V0.1)
+## P2 — Public share opens are counted, not identified
 
-**Status:** OPEN
+**Status:** MITIGATED
 
 A public link works for 30 days after the owner turns it on, renews it,
 or regenerates it. Anyone who has the link during that window can read
-the fields the owner left visible. There is still no per-viewer
-authentication and no record of who viewed the share.
+the fields the owner left visible. The owner sees how many times the
+page loaded and when it last did. The app does not record who opened it.
 
 That means:
 
 - a link forwarded outside the intended audience keeps working until it
   expires, or until the owner disables or regenerates it;
-- there's no way for the owner to see whether a link has been viewed, so
-  a leak during the window may go unnoticed;
-- for a minor's account, an unlogged link is still a sharper version of
-  the general "oversharing personal information" risk in the P0 Child
-  Safety register above, even though the shared fields themselves
-  (owned/missing/duplicate/trade/give-away card lists, completion %) are
-  not personal contact information.
+- the count can show that a link was used, including when the owner opens
+  it themselves. It cannot show which person did;
+- a burst of more than 60 loads a minute for one link is undercounted.
+  The page still loads;
+- for a minor's account, a counted link is still a form of the general
+  "oversharing personal information" risk in the P0 Child Safety register
+  above. The shared fields (owned, missing, duplicate, trade, and
+  give-away lists, plus completion) are not contact details, and the
+  count is not a viewer list.
 
 ### Mitigations already in place
 
 - the link stops working after 30 days. Renewing keeps the same address
   and starts another 30 days from that moment. Regenerating invalidates
-  the old address immediately and starts a new window. Disabling clears
-  the end time. An expired link is the same 404 as one that never existed;
+  the old address immediately, starts a new window, and resets the open
+  count. Disabling clears the end time and keeps the count. An expired
+  link is the same 404 as one that never existed, and a 404 is not counted;
 - shared fields are strictly limited to non-identifying collection data —
   no email, no internal id, no location, no age (see
   [architecture.md](architecture.md#collection-sharing-v01));
 - the HTML shell is `noindex, nofollow`, including for a crawler that does
-  not run JavaScript, and the public page sets the same tag after it renders.
+  not run JavaScript, and the public page sets the same tag after it renders;
+- the open counter stores a number and a timestamp only.
 
 ### Future investigation
 
-- a lightweight access log visible to the owner ("last viewed 2 days ago")
-  without identifying the viewer;
 - guardian-mediated sharing controls for accounts flagged as minors, once
   age/guardian concepts exist (see the P0 Child Safety entry above).
 

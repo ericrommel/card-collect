@@ -13,6 +13,14 @@ function linkIsOpen(expiresAt: string | null): boolean {
   return new Date(expiresAt).getTime() > Date.now();
 }
 
+function openCountLabel(count: number, lastViewedAt: string | null): string {
+  const note = "This does not say who opened it. Opening it yourself counts.";
+  if (count <= 0) return `Not opened yet. ${note}`;
+  const times = count === 1 ? "1 time" : `${count} times`;
+  const when = lastViewedAt ? ` Last opened ${formatShareEnd(lastViewedAt)}.` : "";
+  return `Opened ${times}.${when} ${note}`;
+}
+
 const VISIBILITY_FIELDS: { key: keyof ShareVisibility; label: string }[] = [
   { key: "completion", label: "Completion %" },
   { key: "owned", label: "Owned cards" },
@@ -156,6 +164,8 @@ export function SharingPanel({ setId }: { setId: string }) {
       </div>
 
       {error && <p className="error small">{error}</p>}
+
+      {settings && <p className="muted small">{openCountLabel(settings.view_count, settings.last_viewed_at)}</p>}
 
       {!settings?.enabled && <p className="muted small">This collection is private. Nobody can see it but you.</p>}
 

@@ -489,6 +489,8 @@ for the design rationale.
     "share_id": "H1aiHFVjz0XYZ0zVZw95xZG0",
     "expires_at": "2026-11-07T08:00:00.000Z",
     "link_lifetime_days": 30,
+    "view_count": 2,
+    "last_viewed_at": "2026-10-08T12:00:00.000Z",
     "visibility": {
       "completion": true,
       "owned": true,
@@ -504,8 +506,10 @@ for the design rationale.
 `share_id` is always returned once a row exists, even while `enabled` is
 `false` — this is the owner's own view of their settings, not the public
 endpoint, so there's nothing to hide from them here. `expires_at` is an
-ISO time while sharing is on, and `null` while it is off. The public
-response never includes either field.
+ISO time while sharing is on, and `null` while it is off. `view_count` is
+how many times the public page loaded, and `last_viewed_at` is the last
+of those times (`null` when the count is 0). Neither field says who
+opened the link. The public response never includes these fields.
 
 ### `PUT /my/sets/:id/share`
 
@@ -527,7 +531,8 @@ doesn't exist.
 
 No body. Rotates `share_id` to a new random token, invalidating the
 previous public link immediately. Preserves `enabled` and all visibility
-flags. When sharing is on, the new link gets a new 30-day window.
+flags. When sharing is on, the new link gets a new 30-day window. The
+open count goes back to zero because the address changed.
 → `200 { "share": {...} }`.
 
 ### `POST /my/sets/:id/share/renew`
@@ -563,10 +568,16 @@ empty list.
 
 → `404` if `shareId` was never issued, belongs to a disabled, expired, or
 revoked share, or doesn't exist — these cases are indistinguishable by
-design (see architecture.md). No email, internal user id, location, or any field
-outside the shape above is ever present.
+design (see architecture.md). No email, internal user id, location, open
+count, or any field outside the shape above is ever present. A 404 does
+not change the owner's open count.
 
-Only `GET` is defined on this path; `PUT`/`POST`/`DELETE` all 404.
+Only `GET` is defined on this path; `PUT`/`POST`/`DELETE` all 404. A
+successful `GET` adds one to the owner's `view_count` and sets
+`last_viewed_at`. A second load of the same link within one second is
+not counted again. The process also counts at most 60 opens a minute for
+one link. Further opens still return the page and are not counted. The
+count is not a list of people, and opening the page yourself counts.
 
 ## Not implemented
 
