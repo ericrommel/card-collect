@@ -92,6 +92,10 @@ Match highlights are limited to sets you have already started. Overall
 completion counts every catalogued card, including sets you have not
 opened, and the page says so.
 
+Home and the catalog can search the sample catalog by card name, number,
+or set. A result opens that set already searched. The search does not say
+whether you own the card until the set opens.
+
 The numbers on home open a list of the sets that match: missing cards,
 extras, cards you have, and copies for trade, sale, or donation. Each set
 then opens with that filter already on. A link can also search one card

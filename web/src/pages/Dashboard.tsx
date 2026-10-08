@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { CardSearch } from "../components/CardSearch";
 import { OfferCards } from "../components/OfferCards";
 import { SetCover } from "../components/SetCover";
 import type { DashboardHighlight, DashboardSetSummary } from "../lib/api";
@@ -135,6 +136,8 @@ export function DashboardPage() {
           <div className="progress-bar-fill" style={{ width: `${totals.completion_percentage}%` }} />
         </div>
       </section>
+
+      <CardSearch />
 
       {data.exchanges.needs_action_count > 0 && (
         <Link to="/exchanges" className="attention-banner">

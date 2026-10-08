@@ -94,6 +94,10 @@ The owned, missing, extra, trade, donation, and sale counts on home were numbers
 
 Sale is still only a label. The page says the app does not take payment.
 
+## 2026-10-08 — Catalog search stays inside the provider
+
+Home and the catalog page search card names, numbers, and set names. The local provider loads the sample rows and ranks them in process. A licensed provider can replace that method without a second search API. Fewer than two characters returns nothing, and a broad query stops at 24 cards. The result does not include ownership. Opening it lands in the set, which already knows what you have.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

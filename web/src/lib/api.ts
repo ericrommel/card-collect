@@ -273,6 +273,21 @@ export function listCollectibles(setId: string) {
   return apiFetch<{ collectibles: CatalogCollectible[] }>(`/catalog/sets/${setId}/collectibles`);
 }
 
+export interface CatalogSearchHit {
+  id: string;
+  number: string;
+  name: string;
+  rarity: string | null;
+  set: { id: string; name: string; code: string };
+  universeName: string;
+}
+
+export function searchCatalog(query: string) {
+  return apiFetch<{ results: CatalogSearchHit[]; truncated: boolean }>(
+    `/catalog/search?q=${encodeURIComponent(query)}`,
+  );
+}
+
 // ---- My collection ----
 
 export function myCollection(setId?: string) {

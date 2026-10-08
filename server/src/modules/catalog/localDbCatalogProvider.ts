@@ -1,6 +1,13 @@
 import { prisma } from "../../db.js";
 import { sampleNoticeForSlug } from "../../catalog/sampleCatalog.js";
-import type { CatalogCollectible, CatalogProvider, CatalogSet, CatalogUniverse } from "./catalogProvider.js";
+import type {
+  CatalogCollectible,
+  CatalogProvider,
+  CatalogSearchHit,
+  CatalogSet,
+  CatalogUniverse,
+} from "./catalogProvider.js";
+import { searchCatalogCards } from "./searchCatalog.js";
 
 /**
  * CatalogProvider implementation backed by the local seeded database
@@ -47,6 +54,28 @@ export class LocalDbCatalogProvider implements CatalogProvider {
       metadata: row.metadata ? (JSON.parse(row.metadata) as Record<string, unknown>) : null,
       variants: row.variants.map((v) => ({ id: v.id, name: v.name, isDefault: v.isDefault })),
     }));
+  }
+
+  async searchCollectibles(query: string, limit: number): Promise<{ hits: CatalogSearchHit[]; truncated: boolean }> {
+    const rows = await prisma.collectible.findMany({
+      select: {
+        id: true,
+        number: true,
+        name: true,
+        rarity: true,
+        set: { select: { id: true, name: true, code: true, universe: { select: { name: true } } } },
+      },
+    });
+    const cards: CatalogSearchHit[] = rows.map((row) => ({
+      id: row.id,
+      number: row.number,
+      name: row.name,
+      rarity: row.rarity,
+      set: { id: row.set.id, name: row.set.name, code: row.set.code },
+      universeName: row.set.universe.name,
+    }));
+    const found = searchCatalogCards(cards, query, limit);
+    return { hits: found.results, truncated: found.truncated };
   }
 }
 

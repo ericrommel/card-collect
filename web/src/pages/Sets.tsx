@@ -1,3 +1,4 @@
+import { CardSearch } from "../components/CardSearch";
 import { SetCover } from "../components/SetCover";
 import type { DashboardSetSummary } from "../lib/api";
 import { useDashboard } from "../lib/useDashboard";
@@ -26,6 +27,7 @@ export function SetsPage() {
         <h1>Sets</h1>
         <p className="muted">Choose a set to search, filter, and update the cards you own.</p>
       </div>
+      <CardSearch />
       {groups.length === 0 && (
         <div className="card empty-state">
           <p>No sets are loaded yet.</p>
