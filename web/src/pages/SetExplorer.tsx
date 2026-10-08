@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CardDetail } from "../components/CardDetail";
 import { inkFromMetadata } from "../components/CardFace";
+import { kindFromMetadata } from "../lib/cardMotif";
 import { OwnedFace } from "../components/OwnedFace";
 import { SharingPanel } from "../components/SharingPanel";
 import * as api from "../lib/api";
@@ -79,6 +80,19 @@ function revealSelectedCard(root: HTMLElement, collectibleId: string) {
   if (rect.top >= Math.max(headerBottom, toolsBottom) + 4 && rect.bottom <= barTop - 8 && rect.bottom > rect.top)
     return;
   card.scrollIntoView({ block: "center", inline: "nearest" });
+}
+
+function TileSubtitle({ entry }: { entry: ExplorerEntry }) {
+  const kind = kindFromMetadata(entry.collectible.metadata);
+  return (
+    <>
+      <span className="tile-sub">
+        {entry.collectible.number}
+        {entry.collectible.rarity ? ` · ${rarityLabel(entry.collectible.rarity)}` : ""}
+      </span>
+      {kind && <span className="tile-sub">{kind}</span>}
+    </>
+  );
 }
 
 function TileBadges({ entry }: { entry: ExplorerEntry }) {
@@ -846,14 +860,12 @@ export function SetExplorerPage() {
                       name={entry.collectible.name}
                       rarity={entry.collectible.rarity}
                       ink={inkFromMetadata(entry.collectible.metadata)}
+                      kind={kindFromMetadata(entry.collectible.metadata)}
                       copies={entry.copies}
                       photoRevision={photoRevision}
                     />
                     <span className="tile-name">{entry.collectible.name}</span>
-                    <span className="tile-sub">
-                      {entry.collectible.number}
-                      {entry.collectible.rarity ? ` · ${rarityLabel(entry.collectible.rarity)}` : ""}
-                    </span>
+                    <TileSubtitle entry={entry} />
                     <TileBadges entry={entry} />
                   </button>
                   {!entry.isOwned && !selecting && (
@@ -893,15 +905,13 @@ export function SetExplorerPage() {
                       name={entry.collectible.name}
                       rarity={entry.collectible.rarity}
                       ink={inkFromMetadata(entry.collectible.metadata)}
+                      kind={kindFromMetadata(entry.collectible.metadata)}
                       copies={entry.copies}
                       photoRevision={photoRevision}
                     />
                     <span className="row-copy">
                       <span className="tile-name">{entry.collectible.name}</span>
-                      <span className="tile-sub">
-                        {entry.collectible.number}
-                        {entry.collectible.rarity ? ` · ${rarityLabel(entry.collectible.rarity)}` : ""}
-                      </span>
+                      <TileSubtitle entry={entry} />
                       <TileBadges entry={entry} />
                     </span>
                   </button>

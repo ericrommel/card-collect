@@ -62,8 +62,8 @@ export function LoginPage() {
           you are.
         </p>
         <div className="auth-faces" aria-hidden="true">
-          <CardFace number="HA01-001" name="Lantern Keeper" rarity="Common" ink="Sea" />
-          <CardFace number="HA01-020" name="Braid Keeper" rarity="Legendary" ink="Sea" />
+          <CardFace number="HA01-001" name="Lantern Keeper" rarity="Common" ink="Sea" kind="Place" />
+          <CardFace number="HA01-020" name="Braid Keeper" rarity="Legendary" ink="Sea" kind="Event" />
           <CardFace number="SV01-010" name="Helmsman's Steady Hand" rarity="C" />
         </div>
       </div>

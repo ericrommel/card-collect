@@ -13,6 +13,7 @@ export function OwnedFace({
   name,
   rarity,
   ink,
+  kind,
   copies,
   size = "md",
   photoRevision = 0,
@@ -21,6 +22,7 @@ export function OwnedFace({
   name: string;
   rarity: string | null;
   ink?: string | null;
+  kind?: string | null;
   copies: UserCopy[];
   size?: "sm" | "md";
   /** Bumped after a photo is saved or removed, so a replacement is not the cached picture. */
@@ -41,5 +43,5 @@ export function OwnedFace({
       />
     );
   }
-  return <CardFace number={number} name={name} rarity={rarity} ink={ink} size={size} />;
+  return <CardFace number={number} name={name} rarity={rarity} ink={ink} kind={kind} size={size} />;
 }
