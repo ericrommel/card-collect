@@ -14,6 +14,12 @@ const ACTION_LABEL: Record<ExchangeAction, string> = {
   confirm: "Confirm cards changed hands",
 };
 
+function confirmAction(action: ExchangeAction): boolean {
+  if (action === "decline") return window.confirm("Decline this proposal? Nothing will change hands.");
+  if (action === "cancel") return window.confirm("Cancel this exchange? Nothing will change hands.");
+  return true;
+}
+
 function statusSentence(exchange: Exchange): string {
   if (exchange.status === "PROPOSED" && exchange.role === "proposer") {
     return "Waiting for them to accept or decline. Nothing has moved.";
@@ -126,7 +132,10 @@ function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChang
                 action === "accept" ? "primary" : action === "decline" || action === "cancel" ? "secondary" : "primary"
               }
               disabled={busy}
-              onClick={() => run(action)}
+              onClick={() => {
+                if (!confirmAction(action)) return;
+                void run(action);
+              }}
             >
               {ACTION_LABEL[action]}
             </button>
