@@ -119,10 +119,18 @@ describe("exchanges", () => {
 
     const matches = await request(app).get(`/api/my/matches?setId=${setId}`).set(auth(alice.token));
     expect(matches.status).toBe(200);
-    const trade = (matches.body.matches as Array<{ type: string; collector: { ref: string } }>).find(
-      (match) => match.type === "MUTUAL_TRADE",
-    );
+    const trade = (
+      matches.body.matches as Array<{
+        type: string;
+        collector: { ref: string };
+        current_user: { completion_before: number; completion_after: number };
+        other_collector: { completion_before: number; completion_after: number };
+      }>
+    ).find((match) => match.type === "MUTUAL_TRADE");
     expect(trade?.collector.ref).toBeTruthy();
+    // Alice keeps a second copy of c2 and gains c3. Bob trades away his only c3.
+    expect(trade?.current_user).toMatchObject({ completion_before: 33.3, completion_after: 66.7 });
+    expect(trade?.other_collector).toMatchObject({ completion_before: 33.3, completion_after: 33.3 });
 
     const proposed = await request(app)
       .post("/api/my/exchanges")
@@ -146,6 +154,10 @@ describe("exchanges", () => {
     ).toEqual([["c2", "Played"]]);
     expect(proposed.body.exchange.you_receive).toMatchObject([{ number: "c3", condition: "Good" }]);
     expect(proposed.body.exchange.other_collector).toEqual({ display_name: "Bob Trader", ref: trade!.collector.ref });
+    expect(proposed.body.exchange.projected_completion).toEqual({
+      yours: { before: 33.3, after: 66.7 },
+      theirs: { before: 33.3, after: 33.3 },
+    });
 
     const raw = JSON.stringify(proposed.body);
     expect(raw).not.toContain(alice.email);
@@ -199,6 +211,10 @@ describe("exchanges", () => {
       actions: ["accept", "decline"],
       you_give: [{ number: "c3" }],
       you_receive: [{ number: "c2", condition: "Played" }],
+      projected_completion: {
+        yours: { before: 33.3, after: 33.3 },
+        theirs: { before: 33.3, after: 66.7 },
+      },
     });
 
     const accepted = await request(app).post(`/api/my/exchanges/${exchangeId}/accept`).set(auth(bob.token));
@@ -222,6 +238,7 @@ describe("exchanges", () => {
       actions: [],
       you_confirmed: true,
       they_confirmed: true,
+      projected_completion: null,
     });
 
     const again = await request(app).post(`/api/my/exchanges/${exchangeId}/confirm`).set(auth(alice.token));
@@ -292,6 +309,11 @@ describe("exchanges", () => {
     expect(proposed.status).toBe(201);
     expect(proposed.body.exchange.you_give).toEqual([]);
     expect(proposed.body.exchange.you_receive).toMatchObject([{ number: "c2", condition: "Excellent" }]);
+    // Alice gains a card. Bob gives away the only copy he has.
+    expect(proposed.body.exchange.projected_completion).toEqual({
+      yours: { before: 50, after: 100 },
+      theirs: { before: 50, after: 0 },
+    });
 
     const aliceCopies = await request(app).get(`/api/my/collection?setId=${setId}`).set(auth(alice.token));
     expect((aliceCopies.body.copies as Array<{ reserved: boolean }>).every((copy) => copy.reserved === false)).toBe(
@@ -335,6 +357,7 @@ describe("exchanges", () => {
     const cancelled = await request(app).post(`/api/my/exchanges/${id}/cancel`).set(auth(alice.token));
     expect(cancelled.body.exchange.status).toBe("CANCELLED");
     expect(cancelled.body.exchange.actions).toEqual([]);
+    expect(cancelled.body.exchange.projected_completion).toBeNull();
 
     const aliceAfter = await request(app).get(`/api/my/collection?setId=${setId}`).set(auth(alice.token));
     expect(aliceAfter.body.copies).toMatchObject([{ id: aliceCopy.id, availability: "TRADE", reserved: false }]);

@@ -83,6 +83,11 @@ function MatchCard({ match, setId }: { match: CollectorMatch; setId: string }) {
           />
         )}
       </div>
+      {(match.current_user.completion_after < match.current_user.completion_before ||
+        (match.other_collector != null &&
+          match.other_collector.completion_after < match.other_collector.completion_before)) && (
+        <p className="muted small">A card without another copy would leave, so that set does not go up.</p>
+      )}
 
       {error && <p className="error">{error}</p>}
       <div className="match-actions">

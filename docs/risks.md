@@ -519,6 +519,9 @@ from being over-trusted by an end user who never reads the docs.
   score is about finishing the set, not card value or a fair price;
 - user-entered condition is shown on an exchange and is explicitly not an
   input to the score;
+- the completion change is net. Giving away your only copy of a card
+  lowers that side, so swapping two unique cards does not look like both
+  collections grew;
 - no price/value data exists anywhere in the app (see the existing
   Pricing Data Reliability and AI Cost risks above) — there is currently
   no data source the score could draw a value signal from.

@@ -175,6 +175,11 @@ export interface Exchange {
   you_confirmed: boolean;
   they_confirmed: boolean;
   actions: ExchangeAction[];
+  /** Set for an open exchange. Null after it is declined, cancelled, or completed. */
+  projected_completion: {
+    yours: { before: number; after: number };
+    theirs: { before: number; after: number };
+  } | null;
   created_at: string;
   updated_at: string;
 }

@@ -64,6 +64,10 @@ function HighlightCard({
             · Theirs {item.their_completion_before}% → <strong>{item.their_completion_after}%</strong>
           </>
         )}
+        {(item.your_completion_after < item.your_completion_before ||
+          (item.their_completion_after !== undefined &&
+            item.their_completion_after < (item.their_completion_before ?? item.their_completion_after))) &&
+          " A card without another copy would leave."}
       </p>
       <div className="match-actions">
         <button type="button" className="primary small" disabled={busy} onClick={() => onPropose(item)}>

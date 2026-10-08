@@ -17,7 +17,7 @@ import {
   type ParticipantRole,
 } from "../../domain/exchange.js";
 import { findDonationCandidate, findMutualTradeCandidate } from "../../domain/matching.js";
-import { calculateProgress } from "../../domain/progress.js";
+import { calculateProgress, completionPercentageOf, ownedCountAfterTransfer } from "../../domain/progress.js";
 
 export type ExchangeType = "MUTUAL_TRADE" | "DONATION";
 
@@ -40,6 +40,15 @@ export interface ExchangeView {
   you_confirmed: boolean;
   they_confirmed: boolean;
   actions: ExchangeAction[];
+  /**
+   * How each person's set would look if this open exchange finished now.
+   * Null once it is declined, cancelled, or completed — those rows do not
+   * store the counts from when they were proposed.
+   */
+  projected_completion: {
+    yours: { before: number; after: number };
+    theirs: { before: number; after: number };
+  } | null;
   created_at: string;
   updated_at: string;
 }
@@ -118,8 +127,85 @@ export function toExchangeView(row: ExchangeRow, viewerId: string): ExchangeView
     you_confirmed: youConfirmed,
     they_confirmed: theyConfirmed,
     actions: allowedActions(state, role),
+    projected_completion: null,
     created_at: row.createdAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
+  };
+}
+
+type ExchangeDb = Prisma.TransactionClient | typeof prisma;
+
+interface ProjectionCache {
+  totals: Map<string, number>;
+  quantities: Map<string, Map<string, number>>;
+}
+
+function newProjectionCache(): ProjectionCache {
+  return { totals: new Map(), quantities: new Map() };
+}
+
+function projectSide(
+  total: number,
+  quantities: ReadonlyMap<string, number>,
+  received: string[],
+  given: string[],
+): { before: number; after: number } {
+  let ownedCount = 0;
+  for (const quantity of quantities.values()) {
+    if (quantity > 0) ownedCount += 1;
+  }
+  const afterCount = ownedCountAfterTransfer(total, ownedCount, quantities, received, given);
+  return {
+    before: completionPercentageOf(ownedCount, total),
+    after: completionPercentageOf(afterCount, total),
+  };
+}
+
+async function setTotal(setId: string, cache: ProjectionCache): Promise<number> {
+  const cached = cache.totals.get(setId);
+  if (cached !== undefined) return cached;
+  const collectibles = await catalogProvider.listCollectibles(setId);
+  cache.totals.set(setId, collectibles.length);
+  return collectibles.length;
+}
+
+async function quantitiesByNumber(userId: string, setId: string, db: ExchangeDb, cache: ProjectionCache) {
+  const key = `${userId}:${setId}`;
+  const cached = cache.quantities.get(key);
+  if (cached) return cached;
+  const copies = await getUserCopies(userId, setId, db);
+  const quantities = new Map<string, number>();
+  for (const copy of copies) {
+    const number = copy.variant.collectible.number;
+    quantities.set(number, (quantities.get(number) ?? 0) + 1);
+  }
+  cache.quantities.set(key, quantities);
+  return quantities;
+}
+
+/** Fills the projection for an open exchange. Closed exchanges stay null. */
+async function withProjection(
+  row: ExchangeRow,
+  viewerId: string,
+  db: ExchangeDb,
+  cache: ProjectionCache,
+): Promise<ExchangeView> {
+  const view = toExchangeView(row, viewerId);
+  if (view.status !== "PROPOSED" && view.status !== "ACCEPTED") return view;
+
+  const total = await setTotal(row.setId, cache);
+  const otherId = row.proposerId === viewerId ? row.counterpartyId : row.proposerId;
+  const yours = await quantitiesByNumber(viewerId, row.setId, db, cache);
+  const theirs = await quantitiesByNumber(otherId, row.setId, db, cache);
+  const youGive = row.lines.filter((line) => line.fromUserId === viewerId).map((line) => line.collectibleNumber);
+  const youReceive = row.lines.filter((line) => line.toUserId === viewerId).map((line) => line.collectibleNumber);
+
+  return {
+    ...view,
+    projected_completion: {
+      yours: projectSide(total, yours, youReceive, youGive),
+      theirs: projectSide(total, theirs, youGive, youReceive),
+    },
   };
 }
 
@@ -236,7 +322,10 @@ export async function listExchangesForUser(userId: string): Promise<ExchangeView
     include: exchangeInclude,
     orderBy: { updatedAt: "desc" },
   });
-  return rows.map((row) => toExchangeView(row, userId));
+  const cache = newProjectionCache();
+  const views: ExchangeView[] = [];
+  for (const row of rows) views.push(await withProjection(row, userId, prisma, cache));
+  return views;
 }
 
 export async function getExchangeForUser(userId: string, exchangeId: string): Promise<ExchangeView> {
@@ -244,7 +333,7 @@ export async function getExchangeForUser(userId: string, exchangeId: string): Pr
   if (!row || !roleFor(row, userId)) {
     throw ApiError.notFound("Exchange not found");
   }
-  return toExchangeView(row, userId);
+  return withProjection(row, userId, prisma, newProjectionCache());
 }
 
 export async function proposeExchange(
@@ -304,7 +393,7 @@ export async function proposeExchange(
       }
     }
 
-    return toExchangeView(created, proposerId);
+    return withProjection(created, proposerId, tx, newProjectionCache());
   });
 }
 
@@ -323,7 +412,7 @@ export async function actOnExchange(userId: string, exchangeId: string, action: 
       result.state.proposerConfirmed === before.proposerConfirmed &&
       result.state.counterpartyConfirmed === before.counterpartyConfirmed
     ) {
-      return { view: toExchangeView(row, userId), removedImageIds: [] as string[] };
+      return { view: await withProjection(row, userId, tx, newProjectionCache()), removedImageIds: [] as string[] };
     }
 
     const now = new Date();
@@ -357,7 +446,7 @@ export async function actOnExchange(userId: string, exchangeId: string, action: 
       },
       include: exchangeInclude,
     });
-    return { view: toExchangeView(updated, userId), removedImageIds };
+    return { view: await withProjection(updated, userId, tx, newProjectionCache()), removedImageIds };
   });
   await unlinkImages(outcome.removedImageIds);
   return outcome.view;

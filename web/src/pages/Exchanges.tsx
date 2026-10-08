@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { OfferCards } from "../components/OfferCards";
 import * as api from "../lib/api";
 import type { Exchange, ExchangeAction } from "../lib/api";
-import { EXCHANGE_STATUS_LABEL } from "../lib/labels";
+import { EXCHANGE_STATUS_LABEL, completionShift } from "../lib/labels";
 
 const ACTION_LABEL: Record<ExchangeAction, string> = {
   accept: "Accept",
@@ -76,17 +76,33 @@ function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChang
       <div className="match-columns">
         <div>
           <p>
-            You give <strong>{exchange.you_give.length}</strong>
+            You give <strong>{exchange.you_give.length}</strong> {exchange.you_give.length === 1 ? "card" : "cards"}
           </p>
           <OfferCards items={exchange.you_give} showCondition />
         </div>
         <div>
           <p>
-            You receive <strong>{exchange.you_receive.length}</strong>
+            You receive <strong>{exchange.you_receive.length}</strong>{" "}
+            {exchange.you_receive.length === 1 ? "card" : "cards"}
           </p>
           <OfferCards items={exchange.you_receive} showCondition />
         </div>
       </div>
+      {exchange.projected_completion && (
+        <p className="small">
+          If this finishes,{" "}
+          {completionShift(
+            "your set",
+            exchange.projected_completion.yours.before,
+            exchange.projected_completion.yours.after,
+          )}{" "}
+          {completionShift(
+            "Theirs",
+            exchange.projected_completion.theirs.before,
+            exchange.projected_completion.theirs.after,
+          )}
+        </p>
+      )}
       {exchange.status === "ACCEPTED" && (
         <p className="small">
           You: {exchange.you_confirmed ? "confirmed" : "not yet"} · Them:{" "}

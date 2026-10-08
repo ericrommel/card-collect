@@ -51,14 +51,18 @@ describe("GET /api/my/matches — ranked trade/donation matches", () => {
     const { setId, variantIds } = await createTestSet(6);
 
     const me = await registerUser(`me-${Date.now()}@example.com`);
-    // I own c1, c2; missing c3, c4, c5, c6.
+    // I own c1 and two copies of c2, so offering one c2 still leaves c2 in the set.
+    // Missing c3, c4, c5, c6.
     await addCopy(me.token, variantIds.c1, "KEEP");
+    await addCopy(me.token, variantIds.c2, "KEEP");
     await addCopy(me.token, variantIds.c2, "TRADE");
 
-    // Trader: owns c4, c5 (TRADE) — I'm missing both. Trader is missing c1, c2, c3
-    // and I have c2 marked TRADE, which covers c2 for them.
+    // Trader: owns c4 and c5, each with a spare, and offers the spare. Also owns c6.
+    // Trader is missing c2, which my TRADE copy covers. Both sets go up.
     const trader = await registerUser(`trader-${Date.now()}@example.com`);
+    await addCopy(trader.token, variantIds.c4, "KEEP");
     await addCopy(trader.token, variantIds.c4, "TRADE");
+    await addCopy(trader.token, variantIds.c5, "KEEP");
     await addCopy(trader.token, variantIds.c5, "TRADE");
     await addCopy(trader.token, variantIds.c6, "KEEP"); // owned, not missing, not offerable
 
@@ -86,8 +90,16 @@ describe("GET /api/my/matches — ranked trade/donation matches", () => {
     expect((trade.collector as { ref: string }).ref).toMatch(/^[A-Za-z0-9_-]{20,}$/);
     expect((trade.collector as { ref: string }).ref).not.toBe(trader.userId);
     expect(trade.open_exchange_id).toBeUndefined();
-    expect(trade.current_user).toMatchObject({ cards_received: 2 }); // c4, c5
-    expect(trade.other_collector).toMatchObject({ cards_received: 1 }); // c2
+    expect(trade.current_user).toMatchObject({
+      cards_received: 2,
+      completion_before: 33.3,
+      completion_after: 66.7,
+    }); // c4, c5, and c2 stays
+    expect(trade.other_collector).toMatchObject({
+      cards_received: 1,
+      completion_before: 50,
+      completion_after: 66.7,
+    }); // c2, and c4 plus c5 stay
     expect(trade.balance).toEqual({ difference: 1 });
     expect((trade.proposed_exchange as any).you_receive.map((c: any) => c.number).sort()).toEqual(["c4", "c5"]);
     expect((trade.proposed_exchange as any).they_receive.map((c: any) => c.number)).toEqual(["c2"]);

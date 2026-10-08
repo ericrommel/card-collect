@@ -11,7 +11,7 @@
  * docs/architecture.md#trade-score-formula for the full write-up of the
  * formula below.
  */
-import { completionPercentageOf, estimateCompletionAfter } from "./progress.js";
+import { completionPercentageOf, ownedCountAfterTransfer } from "./progress.js";
 
 export type MatchType = "MUTUAL_TRADE" | "DONATION";
 
@@ -25,6 +25,12 @@ export interface CollectibleRef {
 export interface SetProgressSnapshot {
   totalCount: number;
   ownedCount: number;
+  /**
+   * Physical copies of each collectible this person has now.
+   * A card they would give away must be listed. An unlisted card that
+   * leaves is treated as their only copy.
+   */
+  quantityByCollectible: ReadonlyMap<string, number>;
 }
 
 export interface SideProgress {
@@ -49,9 +55,16 @@ export interface TradeScoreBreakdown {
   };
 }
 
-function computeSideProgress(snapshot: SetProgressSnapshot, receivedIds: string[]): SideProgress {
+function computeSideProgress(snapshot: SetProgressSnapshot, receivedIds: string[], givenIds: string[]): SideProgress {
   const completionBefore = completionPercentageOf(snapshot.ownedCount, snapshot.totalCount);
-  const completionAfter = estimateCompletionAfter(snapshot.totalCount, snapshot.ownedCount, receivedIds);
+  const ownedAfter = ownedCountAfterTransfer(
+    snapshot.totalCount,
+    snapshot.ownedCount,
+    snapshot.quantityByCollectible,
+    receivedIds,
+    givenIds,
+  );
+  const completionAfter = completionPercentageOf(ownedAfter, snapshot.totalCount);
   return {
     cardsReceived: receivedIds.length,
     completionBefore,
@@ -93,8 +106,16 @@ export function scoreMutualTrade(
   candidate: { currentUserReceives: string[]; otherCollectorReceives: string[] },
   collectiblesById: Map<string, CollectibleRef>,
 ): TradeScoreBreakdown {
-  const currentUser = computeSideProgress(currentUserSnapshot, candidate.currentUserReceives);
-  const otherCollector = computeSideProgress(otherCollectorSnapshot, candidate.otherCollectorReceives);
+  const currentUser = computeSideProgress(
+    currentUserSnapshot,
+    candidate.currentUserReceives,
+    candidate.otherCollectorReceives,
+  );
+  const otherCollector = computeSideProgress(
+    otherCollectorSnapshot,
+    candidate.otherCollectorReceives,
+    candidate.currentUserReceives,
+  );
 
   const scaledCurrent = scaleGain(currentUser.completionGain);
   const scaledOther = scaleGain(otherCollector.completionGain);
@@ -122,7 +143,7 @@ export function scoreDonation(
   donatedCollectibleIds: string[],
   collectiblesById: Map<string, CollectibleRef>,
 ): TradeScoreBreakdown {
-  const currentUser = computeSideProgress(currentUserSnapshot, donatedCollectibleIds);
+  const currentUser = computeSideProgress(currentUserSnapshot, donatedCollectibleIds, []);
 
   return {
     // No balance factor (one-sided by construction) and no reciprocity

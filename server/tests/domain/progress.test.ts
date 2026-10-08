@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateProgress, estimateCompletionAfter } from "../../src/domain/progress.js";
+import { calculateProgress, estimateCompletionAfter, ownedCountAfterTransfer } from "../../src/domain/progress.js";
 
 function collectibles(count: number) {
   return Array.from({ length: count }, (_, i) => ({ id: `c${i + 1}` }));
@@ -64,5 +64,30 @@ describe("estimateCompletionAfter", () => {
     const ids = Object.freeze(["a", "b"]);
     expect(() => estimateCompletionAfter(10, 6, ids as unknown as string[])).not.toThrow();
     expect(ids).toEqual(["a", "b"]);
+  });
+});
+
+describe("ownedCountAfterTransfer", () => {
+  it("keeps a card when a spare copy stays and adds a card the person did not have", () => {
+    const quantities = new Map([
+      ["keep", 2],
+      ["only", 1],
+    ]);
+    expect(ownedCountAfterTransfer(10, 2, quantities, ["new"], ["keep"])).toBe(3);
+  });
+
+  it("drops a card when every copy of it leaves", () => {
+    const quantities = new Map([["only", 1]]);
+    expect(ownedCountAfterTransfer(10, 1, quantities, ["new"], ["only"])).toBe(1);
+    expect(ownedCountAfterTransfer(10, 1, quantities, [], ["only"])).toBe(0);
+  });
+
+  it("treats an unlisted card that leaves as the only copy", () => {
+    expect(ownedCountAfterTransfer(10, 1, new Map(), ["new"], ["mystery"])).toBe(1);
+  });
+
+  it("does not go below zero or above the set", () => {
+    expect(ownedCountAfterTransfer(2, 0, new Map(), ["a", "b", "c"], [])).toBe(2);
+    expect(ownedCountAfterTransfer(2, 0, new Map([["a", 1]]), [], ["a"])).toBe(0);
   });
 });
