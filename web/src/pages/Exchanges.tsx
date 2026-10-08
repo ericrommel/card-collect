@@ -36,7 +36,6 @@ function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChang
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const isOpen = exchange.status === "PROPOSED" || exchange.status === "ACCEPTED";
 
   async function run(action: ExchangeAction) {
     setBusy(true);
@@ -69,12 +68,6 @@ function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChang
         {exchange.role === "proposer" ? "You proposed this" : "They proposed this"}
       </p>
       <p>{statusSentence(exchange)}</p>
-      {isOpen && (
-        <p className="muted small">
-          Your email and location stay private. This app does not message the other collector or arrange a meeting. The
-          match score is about finishing the set, not about card value.
-        </p>
-      )}
       <div className="match-columns">
         <div>
           <p>
@@ -199,7 +192,8 @@ export function ExchangesPage() {
           <h1>Exchanges</h1>
           <p className="muted">
             Trades and donations you have proposed or been asked about. Cards move only after both people confirm the
-            handover.
+            handover. Your email and location stay private. This app does not message the other person or arrange a
+            meeting.
           </p>
         </div>
       </div>

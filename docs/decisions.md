@@ -238,6 +238,10 @@ Adding a card could save a front photo only. You can also add a photo of the bac
 
 Home shows at most three cards on each side of a match. When there are more, the button opens the match instead of proposing it. An open exchange uses the same completion lines as that match, and says whether each person has confirmed.
 
+## 2026-10-08 — An exchange states the privacy limits once
+
+Each open exchange repeated that the app does not message anyone or arrange a meeting. That note now sits once under the page title, so the cards and the next action stay higher on a phone. The match page still says the score is about finishing the set.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
