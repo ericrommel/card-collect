@@ -96,6 +96,7 @@ function CardColumn({
   onCondition,
   onRemove,
   onPhotosChange,
+  showName = true,
 }: {
   entry: ExplorerEntry;
   busy: boolean;
@@ -104,6 +105,7 @@ function CardColumn({
   onCondition: (copyId: string, condition: ConditionGrade | null) => void;
   onRemove: (copyId: string) => void;
   onPhotosChange?: (event: "saved" | "removed") => void;
+  showName?: boolean;
 }) {
   const collectible = entry.collectible;
   const metadata = Object.entries(collectible.metadata ?? {}).filter(
@@ -120,7 +122,7 @@ function CardColumn({
         ink={inkFromMetadata(collectible.metadata)}
         kind={kindFromMetadata(collectible.metadata)}
       />
-      <h3>{collectible.name}</h3>
+      {showName && <h3>{collectible.name}</h3>}
       <p className="muted small">
         {collectible.number}
         {collectible.rarity ? ` · ${rarityLabel(collectible.rarity)}` : ""}
@@ -205,7 +207,13 @@ export function CardDetail({
       aria-label={mode === "compare" ? "Compare cards" : "Card details"}
     >
       <div className="detail-toolbar">
-        <h2>{mode === "compare" ? "Compare" : mode === "bulk" ? "Selected cards" : "Card"}</h2>
+        <h2>
+          {mode === "compare"
+            ? "Compare"
+            : mode === "bulk"
+              ? "Selected cards"
+              : (entries[0]?.collectible.name ?? "Card")}
+        </h2>
         <button type="button" className="secondary small" onClick={onClose}>
           Close
         </button>
@@ -224,6 +232,7 @@ export function CardDetail({
               onCondition={onCondition}
               onRemove={onRemove}
               onPhotosChange={onPhotosChange}
+              showName={mode === "compare"}
             />
           ))}
         </div>

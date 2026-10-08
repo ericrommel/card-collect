@@ -242,6 +242,10 @@ Home shows at most three cards on each side of a match. When there are more, the
 
 Each open exchange repeated that the app does not message anyone or arrange a meeting. That note now sits once under the page title, so the cards and the next action stay higher on a phone. The match page still says the score is about finishing the set.
 
+## 2026-10-08 — A card's name is the title of its details
+
+The detail panel was titled "Card", and the availability choices wrapped so one sat on a line by itself. The title is now the card's name. Keep, For trade, For sale, and Donation sit in two columns. Comparing two cards still titles the panel Compare and names each card underneath.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

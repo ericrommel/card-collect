@@ -714,6 +714,12 @@ select {
   align-items: center;
 }
 
+.detail-toolbar h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* Stays under the header so a long set can be searched without returning to the top. */
 .explorer-toolbar {
   position: sticky;
@@ -1054,6 +1060,15 @@ select {
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
+}
+
+.copy-editor .segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.copy-editor .segmented button {
+  min-height: 44px;
 }
 
 .segmented button {
@@ -1434,6 +1449,10 @@ select {
     overflow: auto;
     border-radius: 18px 18px 0 0;
     padding-bottom: calc(var(--nav-h) + 0.8rem);
+  }
+
+  .detail-panel .detail-toolbar button {
+    min-height: 44px;
   }
 
   .detail-compare {
