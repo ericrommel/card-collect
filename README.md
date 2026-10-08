@@ -82,7 +82,8 @@ password `password123`), or register a new account.
 name other collectors see. The email cannot be changed. The display name
 can, and it cannot be an email address or a link, because matches,
 exchanges, and a shared collection show it. Changing the password keeps
-this browser signed in and signs out the others. Sign out ends every
+this browser signed in and signs out the others. On a phone those fields
+are on the first screen, including a narrow one, and that note sits above the button. Sign out ends every
 session for the account. There is no email reset. Password guesses are
 limited to 10 a minute.
 

@@ -71,7 +71,7 @@ export function AccountPage() {
   }
 
   return (
-    <div className="page-stack">
+    <div className="page-stack account-page">
       <div>
         <p className="eyebrow">Account</p>
         <h1>Your account</h1>
@@ -113,10 +113,6 @@ export function AccountPage() {
 
       <section className="card account-panel">
         <h2>Password</h2>
-        <p className="muted">
-          Changing your password keeps you signed in here and signs out every other browser. Sign out ends every
-          session, including this one. There is no email to reset a forgotten password.
-        </p>
         <form onSubmit={savePassword} className="form">
           <label>
             Current password
@@ -150,6 +146,10 @@ export function AccountPage() {
               required
             />
           </label>
+          <p className="muted password-note">
+            You stay signed in here, and every other browser is signed out. Sign out ends every session, including this
+            one. There is no email to reset a forgotten password.
+          </p>
           {passwordError && (
             <p className="error" role="alert">
               {passwordError}

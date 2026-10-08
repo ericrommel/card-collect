@@ -274,6 +274,10 @@ The phone selection bar already asked for a 44px target, but the smaller button 
 
 On a phone, More makes the selection bar taller, and that bar was covering the card. Opening More now moves the card up until the name and number clear the bar, or until the name meets the search. Choosing another card after that does not jump the page. On a wide screen the same bar sits over the grid, so the first selected card moves up in the same way. The card beside it stays open.
 
+## 2026-10-08 — Password fields come before the explanation
+
+On a phone the password explanation sat above the fields, so the new password was under the navigation. The fields come first now. The same explanation stays on the page, directly above the button: this browser stays signed in, other browsers are signed out, sign out ends every session, and there is no reset email. On a narrow phone the header stays one line, so those fields still clear the navigation.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

@@ -1646,6 +1646,22 @@ select {
     padding-bottom: calc(var(--nav-h) + 1.5rem);
   }
 
+  .account-page.page-stack {
+    gap: 0.55rem;
+  }
+
+  .account-page .account-panel {
+    padding: 0.75rem 0.9rem;
+  }
+
+  .account-page .form {
+    gap: 0.5rem;
+  }
+
+  .account-page .password-note {
+    margin-top: 0.85rem;
+  }
+
   .card-search input,
   .card-search .search-hit,
   .card-search .search-feedback,
@@ -1797,6 +1813,40 @@ select {
 
   .bulk-bar {
     bottom: calc(var(--nav-h) + 0.4rem);
+  }
+}
+
+/* On a narrow phone, "Sign out" wraps and the header grows. The display-name hint also wraps, which pushes the password fields under the navigation. */
+@media (max-width: 360px) {
+  .app-header {
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
+    gap: 0.5rem;
+  }
+
+  .header-user {
+    gap: 0.15rem 0.45rem;
+  }
+
+  .header-account,
+  .header-user button {
+    white-space: nowrap;
+  }
+
+  .account-page .form > p.muted:not(.password-note) {
+    font-size: 0.92rem;
+    line-height: 1.35;
+  }
+}
+
+/* The hint is still three lines at this width, so the stack above the password fields has to be shorter. */
+@media (max-width: 324px) {
+  .account-page.page-stack {
+    gap: 0.35rem;
+  }
+
+  .account-page h1 {
+    margin-bottom: 0.15rem;
   }
 }
 
