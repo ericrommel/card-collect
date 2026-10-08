@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  duplicateOfferConfirm,
   duplicateOfferStatus,
   planDuplicateOffers,
   type DuplicateCopyRef,
@@ -66,6 +67,21 @@ describe("planDuplicateOffers", () => {
     expect(plan).toMatchObject({ cards: 1, extras: 2, skippedSingle: 1 });
     expect(duplicateOfferStatus(plan)).toBe(
       "Kept one copy of 1 card and marked 2 extras for trade. Left 1 card unchanged because there isn't a free duplicate.",
+    );
+    expect(duplicateOfferConfirm(plan)).toBe(
+      "Keep one copy of 1 card and mark 2 extras for trade? 1 card with only one free copy stays as it is.",
+    );
+  });
+
+  it("asks before several cards change and names every card that would stay", () => {
+    const plan = planDuplicateOffers([
+      [copy({ id: "a1" }), copy({ id: "a2", availability: "SELL" })],
+      [copy({ id: "b1" }), copy({ id: "b2", availability: "GIVE_AWAY" })],
+      [copy({ id: "solo" })],
+      [copy({ id: "solo-2" })],
+    ]);
+    expect(duplicateOfferConfirm(plan)).toBe(
+      "Keep one copy of 2 cards and mark 2 extras for trade? 2 cards with only one free copy stay as they are.",
     );
   });
 });

@@ -28,7 +28,7 @@ import {
   type OwnershipFilter,
 } from "../lib/explorerQuery";
 import { conditionSummary } from "../lib/conditionSummary";
-import { duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
+import { duplicateOfferConfirm, duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
 import { explorerDetail } from "../lib/explorerDetail";
 import { toggleVisibleSelection } from "../lib/explorerSelection";
 import { useNarrowViewport } from "../lib/useNarrowViewport";
@@ -392,6 +392,7 @@ export function SetExplorerPage() {
       );
       return;
     }
+    if (!window.confirm(duplicateOfferConfirm(plan))) return;
     await run(async () => {
       const batches: { ids: string[]; availability: Availability }[] = [
         { ids: plan.keepIds, availability: "KEEP" },

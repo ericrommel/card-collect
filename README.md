@@ -123,8 +123,8 @@ agrees. Copies that differ say Mixed. A card with no condition note stays
 unmarked, and a public page still does not show condition. Sort, switch between grid and list, and
 select cards. **Select these** chooses the cards on screen. **Mark owned** adds one Keep copy for each selected card you
 do not already own. **Add a copy** always adds another physical copy.
-**Offer duplicates** keeps one copy of each selected card — the one already
-marked Keep, or else the oldest — and marks the other free copies for trade.
+**Offer duplicates** asks first, then keeps one copy of each selected card — the one already
+marked Keep, or else the oldest — and marks the other free copies for trade. Cancel leaves the cards as they are.
 **All copies** changes every free copy, including the one you are keeping.
 A copy reserved for an open exchange cannot be changed. On a wide screen,
 one selected card opens beside the grid and two selected cards compare

@@ -52,6 +52,19 @@ export function planDuplicateOffers(groups: DuplicateCopyRef[][]): DuplicateOffe
   return { keepIds, offerIds, cards, extras, skippedSingle };
 }
 
+/** The question shown before any copy is changed. Cancel leaves the collection as it is. */
+export function duplicateOfferConfirm(plan: DuplicateOfferPlan): string {
+  const cards = plan.cards === 1 ? "1 card" : `${plan.cards} cards`;
+  const extras = plan.extras === 1 ? "1 extra" : `${plan.extras} extras`;
+  let message = `Keep one copy of ${cards} and mark ${extras} for trade?`;
+  if (plan.skippedSingle === 1) {
+    message += " 1 card with only one free copy stays as it is.";
+  } else if (plan.skippedSingle > 1) {
+    message += ` ${plan.skippedSingle} cards with only one free copy stay as they are.`;
+  }
+  return message;
+}
+
 export function duplicateOfferStatus(plan: DuplicateOfferPlan): string {
   const cards = plan.cards === 1 ? "1 card" : `${plan.cards} cards`;
   const extras = plan.extras === 1 ? "1 extra" : `${plan.extras} extras`;

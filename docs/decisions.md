@@ -258,6 +258,10 @@ Home and the counts on a set already said extras, while the filter, the sort, an
 
 A shared collection shows the name the person chose and the lists they turned on. The page now says it does not show an email, a location, photos, or a card's condition. It stays read-only, and it still does not say who opened the link.
 
+## 2026-10-08 — Offering extras asks first
+
+Offer duplicates used to mark copies for trade as soon as it was chosen. It now asks first. One copy stays, and the extras would be marked for trade. Cancel leaves the collection as it is. A card with only one free copy is named in that question and is not changed.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
