@@ -457,7 +457,7 @@ export function SetExplorerPage() {
               {universes.find((universe) => universe.id === setInfo?.universeId)?.name}
             </p>
             <h1>{setInfo?.name ?? "Set"}</h1>
-            <p className="muted small">{setInfo?.code}</p>
+            <p className="set-code">{setInfo?.code}</p>
           </div>
           <div className="heading-actions">
             <label className="set-switcher">

@@ -658,6 +658,12 @@ select {
   margin: 0;
 }
 
+.set-code {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
 .explorer-toolbar,
 .result-row,
 .bulk-bar,
@@ -1490,7 +1496,7 @@ select {
   }
 
   .explorer-heading h1,
-  .explorer-heading .muted {
+  .explorer-heading .set-code {
     display: inline;
   }
 
@@ -1498,8 +1504,13 @@ select {
     font-size: 1.45rem;
   }
 
-  .explorer-heading .muted {
+  .explorer-heading .set-code {
     margin-left: 0.4rem;
+  }
+
+  .add-card-page .explorer-heading .muted {
+    display: block;
+    margin: 0.35rem 0 0;
   }
 
   .explorer .notice-line {

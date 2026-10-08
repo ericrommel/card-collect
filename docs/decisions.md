@@ -178,6 +178,10 @@ Catalog search is public and reads the whole sample catalog, so a script could a
 
 The search box on a phone sits below the sets. A result then opened under the bottom navigation, so the add button was covered even though the browser treated it as on screen. The result now moves up until it clears that bar. The search field does the same when it is focused. A wide screen has no bottom bar, so it does not move.
 
+## 2026-10-08 — Only the set code sits beside the title on a phone
+
+The phone set page puts the set code on the same line as the title. That rule also caught the Add a card instructions, so they continued on from the title. The code is now the only text that sits beside the title. The instructions stay a paragraph under it.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
