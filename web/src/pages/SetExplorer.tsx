@@ -25,6 +25,7 @@ import {
   type ExplorerView,
   type OwnershipFilter,
 } from "../lib/explorerQuery";
+import { conditionSummary } from "../lib/conditionSummary";
 import { duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
 import { explorerDetail } from "../lib/explorerDetail";
 import { useNarrowViewport } from "../lib/useNarrowViewport";
@@ -47,11 +48,13 @@ const AVAILABILITY_FILTERS: { id: AvailabilityFilter; label: string }[] = [
 
 function TileBadges({ entry }: { entry: ExplorerEntry }) {
   const offered = [...new Set(entry.copies.map((copy) => copy.availability))].filter((value) => value !== "KEEP");
+  const condition = conditionSummary(entry.copies.map((copy) => copy.condition));
   return (
     <span className="tile-badges">
       {!entry.isOwned && <span className="badge missing">Missing</span>}
       {entry.isOwned && entry.duplicateQuantity === 0 && <span className="badge owned">Owned</span>}
       {entry.duplicateQuantity > 0 && <span className="badge dup">×{entry.ownedQuantity}</span>}
+      {condition && <span className="badge condition">{condition}</span>}
       {entry.copies.some((copy) => copy.reserved) && <span className="badge reserved">In exchange</span>}
       {offered.map((value) => (
         <span key={value} className={`badge avail avail-${value}`}>

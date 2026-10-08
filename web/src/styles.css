@@ -637,6 +637,10 @@ select {
   background: #e5f2e8;
   color: var(--success);
 }
+.badge.condition {
+  background: #f3efe8;
+  color: #5c564c;
+}
 .badge.reserved,
 .badge.avail-TRADE {
   background: #e7f3f0;
