@@ -114,6 +114,12 @@ Home search can save a Keep copy immediately. The Add page is the slower path: s
 
 The set grid and list show a condition only when every physical copy of that card has the same note. If the copies differ, including one note and one blank, the card says Mixed. Unset copies stay unmarked, so a large set does not fill with "Not set". Public collection pages still omit condition.
 
+## 2026-10-08 — The phone selection bar stays short
+
+Selecting cards on a phone used to pin every bulk action to the bottom, and that stack covered the grid. The phone bar now shows the count, Mark owned, and More. The other actions open from More in two columns, on a solid bar that cannot grow over about half the screen. The first time that bar appears, one selected card scrolls up so it is fully above the bar. Choosing another card does not jump the page again. A wide screen still shows every action at once. Details and Compare stay on that same row when one or two cards are selected.
+
+On a phone, the set title, progress, and filters were tall enough that the first card's name started under the bottom navigation. Those blocks sit closer together. Share stays on the result line until it is opened, and Add sits on the card art instead of under the name. The card's name, number, and ownership stay above the navigation. A wide screen keeps Add under the card, the roomier spacing, and Share as a full-width control above the card count.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

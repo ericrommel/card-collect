@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CardDetail } from "../components/CardDetail";
 import { CardFace, inkFromMetadata } from "../components/CardFace";
@@ -45,6 +45,17 @@ const AVAILABILITY_FILTERS: { id: AvailabilityFilter; label: string }[] = [
   { id: "sell", label: "For sale" },
   { id: "donation", label: "Donation" },
 ];
+
+/** Bring one selected card fully above the phone bar the first time that bar appears. */
+function revealSelectedCard(root: HTMLElement, collectibleId: string) {
+  const card = root.querySelector<HTMLElement>(`[data-collectible-id="${CSS.escape(collectibleId)}"]`);
+  if (!card) return;
+  const barTop = root.querySelector(".bulk-bar")?.getBoundingClientRect().top ?? window.innerHeight;
+  const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+  const rect = card.getBoundingClientRect();
+  if (rect.top >= headerBottom + 4 && rect.bottom <= barTop - 8 && rect.bottom > rect.top) return;
+  card.scrollIntoView({ block: "center", inline: "nearest" });
+}
 
 function TileBadges({ entry }: { entry: ExplorerEntry }) {
   const offered = [...new Set(entry.copies.map((copy) => copy.availability))].filter((value) => value !== "KEEP");
@@ -117,7 +128,27 @@ export function SetExplorerPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [focusId, setFocusId] = useState<string | null>(null);
   const [inspect, setInspect] = useState(false);
+  const [bulkMore, setBulkMore] = useState(false);
   const narrow = useNarrowViewport();
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const pinnedSelection = useRef(false);
+
+  useEffect(() => {
+    if (selected.size === 0) setBulkMore(false);
+  }, [selected.size]);
+
+  useEffect(() => {
+    if (!narrow || selected.size === 0) {
+      pinnedSelection.current = false;
+      return;
+    }
+    if (pinnedSelection.current) return;
+    pinnedSelection.current = true;
+    const collectibleId = selected.values().next().value;
+    const root = resultsRef.current;
+    if (!collectibleId || !root) return;
+    revealSelectedCard(root, collectibleId);
+  }, [narrow, selected]);
 
   const load = useCallback(
     async (mode: "initial" | "refresh" = "refresh") => {
@@ -424,7 +455,7 @@ export function SetExplorerPage() {
 
   return (
     <div className={`explorer ${detail ? "has-detail" : ""} ${detail?.mode === "compare" ? "is-compare" : ""}`}>
-      <div className="explorer-main page-stack">
+      <div className="explorer-main page-stack" ref={resultsRef}>
         <div className="explorer-heading">
           <div>
             <p className="eyebrow">
@@ -497,11 +528,6 @@ export function SetExplorerPage() {
             </p>
           )}
         </section>
-
-        <details className="share-disclosure">
-          <summary>Share this collection</summary>
-          <SharingPanel setId={setId} />
-        </details>
 
         <div className="explorer-toolbar">
           <label className="search-field">
@@ -709,6 +735,12 @@ export function SetExplorerPage() {
         )}
 
         <div className="result-row">
+          <details className="share-disclosure">
+            <summary>
+              Share<span className="share-long"> this collection</span>
+            </summary>
+            <SharingPanel setId={setId} />
+          </details>
           <p role="status" className="muted small">
             {visible.length} of {entries.length} cards
             {status ? ` · ${status}` : ""}
@@ -750,6 +782,7 @@ export function SetExplorerPage() {
                 <div
                   key={entry.collectible.id}
                   className={`card-tile ${entry.isOwned ? "is-owned" : "is-missing"} ${isSelected ? "is-selected" : ""}`}
+                  data-collectible-id={entry.collectible.id}
                 >
                   <button
                     type="button"
@@ -790,7 +823,11 @@ export function SetExplorerPage() {
             {visible.map((entry) => {
               const isSelected = selected.has(entry.collectible.id);
               return (
-                <div key={entry.collectible.id} className={`card-row ${isSelected ? "is-selected" : ""}`}>
+                <div
+                  key={entry.collectible.id}
+                  className={`card-row ${isSelected ? "is-selected" : ""}`}
+                  data-collectible-id={entry.collectible.id}
+                >
                   <button
                     type="button"
                     className="row-open"
@@ -832,74 +869,95 @@ export function SetExplorerPage() {
 
         {selecting && selected.size > 0 && (
           <div className="bulk-bar">
-            <strong>{selected.size} selected</strong>
-            {narrow && selected.size === 1 && (
-              <button type="button" className="secondary small" onClick={() => setInspect(true)}>
-                Card details
+            <div className="bulk-primary">
+              <strong>{selected.size} selected</strong>
+              {narrow && selected.size === 1 && (
+                <button type="button" className="secondary small" onClick={() => setInspect(true)}>
+                  Details
+                </button>
+              )}
+              {narrow && selected.size === 2 && (
+                <button type="button" className="secondary small" onClick={() => setInspect(true)}>
+                  Compare
+                </button>
+              )}
+              <button type="button" className="primary small" disabled={busy} onClick={() => void markOwned()}>
+                Mark owned
               </button>
+              {narrow && (
+                <button
+                  type="button"
+                  className="secondary small"
+                  aria-expanded={bulkMore}
+                  onClick={() => setBulkMore((open) => !open)}
+                >
+                  {bulkMore ? "Less" : "More"}
+                </button>
+              )}
+            </div>
+            {(!narrow || bulkMore) && (
+              <div className="bulk-extra">
+                <button type="button" className="secondary small" disabled={busy} onClick={() => void addAnother()}>
+                  Add a copy
+                </button>
+                <button
+                  type="button"
+                  className="secondary small"
+                  disabled={busy}
+                  onClick={() => void offerDuplicates()}
+                >
+                  Offer duplicates
+                </button>
+                <label>
+                  All copies
+                  <select
+                    aria-label="Set availability for every free copy of the selected cards"
+                    defaultValue=""
+                    disabled={busy}
+                    onChange={(event) => {
+                      const value = event.target.value as Availability;
+                      event.target.value = "";
+                      if (value) void setAvailability(value);
+                    }}
+                  >
+                    <option value="">Choose</option>
+                    {AVAILABILITY_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {AVAILABILITY_LABEL[option]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Condition
+                  <select
+                    aria-label="Set condition for selected copies"
+                    defaultValue=""
+                    disabled={busy}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      event.target.value = "";
+                      if (value === "clear") void setCondition(null);
+                      else if (value) void setCondition(value as ConditionGrade);
+                    }}
+                  >
+                    <option value="">Choose</option>
+                    <option value="clear">Clear condition</option>
+                    {CONDITION_GRADES.map((grade) => (
+                      <option key={grade} value={grade}>
+                        {grade}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button type="button" className="link-danger" disabled={busy} onClick={() => void removeSelected()}>
+                  Remove copies
+                </button>
+                <button type="button" className="link" onClick={() => setSelected(new Set())}>
+                  Clear
+                </button>
+              </div>
             )}
-            {narrow && selected.size === 2 && (
-              <button type="button" className="secondary small" onClick={() => setInspect(true)}>
-                Compare
-              </button>
-            )}
-            <button type="button" className="primary small" disabled={busy} onClick={() => void markOwned()}>
-              Mark owned
-            </button>
-            <button type="button" className="secondary small" disabled={busy} onClick={() => void addAnother()}>
-              Add a copy
-            </button>
-            <button type="button" className="secondary small" disabled={busy} onClick={() => void offerDuplicates()}>
-              Offer duplicates
-            </button>
-            <label>
-              All copies
-              <select
-                aria-label="Set availability for every free copy of the selected cards"
-                defaultValue=""
-                disabled={busy}
-                onChange={(event) => {
-                  const value = event.target.value as Availability;
-                  event.target.value = "";
-                  if (value) void setAvailability(value);
-                }}
-              >
-                <option value="">Choose</option>
-                {AVAILABILITY_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {AVAILABILITY_LABEL[option]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Condition
-              <select
-                aria-label="Set condition for selected copies"
-                defaultValue=""
-                disabled={busy}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  event.target.value = "";
-                  if (value === "clear") void setCondition(null);
-                  else if (value) void setCondition(value as ConditionGrade);
-                }}
-              >
-                <option value="">Choose</option>
-                <option value="clear">Clear condition</option>
-                {CONDITION_GRADES.map((grade) => (
-                  <option key={grade} value={grade}>
-                    {grade}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button type="button" className="link-danger" disabled={busy} onClick={() => void removeSelected()}>
-              Remove copies
-            </button>
-            <button type="button" className="link" onClick={() => setSelected(new Set())}>
-              Clear
-            </button>
           </div>
         )}
       </div>

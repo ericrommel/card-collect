@@ -688,6 +688,11 @@ select {
   align-items: center;
 }
 
+.result-row .share-disclosure {
+  flex: 1 0 100%;
+  order: -1;
+}
+
 .search-field {
   flex: 1 1 220px;
 }
@@ -903,8 +908,13 @@ select {
   padding: 0.7rem;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: rgba(255, 253, 248, 0.96);
+  background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.bulk-primary,
+.bulk-extra {
+  display: contents;
 }
 
 .detail-backdrop {
@@ -1222,6 +1232,47 @@ select {
 
 /* Keep this breakpoint equal to NARROW_EXPLORER_QUERY in explorerDetail.ts. */
 @media (max-width: 959px) {
+  .card-tile,
+  .card-row {
+    scroll-margin-top: calc(var(--header-h) + 0.5rem);
+    scroll-margin-bottom: calc(var(--nav-h) + 8rem);
+  }
+
+  .bulk-bar {
+    max-height: min(46vh, 300px);
+    overflow: auto;
+    padding: 0.55rem 0.65rem;
+  }
+
+  .bulk-primary {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+    align-items: center;
+    width: 100%;
+  }
+
+  .bulk-primary button.small {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .bulk-extra {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    flex: 1 0 100%;
+  }
+
+  .bulk-extra select {
+    width: 100%;
+  }
+
+  .bulk-bar button,
+  .bulk-bar select {
+    min-height: 44px;
+  }
+
   .detail-backdrop {
     display: block;
     position: fixed;
@@ -1304,6 +1355,88 @@ select {
     padding-bottom: calc(var(--nav-h) + 1.5rem);
   }
 
+  .explorer {
+    margin-top: -0.65rem;
+  }
+
+  .explorer-main.page-stack {
+    gap: 0.4rem;
+  }
+
+  .explorer-heading {
+    gap: 0.4rem;
+  }
+
+  .explorer-heading h1,
+  .explorer-heading p {
+    margin: 0;
+  }
+
+  .explorer-heading h1,
+  .explorer-heading .muted {
+    display: inline;
+  }
+
+  .explorer-heading h1 {
+    font-size: 1.45rem;
+  }
+
+  .explorer-heading .muted {
+    margin-left: 0.4rem;
+  }
+
+  .explorer .notice-line {
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .explorer .progress-summary {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .explorer .progress-stats {
+    margin-top: 0.35rem;
+    gap: 0.15rem 0.65rem;
+  }
+
+  .explorer .result-row .share-disclosure {
+    flex: 0 0 auto;
+    order: 2;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .explorer .result-row .share-disclosure summary {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--primary);
+  }
+
+  .explorer .share-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .explorer .result-row .share-disclosure[open] {
+    flex: 1 0 100%;
+    order: 3;
+    margin-left: 0;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+
   .user-name {
     display: none;
   }
@@ -1311,6 +1444,19 @@ select {
   .card-grid,
   .public-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-tile {
+    position: relative;
+  }
+
+  .card-tile .tile-add {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    z-index: 1;
+    width: 44px;
+    padding: 0;
   }
 
   .explorer-heading {
