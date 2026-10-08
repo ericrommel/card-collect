@@ -172,7 +172,7 @@ Marking a group of cards meant turning Select on, then choosing Select visible, 
 
 ## 2026-10-08 — Catalog search is limited per address
 
-Catalog search is public and reads the whole sample catalog, so a script could ask as fast as the server answers. Each socket address can search 120 times a minute. The page already waits a quarter second after typing stops, so refining a name stays inside that. People on the same network share the limit. A search that is too short or too long still counts, and a search shorter than two characters does not read the catalog. The response is 429 and asks them to wait a minute. Opening a set uses the checklist route, which is not part of this limit. The process still does not trust `X-Forwarded-For`. The test suite raises the limit unless a test sets it.
+Catalog search is public and reads the whole sample catalog, so a script could ask as fast as the server answers. Each socket address can search 120 times a minute. The page already waits a quarter second after typing stops, so refining a name stays inside that. People on the same network share the limit. A search that is too short or too long still counts, and a search shorter than two characters does not read the catalog. The response is 429 and asks them to wait a minute. Loading the public checklist is a separate limit of the same size. The process still does not trust `X-Forwarded-For`. The test suite raises the limit unless a test sets it.
 
 ## 2026-10-08 — A phone search result stays above the navigation
 
@@ -189,6 +189,10 @@ The password fields sit at the bottom of the account page. On a phone the next f
 ## 2026-10-08 — Both counts come before the faces on a phone
 
 On a phone the next action sits above the cards. The cards you would receive were then listed in full before the line that says what you would give, so that count was easy to miss. One line with both counts now sits with the action. Each list still has its own heading. A wide screen does not repeat that line, because the two sides are already next to each other.
+
+## 2026-10-08 — A public set checklist is limited on its own
+
+The public checklist returns every card in a set, with no sign-in. It was the catalog read that search's limit did not cover. Each socket address can load it 120 times a minute. That counter is not the search counter: looking up a name does not spend it, and opening a checklist does not spend the search budget. The set list and one set's name stay unlimited, so the catalog page still loads. A missing set still says it was not found, and that attempt still counts. People on the same network share the budget. The signed-in set page reads progress for that account, which is a different request and is not this limit. The process still does not trust `X-Forwarded-For`. The test suite raises the limit unless a test sets it.
 
 ## Not done, on purpose
 

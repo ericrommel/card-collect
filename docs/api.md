@@ -98,9 +98,10 @@ require an allowed `Origin` unless the request sends `X-Auth-Mode: bearer`.
 Register and login share a limit of 20 attempts per minute per socket
 address. The response is `429` with `Retry-After: 60`. Proposing an
 exchange is limited to 30 per minute per account, and changing a password
-to 10 per minute per account, with the same status. Catalog search is
-limited to 120 requests per minute per socket address, with the same
-status. Loading a set is not part of that limit.
+to 10 per minute per account, with the same status. Catalog search and
+the public set checklist are each limited to 120 requests per minute per
+socket address, with the same status. They do not share a budget. The set
+list and a single set's details are not part of either limit.
 
 ## Catalog (read-only, no auth required)
 
@@ -131,8 +132,8 @@ The same socket address can search 120 times a minute. A query that is
 too short or too long still counts. Past that, the response is `429`
 with `Retry-After: 60` and
 `{ "error": "Too many searches. Wait a minute and try again." }`.
-`GET /catalog/sets/:id/collectibles` is a separate read and is not limited
-this way, so opening a set still loads its checklist.
+`GET /catalog/sets/:id/collectibles` has its own limit, below. A search
+does not spend that budget.
 
 Matches the card name, the card number, or the set name and code. The
 closest matches come first. At most 24 rows are returned; `truncated` is
@@ -152,6 +153,14 @@ never another person's collection.
 ### `GET /catalog/sets/:id/collectibles`
 
 → `200 { "collectibles": [{ "id", "providerId", "setId", "number", "name", "rarity", "metadata", "variants": [{ "id", "name", "isDefault" }] }] }`
+
+The same socket address can load a checklist 120 times a minute, including
+a set id that does not exist. Past that, the response is `429` with
+`Retry-After: 60` and
+`{ "error": "Too many set loads. Wait a minute and try again." }`.
+Searching does not spend this budget. `GET /catalog/sets` and
+`GET /catalog/sets/:id` are not limited this way. A signed-in set page
+reads `GET /my/sets/:id/progress`, which is also not this limit.
 
 ## My collection (auth required, always scoped to the caller)
 
