@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
-import { FOCUS_COPY, focusCount, focusHref, focusLabel, isCollectionView, setsForFocus } from "../lib/collectionFocus";
+import { SetCover } from "../components/SetCover";
+import { FOCUS_COPY, focusHref, isCollectionView, setsForFocus } from "../lib/collectionFocus";
 import { useDashboard } from "../lib/useDashboard";
 
 export function CollectionFocusPage() {
@@ -41,18 +42,11 @@ export function CollectionFocusPage() {
           </Link>
         </div>
       ) : (
-        <ul className="focus-list">
+        <div className="set-grid">
           {sets.map((set) => (
-            <li key={set.id}>
-              <Link to={focusHref(set.id, raw)} className="card focus-row">
-                <span className="focus-code">{set.code}</span>
-                <strong>{set.name}</strong>
-                <span>{focusLabel(focusCount(set, raw), raw)}</span>
-                <span className="muted small">{set.universe_name}</span>
-              </Link>
-            </li>
+            <SetCover key={set.id} set={set} openTo={focusHref(set.id, raw)} hideJump={raw} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

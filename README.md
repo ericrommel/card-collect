@@ -109,10 +109,10 @@ account. Recognition does not pick the card unless a provider is
 configured, and a guess still has to be confirmed. Marking many cards at
 once stays on the set page.
 
-The numbers on home open a list of the sets that match: missing cards,
-extras, cards you have, and copies for trade, sale, or donation. Each set
-then opens with that filter already on. A link can also search one card
-by its number.
+The numbers on home open the same set covers: missing cards, extras, cards
+you have, and copies for trade, sale, or donation. A set you have started
+comes first. Opening the cover applies that filter. A link can also search
+one card by its number.
 
 Inside a set, filter by owned, missing, duplicates, rarity, availability,
 condition, and sample metadata. The address keeps that list, including the
