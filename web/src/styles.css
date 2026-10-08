@@ -1816,6 +1816,40 @@ select {
   }
 }
 
+/* Below 389px the set switcher wraps onto its own row. A shorter face keeps the first card's name, number, and ownership above the navigation. */
+@media (max-width: 388px) {
+  .card-grid .card-face {
+    max-height: 148px;
+  }
+
+  .card-grid .owned-photo {
+    height: 148px;
+    max-height: 148px;
+  }
+}
+
+/* The search field was taking its own row, and the sort row wrapped after it. */
+@media (max-width: 336px) {
+  .explorer .search-field {
+    flex: 1 1 9rem;
+    min-width: 8rem;
+  }
+
+  .explorer-toolbar {
+    gap: 0.35rem;
+  }
+
+  .explorer .sort-field {
+    flex: 0 1 6.5rem;
+    min-width: 0;
+  }
+
+  .explorer .sort-field select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
 /* On a narrow phone, "Sign out" wraps and the header grows. The display-name hint also wraps, which pushes the password fields under the navigation. */
 @media (max-width: 360px) {
   .app-header {
