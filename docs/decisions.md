@@ -198,6 +198,10 @@ The public checklist returns every card in a set, with no sign-in. It was the ca
 
 A large set is longer than one screen. Search scrolled away with the title, so finding a card meant returning to the top. Search, filter, sort, and the layout controls now stay under the header while the cards move. Typing a search brings the matches up under those tools, instead of leaving them where the old list was. The title and the progress bar still scroll away. Opening filters brings that list back into view if it has moved off. A public collection already kept its own search on screen.
 
+## 2026-10-08 — Your photo shows on your own card
+
+A front photo lived only inside the card editor, so the grid kept the sample drawing after you attached one. On your own set, the grid and the list now show that photo. The sample drawing stays when there is no photo, or when the photo cannot be loaded. The editor still shows the sample drawing above the copy, next to the photo. A public page, a match, and a search result still use the sample drawing. The photo is still not proof that you hold the card.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

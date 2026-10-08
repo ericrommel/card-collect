@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CardDetail } from "../components/CardDetail";
-import { CardFace, inkFromMetadata } from "../components/CardFace";
+import { inkFromMetadata } from "../components/CardFace";
+import { OwnedFace } from "../components/OwnedFace";
 import { SharingPanel } from "../components/SharingPanel";
 import * as api from "../lib/api";
 import type { Availability, CatalogSet, ConditionGrade, SetProgress, Universe, UserCopy } from "../lib/api";
@@ -47,15 +48,23 @@ const AVAILABILITY_FILTERS: { id: AvailabilityFilter; label: string }[] = [
   { id: "donation", label: "Donation" },
 ];
 
+/** The phone navigation, or the bottom of the window when that bar is hidden. */
+function viewportBottom(): number {
+  const nav = document.querySelector(".bottom-nav");
+  if (nav instanceof HTMLElement && getComputedStyle(nav).display !== "none") {
+    return nav.getBoundingClientRect().top;
+  }
+  return window.innerHeight;
+}
+
 /** Put the result count just under the tools when a search moved it off screen. */
 function revealResults(root: HTMLElement) {
   const toolbar = root.querySelector(".explorer-toolbar");
   const target = root.querySelector<HTMLElement>(".result-row");
   if (!toolbar || !target) return;
   const topLimit = toolbar.getBoundingClientRect().bottom + 8;
-  const navTop = document.querySelector(".bottom-nav")?.getBoundingClientRect().top ?? window.innerHeight;
   const rect = target.getBoundingClientRect();
-  if (rect.top >= topLimit && rect.bottom <= navTop - 8) return;
+  if (rect.top >= topLimit && rect.bottom <= viewportBottom() - 8) return;
   window.scrollBy({ top: rect.top - topLimit, behavior: "auto" });
 }
 
@@ -120,6 +129,7 @@ export function SetExplorerPage() {
   const [focusId, setFocusId] = useState<string | null>(null);
   const [inspect, setInspect] = useState(false);
   const [bulkMore, setBulkMore] = useState(false);
+  const [photoRevision, setPhotoRevision] = useState(0);
   const narrow = useNarrowViewport();
   const resultsRef = useRef<HTMLDivElement>(null);
   const filterPanelRef = useRef<HTMLDivElement>(null);
@@ -831,11 +841,13 @@ export function SetExplorerPage() {
                     aria-pressed={selecting ? isSelected : undefined}
                     onClick={() => onTile(entry)}
                   >
-                    <CardFace
+                    <OwnedFace
                       number={entry.collectible.number}
                       name={entry.collectible.name}
                       rarity={entry.collectible.rarity}
                       ink={inkFromMetadata(entry.collectible.metadata)}
+                      copies={entry.copies}
+                      photoRevision={photoRevision}
                     />
                     <span className="tile-name">{entry.collectible.name}</span>
                     <span className="tile-sub">
@@ -875,12 +887,14 @@ export function SetExplorerPage() {
                     aria-pressed={selecting ? isSelected : undefined}
                     onClick={() => onTile(entry)}
                   >
-                    <CardFace
+                    <OwnedFace
                       size="sm"
                       number={entry.collectible.number}
                       name={entry.collectible.name}
                       rarity={entry.collectible.rarity}
                       ink={inkFromMetadata(entry.collectible.metadata)}
+                      copies={entry.copies}
+                      photoRevision={photoRevision}
                     />
                     <span className="row-copy">
                       <span className="tile-name">{entry.collectible.name}</span>
@@ -1039,6 +1053,10 @@ export function SetExplorerPage() {
                 await api.deleteCopy(copyId);
                 setStatus("Removed a copy.");
               });
+            }}
+            onPhotosChange={(event) => {
+              if (event === "saved") setPhotoRevision((current) => current + 1);
+              void load("refresh");
             }}
           />
         </>
