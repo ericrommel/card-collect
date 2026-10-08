@@ -5,6 +5,7 @@ import { DashboardPage } from "./pages/Dashboard";
 import { SetsPage } from "./pages/Sets";
 import { SetExplorerPage } from "./pages/SetExplorer";
 import { AddCardPage } from "./pages/AddCard";
+import { AddCopyPage } from "./pages/AddCopy";
 import { MatchesPage } from "./pages/Matches";
 import { ExchangesPage } from "./pages/Exchanges";
 import { PublicCollectionPage } from "./pages/PublicCollection";
@@ -37,6 +38,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               Home
             </NavLink>
             <NavLink to="/sets">Catalog</NavLink>
+            <NavLink to="/add">Add</NavLink>
             <NavLink to="/exchanges">Exchanges</NavLink>
           </nav>
           <div className="header-user">
@@ -65,6 +67,7 @@ function Shell({ children }: { children: React.ReactNode }) {
             Home
           </NavLink>
           <NavLink to="/sets">Catalog</NavLink>
+          <NavLink to="/add">Add</NavLink>
           <NavLink to="/exchanges">Exchanges</NavLink>
         </nav>
       )}
@@ -107,6 +110,14 @@ export default function App() {
           element={
             <RequireAuth>
               <SetExplorerPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/add"
+          element={
+            <RequireAuth>
+              <AddCopyPage />
             </RequireAuth>
           }
         />
