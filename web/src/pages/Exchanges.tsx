@@ -19,7 +19,7 @@ function statusSentence(exchange: Exchange): string {
     return "Waiting for them to accept or decline. Nothing has moved.";
   }
   if (exchange.status === "PROPOSED") {
-    return "They proposed this. Nothing changes unless you accept.";
+    return "Nothing changes unless you accept.";
   }
   if (exchange.status === "ACCEPTED" && !exchange.you_confirmed) {
     return "You both agreed. Confirm only after the cards have actually changed hands.";

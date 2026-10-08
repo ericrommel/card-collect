@@ -290,6 +290,10 @@ On a narrow phone the exchange header and the count line wrapped, so the first c
 
 On a narrow phone the first set in the catalog wrapped its shortcuts, and the trade and donation ones sat under the navigation. The catalog page sits a little closer together there, so those shortcuts stay on the first screen. Search still moves a result up so Add a copy stays above the navigation.
 
+## 2026-10-08 — A received proposal does not repeat who proposed it
+
+The set line already says "They proposed this." The status under it said that again, then said nothing changes unless you accept. The status now says only that nothing changes unless you accept.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
