@@ -160,7 +160,7 @@ set. Marking many cards at once stays a bulk action on the set page.
 `modules/identification/cardIdentifier.ts` is the replaceable
 recognition provider. The default reports that recognition is unavailable
 and does not invent a card. `modules/images/` checks JPEG and PNG bytes,
-strips metadata segments, and stores the file under `server/data/copy-images/`
+strips metadata segments, drops anything after a JPEG end marker, and stores the file under `server/data/copy-images/`
 (not in the database and not on a public route). Only the owner can read
 it. Completing an exchange deletes the photos instead of transferring them.
 

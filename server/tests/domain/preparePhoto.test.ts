@@ -35,6 +35,31 @@ describe("prepareCardPhoto", () => {
     expect(prepared.bytes.subarray(prepared.bytes.length - 2)).toEqual(Buffer.from([0xff, 0xd9]));
   });
 
+  it("drops bytes after the JPEG end marker and keeps a stuffed FF", () => {
+    const jpeg = Buffer.concat([jpegWith(false, "GPS-SECRET"), Buffer.from("TRAILING-SECRET")]);
+    const prepared = prepareCardPhoto(jpeg);
+    expect(prepared.bytes.includes(Buffer.from("TRAILING-SECRET"))).toBe(false);
+    expect(prepared.bytes.includes(Buffer.from("GPS-SECRET"))).toBe(false);
+    expect(prepared.bytes.subarray(prepared.bytes.length - 2)).toEqual(Buffer.from([0xff, 0xd9]));
+
+    const stuffed = Buffer.concat([
+      Buffer.from([0xff, 0xd8]),
+      segment(0xda, Buffer.from([0x01, 0x01, 0x00, 0x00, 0x3f, 0x00])),
+      Buffer.from([0x12, 0xff, 0x00, 0x34, 0xff, 0xd9, 0x99]),
+    ]);
+    const kept = prepareCardPhoto(stuffed);
+    expect(kept.bytes.includes(Buffer.from([0x12, 0xff, 0x00, 0x34, 0xff, 0xd9]))).toBe(true);
+    expect(kept.bytes[kept.bytes.length - 1]).toBe(0xd9);
+    expect(kept.bytes.includes(Buffer.from([0x99]))).toBe(false);
+
+    const endless = Buffer.concat([
+      Buffer.from([0xff, 0xd8]),
+      segment(0xda, Buffer.from([0x01, 0x01, 0x00, 0x00, 0x3f, 0x00])),
+      Buffer.from([0x12, 0x34]),
+    ]);
+    expect(() => prepareCardPhoto(endless)).toThrow(/JPEG or PNG/);
+  });
+
   it("drops PNG text chunks", () => {
     const png = Buffer.concat([
       Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
