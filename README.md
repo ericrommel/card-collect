@@ -179,10 +179,10 @@ on the Past tab.
 
 From a set, open "Share this collection" to enable a public
 link, choose which fields it shows (completion %, owned, missing,
-duplicates, trade offers, give-away offers), copy or open it, and disable
+extras, trade offers, give-away offers), copy or open it, and disable
 or regenerate it at any time. The public page (`/c/:shareId`) works logged
-out and shows only what you opted into — no email, account id, or location
-is ever exposed. It shows one of those lists at a time and opens on cards
+out and shows only what you opted into — no email, account id, location,
+photos, or card condition. The page says so. It shows one of those lists at a time and opens on cards
 for trade when any are shared. On a phone each card is a row. A copy
 already in an open exchange is not shown as available. The link works for 30 days. Renew keeps the same address
 and starts another 30 days; regenerate replaces the address and resets

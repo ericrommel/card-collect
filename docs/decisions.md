@@ -254,6 +254,10 @@ The condition on a card you already own was a dropdown, and each copy was marked
 
 Home and the counts on a set already said extras, while the filter, the sort, and a public list said duplicates. Those now say extras too. The address still uses ownership=duplicates. Offer duplicates still keeps one copy and marks the rest for trade.
 
+## 2026-10-08 — A public page says what it leaves out
+
+A shared collection shows the name the person chose and the lists they turned on. The page now says it does not show an email, a location, photos, or a card's condition. It stays read-only, and it still does not say who opened the link.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
