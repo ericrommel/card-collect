@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CardFace } from "../components/CardFace";
+import { OptionalBackPhoto } from "../components/OptionalBackPhoto";
 import { cardMotif } from "../lib/cardMotif";
+import { saveCopyPhotos } from "../lib/saveCopyPhotos";
 import {
   ApiError,
   addCopy,
   identifyPhoto,
   searchCatalog,
-  uploadCopyPhoto,
   type Availability,
   type CatalogSearchHit,
   type ConditionGrade,
@@ -37,6 +38,7 @@ export function AddCopyPage() {
   const [availability, setAvailability] = useState<Availability>("KEEP");
   const [condition, setCondition] = useState<ConditionGrade | "">("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [backPhoto, setBackPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [identify, setIdentify] = useState<IdentifyResponse | null>(null);
   const [identifyError, setIdentifyError] = useState<string | null>(null);
@@ -135,6 +137,7 @@ export function AddCopyPage() {
   async function onPhoto(file: File | undefined) {
     if (!file) return;
     setPhoto(file);
+    setBackPhoto(null);
     setIdentify(null);
     setIdentifyError(null);
     setPhotoNote(null);
@@ -148,6 +151,7 @@ export function AddCopyPage() {
 
   function clearPhoto() {
     setPhoto(null);
+    setBackPhoto(null);
     setIdentify(null);
     setIdentifyError(null);
   }
@@ -161,15 +165,8 @@ export function AddCopyPage() {
     const hit = selected;
     try {
       const created = await addCopy(variantId, availability, condition || null);
-      if (photo) {
-        try {
-          await uploadCopyPhoto(created.copy.id, "front", photo);
-        } catch (err) {
-          setPhotoNote(
-            `Added ${hit.name}, but the photo was not saved. ${err instanceof ApiError ? err.message : ""}`.trim(),
-          );
-        }
-      }
+      const photoProblem = await saveCopyPhotos(created.copy.id, { front: photo, back: backPhoto });
+      if (photoProblem) setPhotoNote(`Added ${hit.name}. ${photoProblem}`);
       setAdded({ name: hit.name, setId: hit.set.id, setName: hit.set.name, number: hit.number });
       setResults(
         (current) =>
@@ -253,7 +250,13 @@ export function AddCopyPage() {
 
           {preview && (
             <section className="card">
-              <img src={preview} alt="Photo you selected" className="add-preview" />
+              <div className="add-photo-pair">
+                <figure className="add-photo-figure">
+                  <img src={preview} alt="Front of the card you selected" className="add-preview" />
+                  <figcaption className="muted small">Front</figcaption>
+                </figure>
+                <OptionalBackPhoto file={backPhoto} onChange={setBackPhoto} />
+              </div>
               {!selected && identify && (
                 <p className={identify.status === "candidates" ? "notice-line" : "muted"}>{identify.message}</p>
               )}
@@ -380,7 +383,7 @@ export function AddCopyPage() {
               {!selected.defaultVariantId && <p className="error small">This card has no printing to add.</p>}
               <p className="muted small">
                 Condition is your note, not a grade, and it does not change the match score.
-                {photo ? " The photo stays on your account." : ""}
+                {photo || backPhoto ? " Photos stay on your account." : ""}
               </p>
             </>
           )}

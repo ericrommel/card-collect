@@ -26,6 +26,7 @@
     "tests/domain/exchangeQueue.test.ts",
     "tests/domain/explorerSelection.test.ts",
     "tests/domain/ownedPhoto.test.ts",
-    "tests/domain/cardMotif.test.ts"
+    "tests/domain/cardMotif.test.ts",
+    "tests/domain/saveCopyPhotos.test.ts"
   ]
 }
