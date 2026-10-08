@@ -1850,6 +1850,39 @@ select {
   }
 }
 
+/* The exchange header and the count line wrap here, which puts the first card's number under the navigation. */
+@media (max-width: 359px) {
+  .exchange-card .match-header {
+    gap: 0.25rem;
+  }
+
+  .exchange-card .score-badge,
+  .exchange-card .status-badge {
+    padding: 0.1rem 0.35rem;
+  }
+
+  .exchange-card .match-header h3 {
+    font-size: 1rem;
+  }
+
+  .exchange-card .match-tally {
+    font-size: 0.92rem;
+    line-height: 1.25;
+  }
+
+  .exchange-card .offer-copy {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.35rem;
+  }
+
+  .exchange-card .offer-copy .tile-name,
+  .exchange-card .offer-copy .tile-sub:nth-of-type(2) {
+    flex: 1 0 100%;
+  }
+}
+
 /* On a narrow phone, "Sign out" wraps and the header grows. The display-name hint also wraps, which pushes the password fields under the navigation. */
 @media (max-width: 360px) {
   .app-header {
