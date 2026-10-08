@@ -460,12 +460,14 @@ for one Set — `modules/sharing/`. Design decisions:
   on `/api/public/*` at all, so "public endpoints cannot mutate
   collection data" holds because the route table makes it impossible,
   not because of a runtime permission check.
-- **The web client marks the public page `noindex, nofollow`**
-  (`web/src/pages/PublicCollection.tsx`) so a shared link isn't
-  accidentally picked up by a search-engine crawler — sharing here means
-  "anyone with the link," not "publicly listed." See the new risk logged
-  in [risks.md](risks.md) about link possession being the only access
-  control in V0.1 (no expiry, no per-viewer restriction).
+- **The site asks crawlers not to index it.** `web/index.html` includes
+  `noindex, nofollow`, and the dev server sends the same `X-Robots-Tag`.
+  A crawler that does not run JavaScript still receives that tag with the
+  generic page, not a collection. The public page also sets the tag after
+  it renders. Sharing means "anyone with the link," not "publicly listed."
+  See the risk in [risks.md](risks.md) about link possession being the
+  only access control (no expiry, no per-viewer restriction). A production
+  host should keep that header when it serves the built files.
 
 ## How a future mobile client fits
 

@@ -474,8 +474,8 @@ means:
 - shared fields are strictly limited to non-identifying collection data —
   no email, no internal id, no location, no age (see
   [architecture.md](architecture.md#collection-sharing-v01));
-- the public page is marked `noindex, nofollow` so a leaked link is at
-  least not additionally surfaced by search engines;
+- the HTML shell is `noindex, nofollow`, including for a crawler that does
+  not run JavaScript, and the public page sets the same tag after it renders;
 - regeneration is one click and immediately invalidates the old link.
 
 ### Future investigation
