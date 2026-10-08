@@ -7,6 +7,8 @@ import { requireAuth, type AuthenticatedRequest } from "../../middleware/require
 import { CONDITION_GRADES } from "../../domain/condition.js";
 import { computeSetProgressForUser, getUserCopies, type CopyWithDetails } from "./service.js";
 import { addCopiesForCollectibles, deleteCopiesBulk, updateCopiesBulk, BULK_LIMIT } from "./bulk.js";
+import { loadImageFlags, removeImageRows } from "../images/service.js";
+import { unlinkImages } from "../images/store.js";
 
 export const collectionRouter = Router();
 collectionRouter.use(requireAuth);
@@ -15,13 +17,15 @@ function userId(req: import("express").Request): string {
   return (req as AuthenticatedRequest).userId;
 }
 
-function toPublicCopy(copy: CopyWithDetails) {
+function toPublicCopy(copy: CopyWithDetails, images = { front: false, back: false }) {
   return {
     id: copy.id,
     availability: copy.availability,
     condition: copy.condition,
     reserved: copy.reservedByExchangeId != null,
     exchange_id: copy.reservedByExchangeId,
+    has_front_image: images.front,
+    has_back_image: images.back,
     created_at: copy.createdAt.toISOString(),
     updated_at: copy.updatedAt.toISOString(),
     variant: {
@@ -45,7 +49,10 @@ collectionRouter.get(
   asyncHandler(async (req, res) => {
     const { setId } = listQuerySchema.parse(req.query);
     const copies = await getUserCopies(userId(req), setId);
-    res.json({ copies: copies.map(toPublicCopy) });
+    const flags = await loadImageFlags(copies.map((copy) => copy.id));
+    res.json({
+      copies: copies.map((copy) => toPublicCopy(copy, flags.get(copy.id))),
+    });
   }),
 );
 
@@ -150,7 +157,8 @@ collectionRouter.patch(
       include: { variant: { include: { collectible: true } } },
     });
 
-    res.json({ copy: toPublicCopy(updated) });
+    const flags = await loadImageFlags([updated.id]);
+    res.json({ copy: toPublicCopy(updated, flags.get(updated.id)) });
   }),
 );
 
@@ -159,7 +167,12 @@ collectionRouter.delete(
   asyncHandler(async (req, res) => {
     const copy = await loadOwnedCopyOrNotFound(req.params.id, userId(req));
     assertCopyIsMutable(copy);
-    await prisma.userCopy.delete({ where: { id: req.params.id } });
+    const removedImageIds = await prisma.$transaction(async (tx) => {
+      const imageIds = await removeImageRows(tx, [copy.id]);
+      await tx.userCopy.delete({ where: { id: copy.id } });
+      return imageIds;
+    });
+    await unlinkImages(removedImageIds);
     res.status(204).send();
   }),
 );

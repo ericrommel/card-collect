@@ -27,6 +27,10 @@ export class ApiError extends Error {
     return new ApiError(409, message);
   }
 
+  static payloadTooLarge(message: string) {
+    return new ApiError(413, message);
+  }
+
   static tooManyRequests(message = "Too many requests. Wait a minute and try again.") {
     return new ApiError(429, message);
   }

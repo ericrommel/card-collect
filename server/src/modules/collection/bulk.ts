@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "../../db.js";
 import { ApiError } from "../../middleware/apiError.js";
+import { removeImageRows } from "../images/service.js";
+import { unlinkImages } from "../images/store.js";
 
 export const BULK_LIMIT = 200;
 
@@ -127,7 +129,7 @@ export async function updateCopiesBulk(
 
 export async function deleteCopiesBulk(ownerId: string, copyIds: string[]): Promise<{ deletedCount: number }> {
   const ids = uniqueCopyIds(copyIds);
-  return prisma.$transaction(async (tx) => {
+  const outcome = await prisma.$transaction(async (tx) => {
     const copies = await tx.userCopy.findMany({
       where: { id: { in: ids }, ownerId },
       select: { id: true, reservedByExchangeId: true },
@@ -135,10 +137,13 @@ export async function deleteCopiesBulk(ownerId: string, copyIds: string[]): Prom
     if (copies.length !== ids.length) throw ApiError.notFound("One or more copies were not found");
     if (copies.some((copy) => copy.reservedByExchangeId != null)) throw ApiError.conflict(RESERVED_MESSAGE);
 
+    const removedImageIds = await removeImageRows(tx, ids);
     const result = await tx.userCopy.deleteMany({
       where: { id: { in: ids }, ownerId, reservedByExchangeId: null },
     });
     if (result.count !== ids.length) throw ApiError.conflict(RESERVED_MESSAGE);
-    return { deletedCount: result.count };
+    return { deletedCount: result.count, removedImageIds };
   });
+  await unlinkImages(outcome.removedImageIds);
+  return { deletedCount: outcome.deletedCount };
 }

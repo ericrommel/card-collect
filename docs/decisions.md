@@ -36,15 +36,25 @@ Two proposals for the same match are serialized by the existing exchange transac
 
 The lockfile takes the non-major patches for Express, `qs`, `proxy-addr`, and the dev-only packages `brace-expansion`, `js-yaml`, and `source-map-js`. `shell-quote` is overridden to 1.12.0 because `concurrently` pins an affected release. This repo uses that package only to start local dev processes. Vite, Vitest, and React Router stay on their current majors: the fixes are breaking upgrades, the Vite and Vitest issues are limited to the dev server and the test runner, and the app does not use React Router's server renderer. Those three are not treated as fixed.
 
-Official catalogs, camera identification, AI condition, image upload checks, and native apps are unchanged.
+Official catalogs, AI condition, and native apps are unchanged. Photos and the manual add flow are described below.
+
+## 2026-10-08 — Private photos, confirmed by the collector
+
+Adding a card does not require a photo. From a set, Add a card searches by name or number and saves one physical copy only after the person presses Add this copy.
+
+A JPEG or PNG can be taken or chosen. The server checks the file type from the bytes, drops JPEG metadata segments and PNG text chunks, and stores the file outside the web root. The owner can see it. A public share does not include it. When a trade or donation is completed, those photos are deleted instead of moving with the card. Two pictures are not treated as proof that they show the same card, or that the person owns it.
+
+No recognition service is configured. The identify route returns that fact and does not create a copy. The route accepts a replaceable provider, and any candidates it returns are labeled as guesses. The copy is still created only by the separate add action.
+
+Each photo is limited to 5 MB. An account can keep 200 photos. HEIC is rejected. The app does not re-encode the picture, so this is a metadata strip and a type check, not a full image sanitizer.
 
 ## Not done, on purpose
 
-| Item                                   | State                                                                                                                                                             |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Official card metadata and artwork     | Blocked until a license exists. Sample catalogs are the stand-in.                                                                                                 |
-| Camera capture and card identification | Not built. An uncertain identification must never be saved as a verified copy. No recognition credentials are configured, and the app must not pretend otherwise. |
-| AI condition estimate                  | Not built. Manual condition remains. An estimate would not be a professional grade, and two photos would not prove they are the same card.                        |
-| Image upload checks                    | Not built. There is no upload yet. A future photo must be size-limited, checked by content, and stripped of location data.                                        |
-| Content-Security-Policy on the web app | The API sends a strict policy. The dev server does not, so its scripts keep working. A production host for the built web app still needs framing and nosniff.     |
-| Native apps                            | Not built.                                                                                                                                                        |
+| Item                                   | State                                                                                                                                                                                                       |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Official card metadata and artwork     | Blocked until a license exists. Sample catalogs are the stand-in.                                                                                                                                           |
+| Automatic card identification          | No recognition provider is configured. The app can accept a photo and will say so, but it will not invent a match. A guess, if a provider is added later, still has to be confirmed before a copy is saved. |
+| AI condition estimate                  | Not built. Manual condition remains. An estimate would not be a professional grade, and two photos would not prove they are the same card.                                                                  |
+| Guided capture                         | Not built. A photo is optional and private. It is not proof of ownership, and the front and back are not checked to be the same card.                                                                       |
+| Content-Security-Policy on the web app | The API sends a strict policy. The dev server does not, so its scripts keep working. A production host for the built web app still needs framing and nosniff.                                               |
+| Native apps                            | Not built.                                                                                                                                                                                                  |

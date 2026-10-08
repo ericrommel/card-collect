@@ -149,6 +149,14 @@ server applies one batch in a single transaction and rejects the whole
 batch when any copy is not the caller's or is reserved, so a partial
 update cannot stick. See [api.md](api.md).
 
+`/sets/:setId/add` is the one-card flow: search, optional photo, then an
+explicit add. `modules/identification/cardIdentifier.ts` is the replaceable
+recognition provider. The default reports that recognition is unavailable
+and does not invent a card. `modules/images/` checks JPEG and PNG bytes,
+strips metadata segments, and stores the file under `server/data/copy-images/`
+(not in the database and not on a public route). Only the owner can read
+it. Completing an exchange deletes the photos instead of transferring them.
+
 ## Matching flow (V0.2: candidates → score → rank)
 
 `modules/matching/service.ts` → `computeMatchesForUser(userId, setId)`
@@ -473,8 +481,8 @@ client uses the same routes with a bearer token. It would:
   documented in [docs/api.md](docs/api.md) — a native share sheet would
   just point at the same `public_url` the web client constructs from
   `share_id`;
-- add its own camera/scanning UI on top of `POST /my/collection/copies` —
-  scanning is out of scope for V0, but the copy-creation endpoint it would
-  feed into already exists and doesn't assume a particular input method.
+- add its own camera UI on top of `POST /my/collection/copies` and
+  `POST /my/collection/identify`. The web app already does that with the
+  file input. Recognition stays behind `CardIdentifier`.
 
 No mobile-specific backend changes are anticipated before that point.

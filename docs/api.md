@@ -101,6 +101,8 @@ derived from the slug, not stored on the universe row.
   "condition": "Mint | Near Mint | Excellent | Good | Played | Poor | null",
   "reserved": false,
   "exchange_id": "string | null",
+  "has_front_image": false,
+  "has_back_image": false,
   "created_at": "ISO-8601",
   "updated_at": "ISO-8601",
   "variant": {
@@ -138,6 +140,48 @@ changing or removing the copy. `exchange_id` is null when the copy is free.
 ### `DELETE /my/collection/copies/:id`
 
 → `204` on success, `404` under the same rule as `PATCH`, `409` when the copy is reserved.
+Deleting a copy also deletes its photos.
+
+### `POST /my/collection/copies/:id/images/:side`
+
+`:side` is `front` or `back`. The body is the raw JPEG or PNG, with
+`Content-Type: image/jpeg` or `image/png`, at most 5 MB. The server checks
+the bytes, strips metadata segments, and stores the file for that account
+only. Replacing the same side overwrites it. An account can keep 200
+photos. → `201 { "image": { "side": "front", "content_type": "image/jpeg" } }`.
+`400` for another file type, `413` when it is too large, `404` when the
+copy is not the caller's, `409` at the photo cap, `429` when this account
+sends too many photos in a minute.
+
+### `GET /my/collection/copies/:id/images/:side`
+
+→ the image bytes for the owner. `401` without a session. `404` for anyone
+else, or when that side has no photo. Public collection responses do not
+include these URLs.
+
+### `DELETE /my/collection/copies/:id/images/:side`
+
+→ `204`. `404` under the same rule as `GET`.
+
+### `POST /my/collection/identify`
+
+Same raw JPEG or PNG body as an upload. This does not store the photo and
+does not create a copy. With no recognition provider configured the
+response is:
+
+```json
+{
+  "status": "unavailable",
+  "candidates": [],
+  "message": "Automatic recognition is not available. Search for the card and confirm it yourself."
+}
+```
+
+A future provider may return `"status": "candidates"` with up to eight
+`{ "set_code", "number", "name", "confidence" }` objects. `confidence` is
+between 0 and 1. The message tells the person to confirm the card. The
+route never adds a copy from a guess. `400` for a file that is not a JPEG
+or PNG. `429` after too many attempts in a minute.
 
 ## My progress
 

@@ -4,6 +4,7 @@ import { LoginPage } from "./pages/Login";
 import { DashboardPage } from "./pages/Dashboard";
 import { SetsPage } from "./pages/Sets";
 import { SetExplorerPage } from "./pages/SetExplorer";
+import { AddCardPage } from "./pages/AddCard";
 import { MatchesPage } from "./pages/Matches";
 import { ExchangesPage } from "./pages/Exchanges";
 import { PublicCollectionPage } from "./pages/PublicCollection";
@@ -93,6 +94,14 @@ export default function App() {
           element={
             <RequireAuth>
               <SetExplorerPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/sets/:setId/add"
+          element={
+            <RequireAuth>
+              <AddCardPage />
             </RequireAuth>
           }
         />

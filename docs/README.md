@@ -2,11 +2,11 @@
 
 ## Where the product is
 
-Implemented: accounts and httpOnly sessions (cookie writes require the app origin; sign-in and proposals are rate-limited), a collection dashboard, a visual set explorer with bulk edits, manual condition, Trade Score matches, trades and donations with reservation and dual confirmation, and revocable public sharing.
+Implemented: accounts and httpOnly sessions (cookie writes require the app origin; sign-in and proposals are rate-limited), a collection dashboard, a visual set explorer with bulk edits, an add-a-card flow with optional private photos, manual condition, Trade Score matches, trades and donations with reservation and dual confirmation, and revocable public sharing.
 
 Sample data only: Starter Voyage (synthetic, 24 cards) and Harbor Atlas (original, 396 cards). These are not official sets. Card faces are generated patterns.
 
-Not implemented: licensed publisher catalogs, camera identification, AI condition estimates, native Android or iOS apps, payments, chat, and precise location. See [decisions.md](decisions.md).
+Not implemented: licensed publisher catalogs, automatic card identification, AI condition estimates, native Android or iOS apps, payments, chat, and precise location. A photo can be attached, but recognition is unavailable until a provider is configured. See [decisions.md](decisions.md).
 
 ## Product Vision
 
