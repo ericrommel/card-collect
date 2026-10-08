@@ -1,0 +1,63 @@
+import { describe, expect, it } from "vitest";
+import {
+  focusCount,
+  focusHref,
+  focusLabel,
+  isCollectionView,
+  setsForFocus,
+  type FocusSet,
+} from "../../../web/src/lib/collectionFocus.ts";
+import {
+  explorerLead,
+  filtersFromSearchParams,
+  searchParamsFromFilters,
+  EMPTY_FILTERS,
+} from "../../../web/src/lib/explorerQuery.ts";
+
+function set(partial: Partial<FocusSet> & Pick<FocusSet, "id" | "name">): FocusSet {
+  return {
+    code: partial.id,
+    universe_name: "Harbor Atlas",
+    missing_count: 0,
+    duplicate_count: 0,
+    owned_count: 0,
+    trade_copies: 0,
+    donation_copies: 0,
+    sell_copies: 0,
+    ...partial,
+  };
+}
+
+describe("set links", () => {
+  it("reads a missing-card link and ignores a bad filter", () => {
+    const filters = filtersFromSearchParams(new URLSearchParams("ownership=missing&availability=nope&q=lantern"));
+    expect(filters.ownership).toBe("missing");
+    expect(filters.availability).toBe("any");
+    expect(filters.search).toBe("lantern");
+    expect(searchParamsFromFilters(filters).toString()).toBe("q=lantern&ownership=missing");
+  });
+
+  it("omits the default filters from the link", () => {
+    expect(searchParamsFromFilters(EMPTY_FILTERS).toString()).toBe("");
+    expect(explorerLead(EMPTY_FILTERS)).toBeNull();
+    expect(explorerLead({ ...EMPTY_FILTERS, ownership: "missing", availability: "trade" })).toBe(
+      "Showing cards you don't have and copies for trade.",
+    );
+  });
+});
+
+describe("collection focus", () => {
+  it("rejects an unknown list", () => {
+    expect(isCollectionView("missing")).toBe(true);
+    expect(isCollectionView("price")).toBe(false);
+  });
+
+  it("puts a started set ahead of a larger untouched set", () => {
+    const started = set({ id: "ha", name: "Lantern Harbor", owned_count: 10, missing_count: 4 });
+    const untouched = set({ id: "sv", name: "Starter Voyage", missing_count: 24 });
+    expect(setsForFocus([untouched, started], "missing").map((item) => item.id)).toEqual(["ha", "sv"]);
+    expect(focusHref("ha", "missing")).toBe("/sets/ha?ownership=missing");
+    expect(focusLabel(focusCount(started, "missing"), "missing")).toBe("4 missing");
+    expect(setsForFocus([started, untouched], "trade")).toEqual([]);
+  });
+});

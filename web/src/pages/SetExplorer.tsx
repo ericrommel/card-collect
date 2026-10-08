@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CardDetail } from "../components/CardDetail";
 import { CardFace, inkFromMetadata } from "../components/CardFace";
 import { SharingPanel } from "../components/SharingPanel";
@@ -11,8 +11,11 @@ import {
   activeFilterCount,
   applyExplorerQuery,
   defaultVariant,
+  explorerLead,
+  filtersFromSearchParams,
   metadataFacets,
   readExplorerView,
+  searchParamsFromFilters,
   writeExplorerView,
   type AvailabilityFilter,
   type ConditionFilter,
@@ -62,6 +65,39 @@ function TileBadges({ entry }: { entry: ExplorerEntry }) {
 export function SetExplorerPage() {
   const { setId } = useParams<{ setId: string }>();
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const linked = filtersFromSearchParams(params);
+  const [rest, setRest] = useState<Pick<ExplorerFilters, "rarities" | "condition" | "metadata" | "sort">>({
+    rarities: [],
+    condition: "any",
+    metadata: {},
+    sort: "number",
+  });
+  const filters = useMemo<ExplorerFilters>(
+    () => ({
+      search: linked.search,
+      ownership: linked.ownership,
+      availability: linked.availability,
+      rarities: rest.rarities,
+      condition: rest.condition,
+      metadata: rest.metadata,
+      sort: rest.sort,
+    }),
+    [linked.search, linked.ownership, linked.availability, rest],
+  );
+
+  function setFilters(update: ExplorerFilters | ((current: ExplorerFilters) => ExplorerFilters)) {
+    const next = typeof update === "function" ? update(filters) : update;
+    setRest({
+      rarities: next.rarities,
+      condition: next.condition,
+      metadata: next.metadata,
+      sort: next.sort,
+    });
+    const query = searchParamsFromFilters(next);
+    if (query.toString() !== params.toString()) setParams(query, { replace: true });
+  }
+
   const [setInfo, setSetInfo] = useState<CatalogSet | null>(null);
   const [allSets, setAllSets] = useState<CatalogSet[]>([]);
   const [universes, setUniverses] = useState<Universe[]>([]);
@@ -72,7 +108,6 @@ export function SetExplorerPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [filters, setFilters] = useState<ExplorerFilters>(EMPTY_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [view, setView] = useState<ExplorerView>(readExplorerView);
   const [selecting, setSelecting] = useState(false);
@@ -110,7 +145,7 @@ export function SetExplorerPage() {
   );
 
   useEffect(() => {
-    setFilters(EMPTY_FILTERS);
+    setRest({ rarities: [], condition: "any", metadata: {}, sort: "number" });
     setSelected(new Set());
     setSelecting(false);
     setInspect(false);
@@ -380,6 +415,7 @@ export function SetExplorerPage() {
 
   const notice = universes.find((universe) => universe.id === setInfo?.universeId)?.notice;
   const filterCount = activeFilterCount(filters);
+  const lead = explorerLead(filters);
   const visibleIds = visible.map((entry) => entry.collectible.id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
 
@@ -399,7 +435,14 @@ export function SetExplorerPage() {
           <div className="heading-actions">
             <label className="set-switcher">
               <span className="sr-only">Switch set</span>
-              <select value={setId} onChange={(event) => navigate(`/sets/${event.target.value}`)}>
+              <select
+                value={setId}
+                onChange={(event) => {
+                  const next = searchParamsFromFilters({ ...filters, search: "" });
+                  const query = next.toString();
+                  navigate(query ? `/sets/${event.target.value}?${query}` : `/sets/${event.target.value}`);
+                }}
+              >
                 {universes.map((universe) => (
                   <optgroup key={universe.id} label={universe.name}>
                     {allSets
@@ -647,6 +690,19 @@ export function SetExplorerPage() {
               </button>
             )}
           </div>
+        )}
+
+        {lead && (
+          <p className="notice-line" role="status">
+            {lead}{" "}
+            <button
+              type="button"
+              className="link"
+              onClick={() => setFilters((current) => ({ ...current, ownership: "all", availability: "any" }))}
+            >
+              Show all cards
+            </button>
+          </p>
         )}
 
         <div className="result-row">

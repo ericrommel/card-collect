@@ -146,33 +146,47 @@ export function DashboardPage() {
 
       <ul className="stat-row">
         <li>
-          <strong>{totals.owned_count}</strong>
-          <span>Owned</span>
+          <Link to="/collection/owned" className="stat-link">
+            <strong>{totals.owned_count}</strong>
+            <span>Owned</span>
+          </Link>
         </li>
         <li>
-          <strong>{totals.missing_count}</strong>
-          <span>Missing</span>
+          <Link to="/collection/missing" className="stat-link">
+            <strong>{totals.missing_count}</strong>
+            <span>Missing</span>
+          </Link>
         </li>
         <li>
-          <strong>{totals.duplicate_count}</strong>
-          <span>Extras</span>
+          <Link to="/collection/duplicates" className="stat-link">
+            <strong>{totals.duplicate_count}</strong>
+            <span>Extras</span>
+          </Link>
         </li>
         <li>
-          <strong>{totals.trade_copies}</strong>
-          <span>For trade</span>
+          <Link to="/collection/trade" className="stat-link">
+            <strong>{totals.trade_copies}</strong>
+            <span>For trade</span>
+          </Link>
         </li>
         <li>
-          <strong>{totals.donation_copies}</strong>
-          <span>Donations</span>
+          <Link to="/collection/donations" className="stat-link">
+            <strong>{totals.donation_copies}</strong>
+            <span>Donations</span>
+          </Link>
         </li>
         <li>
-          <strong>{totals.sell_copies}</strong>
-          <span>For sale</span>
+          <Link to="/collection/sale" className="stat-link">
+            <strong>{totals.sell_copies}</strong>
+            <span>For sale</span>
+          </Link>
         </li>
         {totals.reserved_copies > 0 && (
           <li>
-            <strong>{totals.reserved_copies}</strong>
-            <span>In an exchange</span>
+            <Link to="/exchanges" className="stat-link">
+              <strong>{totals.reserved_copies}</strong>
+              <span>In an exchange</span>
+            </Link>
           </li>
         )}
       </ul>
@@ -267,7 +281,7 @@ export function DashboardPage() {
               <ul className="recent-list">
                 {data.recent_copies.map((copy) => (
                   <li key={copy.id}>
-                    <Link to={`/sets/${copy.set_id}`}>
+                    <Link to={`/sets/${copy.set_id}?q=${encodeURIComponent(copy.collectible_number)}`}>
                       <span className="card-number">{copy.collectible_number}</span> {copy.collectible_name}
                     </Link>
                     <span className="muted small">

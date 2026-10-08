@@ -88,6 +88,12 @@ On a wide screen, one selected card still opens beside the grid and two still co
 
 While select mode is on and the layout is narrow, the sheet stays closed until the person chooses **Card details** (one card) or **Compare** (two). Closing that sheet, or pressing Escape, returns to the selection. Escape with the sheet already closed still leaves select mode. A card opened by an ordinary tap, outside select mode, still uses the sheet.
 
+## 2026-10-08 — Home counts open the cards they describe
+
+The owned, missing, extra, trade, donation, and sale counts on home were numbers with nowhere to go. Each one now opens the sets that have those cards, with sets already in progress listed before untouched ones. Opening a set applies that filter, and the address keeps it, so a refresh stays on the same list. Show all cards clears it. Recently added cards open their set already searched by number.
+
+Sale is still only a label. The page says the app does not take payment.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
