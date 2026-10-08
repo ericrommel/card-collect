@@ -100,7 +100,7 @@ Home and the catalog page search card names, numbers, and set names. The local p
 
 ## 2026-10-08 — Signed-in search shows your copies
 
-Catalog search stays a public read. A working session adds `owned_quantity` for that person only: how many physical copies they have, including zero. A missing or rejected session leaves the field out and still returns the cards. Someone else's copies are not included.
+Catalog search stays a public read. A working session adds `owned_quantity` for that person only: how many physical copies they have, including zero. A missing or rejected session leaves the field out and still returns the cards. Someone else's copies are not included. Each result also names the default printing, so a signed-in person can add a Keep copy from the result. That copy starts with no condition.
 
 ## 2026-10-08 — Completion after a trade is net
 

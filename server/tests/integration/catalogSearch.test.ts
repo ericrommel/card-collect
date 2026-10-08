@@ -33,6 +33,7 @@ describe("catalog search", () => {
     ]);
     expect(JSON.stringify(byName.body)).not.toContain("email");
     expect(byName.body.results[0]).not.toHaveProperty("owned_quantity");
+    expect(byName.body.results[0].defaultVariantId).toBeNull();
 
     const rejected = await request(app)
       .get("/api/catalog/search")
@@ -87,6 +88,7 @@ describe("catalog search", () => {
       .set("Authorization", `Bearer ${owner.body.token}`)
       .query({ q: "quill sextant" });
     expect(none.body.results[0].owned_quantity).toBe(0);
+    expect(none.body.results[0].defaultVariantId).toBe(variant.id);
 
     const kept = await request(app)
       .post("/api/my/collection/copies")

@@ -797,17 +797,30 @@ select {
 .search-hit {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
   min-height: 44px;
   padding: 0.35rem;
   border-radius: 12px;
+}
+
+.search-hit:hover,
+.search-hit:focus-within {
+  background: var(--bg);
+}
+
+.search-hit-open {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 12rem;
+  min-width: 0;
   text-decoration: none;
   color: inherit;
 }
 
-.search-hit:hover,
-.search-hit:focus-visible {
-  background: var(--bg);
+.search-hit .secondary {
+  flex: none;
 }
 
 .search-hit-title {
