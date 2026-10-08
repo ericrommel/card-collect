@@ -1504,7 +1504,7 @@ select {
     padding: 0.5rem 0.75rem;
   }
 
-  .explorer:has(.filter-panel) .explorer-heading + .notice-line,
+  .explorer-heading + .notice-line,
   .explorer:has(.filter-panel) .progress-summary {
     display: none;
   }
@@ -1569,6 +1569,12 @@ select {
   .card-grid,
   .public-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card-grid .card-face {
+    width: auto;
+    max-height: 176px;
+    margin-inline: auto;
   }
 
   .card-tile {

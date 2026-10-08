@@ -28,6 +28,7 @@ import {
 import { conditionSummary } from "../lib/conditionSummary";
 import { duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
 import { explorerDetail } from "../lib/explorerDetail";
+import { toggleVisibleSelection } from "../lib/explorerSelection";
 import { useNarrowViewport } from "../lib/useNarrowViewport";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS, rarityLabel, titleCaseKey } from "../lib/labels";
 
@@ -527,8 +528,7 @@ export function SetExplorerPage() {
           </div>
           {progress.owned_count === 0 && (
             <p className="small">
-              Select the cards you own, then choose Mark owned. Open Matches to see donations without adding anything
-              yet.
+              Choose Select these, then Mark owned. Open Matches to see donations without adding anything yet.
             </p>
           )}
         </section>
@@ -751,23 +751,27 @@ export function SetExplorerPage() {
             {visible.length} of {entries.length} cards
             {status ? ` · ${status}` : ""}
           </p>
-          {selecting && (
+          {visible.length > 0 && (
             <button
               type="button"
               className="link"
+              aria-label={
+                !selecting
+                  ? "Select these cards"
+                  : allVisibleSelected
+                    ? "Unselect visible cards"
+                    : "Select visible cards"
+              }
               onClick={() => {
-                setSelected((current) => {
-                  const next = new Set(current);
-                  if (allVisibleSelected) {
-                    for (const id of visibleIds) next.delete(id);
-                  } else {
-                    for (const id of visibleIds) next.add(id);
-                  }
-                  return next;
-                });
+                if (!selecting) {
+                  setSelecting(true);
+                  setInspect(false);
+                  setFocusId(null);
+                }
+                setSelected((current) => toggleVisibleSelection(selecting ? current : [], visibleIds));
               }}
             >
-              {allVisibleSelected ? "Unselect visible" : "Select visible"}
+              {!selecting ? "Select these" : allVisibleSelected ? "Unselect visible" : "Select visible"}
             </button>
           )}
         </div>
