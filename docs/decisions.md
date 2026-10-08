@@ -110,6 +110,10 @@ A match used to add every card someone would receive and ignore a card they woul
 
 Home search can save a Keep copy immediately. The Add page is the slower path: search the whole catalog, choose availability and condition, attach an optional photo, then confirm. A phone reaches it from the bottom navigation, and the installed site can offer the same shortcut. Recognition still does not choose the card. The set page remains the place to mark many cards at once.
 
+## 2026-10-08 — Condition shows on the card when the copies agree
+
+The set grid and list show a condition only when every physical copy of that card has the same note. If the copies differ, including one note and one blank, the card says Mixed. Unset copies stay unmarked, so a large set does not fill with "Not set". Public collection pages still omit condition.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

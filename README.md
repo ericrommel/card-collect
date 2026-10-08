@@ -111,7 +111,9 @@ then opens with that filter already on. A link can also search one card
 by its number.
 
 Inside a set, filter by owned, missing, duplicates, rarity, availability,
-condition, and sample metadata. Sort, switch between grid and list, and
+condition, and sample metadata. A card shows its condition when every copy
+agrees. Copies that differ say Mixed. A card with no condition note stays
+unmarked, and a public page still does not show condition. Sort, switch between grid and list, and
 select cards. **Mark owned** adds one Keep copy for each selected card you
 do not already own. **Add a copy** always adds another physical copy.
 **Offer duplicates** keeps one copy of each selected card — the one already

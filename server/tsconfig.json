@@ -19,6 +19,7 @@
   "exclude": [
     "tests/domain/duplicateOffers.test.ts",
     "tests/domain/explorerDetail.test.ts",
-    "tests/domain/collectionFocus.test.ts"
+    "tests/domain/collectionFocus.test.ts",
+    "tests/domain/conditionSummary.test.ts"
   ]
 }
