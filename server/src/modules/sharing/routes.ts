@@ -63,6 +63,8 @@ function toJson(settings: OwnShareSettings) {
     share_id: settings.shareId,
     expires_at: settings.expiresAt ? settings.expiresAt.toISOString() : null,
     link_lifetime_days: SHARE_LINK_LIFETIME_DAYS,
+    view_count: settings.viewCount,
+    last_viewed_at: settings.lastViewedAt ? settings.lastViewedAt.toISOString() : null,
     visibility: {
       completion: settings.visibility.showCompletion,
       owned: settings.visibility.showOwned,

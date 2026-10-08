@@ -316,6 +316,60 @@ describe("collection sharing", () => {
     expect((await request(app).get(`/api/public/collections/${shareId}`)).status).toBe(404);
     expect((await request(app).get(`/api/public/collections/${regen.body.share.share_id}`)).status).toBe(200);
   });
+
+  it("counts public opens for the owner and does not say who opened the link", async () => {
+    const token = await registerUser(`views-${Date.now()}@example.com`);
+    const enableRes = await request(app)
+      .put(`/api/my/sets/${setId}/share`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ enabled: true });
+    expect(enableRes.body.share.view_count).toBe(0);
+    expect(enableRes.body.share.last_viewed_at).toBeNull();
+    const shareId = enableRes.body.share.share_id as string;
+
+    const first = await request(app).get(`/api/public/collections/${shareId}`);
+    expect(first.status).toBe(200);
+    expect(JSON.stringify(first.body)).not.toContain("view_count");
+    expect(JSON.stringify(first.body)).not.toContain("last_viewed");
+
+    const afterOne = await request(app).get(`/api/my/sets/${setId}/share`).set("Authorization", `Bearer ${token}`);
+    expect(afterOne.body.share.view_count).toBe(1);
+    expect(Math.abs(new Date(afterOne.body.share.last_viewed_at).getTime() - Date.now())).toBeLessThan(60_000);
+
+    expect((await request(app).get(`/api/public/collections/${shareId}`)).status).toBe(200);
+    const rushed = await request(app).get(`/api/my/sets/${setId}/share`).set("Authorization", `Bearer ${token}`);
+    expect(rushed.body.share.view_count).toBe(1);
+
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+    expect((await request(app).get(`/api/public/collections/${shareId}`)).status).toBe(200);
+    const afterTwo = await request(app).get(`/api/my/sets/${setId}/share`).set("Authorization", `Bearer ${token}`);
+    expect(afterTwo.body.share.view_count).toBe(2);
+
+    process.env.SHARE_VIEW_WRITE_LIMIT = "1";
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+      expect((await request(app).get(`/api/public/collections/${shareId}`)).status).toBe(200);
+      const capped = await request(app).get(`/api/my/sets/${setId}/share`).set("Authorization", `Bearer ${token}`);
+      expect(capped.body.share.view_count).toBe(2);
+    } finally {
+      delete process.env.SHARE_VIEW_WRITE_LIMIT;
+    }
+
+    await prisma.collectionShare.update({
+      where: { shareId },
+      data: { expiresAt: new Date(Date.now() - 60_000) },
+    });
+    expect((await request(app).get(`/api/public/collections/${shareId}`)).status).toBe(404);
+    const expired = await request(app).get(`/api/my/sets/${setId}/share`).set("Authorization", `Bearer ${token}`);
+    expect(expired.body.share.view_count).toBe(2);
+
+    const regen = await request(app)
+      .post(`/api/my/sets/${setId}/share/regenerate`)
+      .set("Authorization", `Bearer ${token}`);
+    expect(regen.body.share.view_count).toBe(0);
+    expect(regen.body.share.last_viewed_at).toBeNull();
+    expect(regen.body.share.share_id).not.toBe(shareId);
+  });
 });
 
 function expectedExpiry(): number {

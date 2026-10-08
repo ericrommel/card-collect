@@ -141,11 +141,12 @@ duplicates, trade offers, give-away offers), copy or open it, and disable
 or regenerate it at any time. The public page (`/c/:shareId`) works logged
 out and shows only what you opted into — no email, account id, or location
 is ever exposed. The link works for 30 days. Renew keeps the same address
-and starts another 30 days; regenerate replaces the address. See
+and starts another 30 days; regenerate replaces the address and resets
+the open count. The owner can see how many times the public page loaded
+and when, not who opened it. See
 [docs/architecture.md](docs/architecture.md#collection-sharing-v01) for the
 design and [docs/risks.md](docs/risks.md) for the residual risk (during
-that window, link possession is still the only access control, and there
-is no view log).
+that window, link possession is still the only access control).
 
 ## Test
 

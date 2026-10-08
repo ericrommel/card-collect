@@ -1,4 +1,5 @@
 import { prisma } from "../../db.js";
+import { createHitWindow } from "../../lib/hitWindow.js";
 import { ApiError } from "../../middleware/apiError.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
 import { getUserCopies, isOfferable } from "../collection/service.js";
@@ -28,6 +29,8 @@ export interface OwnShareSettings {
   shareId: string;
   enabled: boolean;
   expiresAt: Date | null;
+  viewCount: number;
+  lastViewedAt: Date | null;
   visibility: ShareVisibility;
 }
 
@@ -35,6 +38,8 @@ function toOwnSettings(row: {
   shareId: string;
   enabled: boolean;
   expiresAt: Date | null;
+  viewCount: number;
+  lastViewedAt: Date | null;
   showCompletion: boolean;
   showOwned: boolean;
   showMissing: boolean;
@@ -46,6 +51,8 @@ function toOwnSettings(row: {
     shareId: row.shareId,
     enabled: row.enabled,
     expiresAt: row.expiresAt,
+    viewCount: row.viewCount,
+    lastViewedAt: row.lastViewedAt,
     visibility: {
       showCompletion: row.showCompletion,
       showOwned: row.showOwned,
@@ -128,6 +135,8 @@ export async function regenerateShareId(ownerId: string, setId: string): Promise
     where: { ownerId_setId: { ownerId, setId } },
     update: {
       shareId: newShareId,
+      viewCount: 0,
+      lastViewedAt: null,
       ...(existing?.enabled ? { expiresAt: nextShareExpiry() } : {}),
     },
     create: { ownerId, setId, shareId: newShareId, enabled: false, expiresAt: null },
@@ -166,10 +175,45 @@ function toRefs(
   });
 }
 
+const shareViewWrites = createHitWindow(60_000);
+const lastCountedOpen = new Map<string, number>();
+/** Collapses a double load, including the development server rendering a page twice. */
+const SHARE_OPEN_QUIET_MS = 1000;
+
+function shareViewWriteLimit(): number {
+  const raw = process.env.SHARE_VIEW_WRITE_LIMIT;
+  if (raw) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  }
+  return 60;
+}
+
+/**
+ * Counts one successful load of a public page. Stores a number and a time
+ * on the share row, not who opened it. A second load of the same link
+ * within one second is not counted. A flood past the per-link write
+ * limit still leaves the page readable; those extra loads are not counted.
+ * A disabled or expired row is not updated.
+ */
+export async function noteShareOpen(shareId: string, now = new Date()): Promise<void> {
+  const at = now.getTime();
+  const previous = lastCountedOpen.get(shareId) ?? 0;
+  if (at - previous < SHARE_OPEN_QUIET_MS) return;
+  lastCountedOpen.set(shareId, at);
+  if (shareViewWrites.tooMany(`share-view:${shareId}`, shareViewWriteLimit())) return;
+  await prisma.collectionShare.updateMany({
+    where: { shareId, enabled: true, expiresAt: { gt: now } },
+    data: { viewCount: { increment: 1 }, lastViewedAt: now },
+  });
+}
+
 /**
  * Public, unauthenticated lookup. Returns null for a shareId that never
  * existed, one that is disabled, and one whose time has passed. Callers
  * must map all of those to the same 404 (see docs/architecture.md).
+ * This read does not itself record the open; the route does that only
+ * after a view is returned.
  */
 export async function getPublicShareView(shareId: string): Promise<PublicShareView | null> {
   const share = await prisma.collectionShare.findUnique({

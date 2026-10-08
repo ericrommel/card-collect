@@ -74,6 +74,14 @@ The token carries a session version stored on the account. Sign-out increments i
 
 The account page can also change the display name other collectors see. That does not end the session, and it does not change the email. There is no reset-by-email flow, because the app does not send mail.
 
+## 2026-10-08 — Public opens are a count, not a visitor list
+
+The owner of a shared collection can see how many times the public page loaded and when it last did. The page stores those two fields on the share row. It does not store an address, an account, or a browser.
+
+A disabled, expired, or unknown link is not counted. Regenerating the address starts the count over, because the old address is no longer the one being watched. Renewing and turning sharing off keep the count. Opening the page yourself counts. A second load of the same link within one second counts once, so a double load does not look like two people. More than 60 loads of one link in a minute are not all written down; the page still loads.
+
+The public response does not include the count.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

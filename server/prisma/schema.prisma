@@ -167,6 +167,10 @@ model CollectionShare {
   /// End of the public link. Null while sharing is off. Renewing keeps
   /// shareId and sets a new time; regenerating also starts a new window.
   expiresAt DateTime?
+  /// Successful loads of the public page. Not who opened it.
+  viewCount    Int       @default(0)
+  /// When the public page was last loaded. Null when it never has been.
+  lastViewedAt DateTime?
 
   showCompletion Boolean @default(true)
   showOwned      Boolean @default(true)
