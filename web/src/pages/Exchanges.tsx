@@ -112,6 +112,10 @@ function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChang
       )}
       {error && <p className="error">{error}</p>}
       <div className="match-actions">
+        <p className="match-tally">
+          You give {exchange.you_give.length} {exchange.you_give.length === 1 ? "card" : "cards"}. You receive{" "}
+          {exchange.you_receive.length} {exchange.you_receive.length === 1 ? "card" : "cards"}.
+        </p>
         {exchange.actions.map((action) =>
           action === "confirm" && !confirming ? (
             <button key={action} className="primary" disabled={busy} onClick={() => setConfirming(true)}>
