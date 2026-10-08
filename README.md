@@ -16,6 +16,7 @@ generic (see [docs/architecture.md](docs/architecture.md) and
 cookie. A cookie write is accepted only from the app, and sign-in and
 proposals are rate-limited. From a set, Add cards searches the catalog or
 attaches a private photo. The app does not identify the card by itself.
+Trades and donations show the cards, and an exchange shows each copy's condition.
 
 ```text
 V0         — Collection tracking (owned/missing/duplicates/completion) + matching

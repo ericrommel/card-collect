@@ -886,10 +886,40 @@ select {
   gap: 0.8rem;
 }
 
-.offer-list {
+.offer-list,
+.offer-grid {
   list-style: none;
   padding: 0;
   margin: 0.35rem 0 0;
+}
+
+.offer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 0.55rem;
+}
+
+.offer-grid li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.offer-grid .card-face {
+  width: 100%;
+  max-width: 104px;
+}
+
+.offer-grid .tile-name {
+  font-size: 0.82rem;
+}
+
+.offer-block .link {
+  margin-top: 0.35rem;
+}
+
+.offer-list {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;

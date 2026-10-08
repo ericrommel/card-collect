@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { OfferCards } from "../components/OfferCards";
 import * as api from "../lib/api";
-import type { Exchange, ExchangeAction, ExchangeCard } from "../lib/api";
-import { EXCHANGE_STATUS_LABEL, rarityLabel } from "../lib/labels";
+import type { Exchange, ExchangeAction } from "../lib/api";
+import { EXCHANGE_STATUS_LABEL } from "../lib/labels";
 
 const ACTION_LABEL: Record<ExchangeAction, string> = {
   accept: "Accept",
@@ -27,21 +28,6 @@ function statusSentence(exchange: Exchange): string {
   if (exchange.status === "COMPLETED") return "Completed. These cards have moved in both collections.";
   if (exchange.status === "DECLINED") return "Declined. No cards moved.";
   return "Cancelled. No cards moved.";
-}
-
-function CardList({ cards }: { cards: ExchangeCard[] }) {
-  if (cards.length === 0) return <p className="muted small">Nothing</p>;
-  return (
-    <ul className="offer-list">
-      {cards.map((card) => (
-        <li key={`${card.number}-${card.name}`}>
-          <span className="card-number">{card.number}</span> {card.name}
-          {card.rarity && <span className="badge small">{rarityLabel(card.rarity)}</span>}
-          <span className="badge small">{card.condition ?? "Condition not set"}</span>
-        </li>
-      ))}
-    </ul>
-  );
 }
 
 function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChanged: (updated: Exchange) => void }) {
@@ -92,13 +78,13 @@ function ExchangeCardView({ exchange, onChanged }: { exchange: Exchange; onChang
           <p>
             You give <strong>{exchange.you_give.length}</strong>
           </p>
-          <CardList cards={exchange.you_give} />
+          <OfferCards items={exchange.you_give} showCondition />
         </div>
         <div>
           <p>
             You receive <strong>{exchange.you_receive.length}</strong>
           </p>
-          <CardList cards={exchange.you_receive} />
+          <OfferCards items={exchange.you_receive} showCondition />
         </div>
       </div>
       {exchange.status === "ACCEPTED" && (

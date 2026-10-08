@@ -1,22 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { OfferCards } from "../components/OfferCards";
 import * as api from "../lib/api";
-import type { CatalogSet, CollectorMatch, MatchCollectibleRef } from "../lib/api";
-import { rarityLabel } from "../lib/labels";
-
-function CardChips({ items }: { items: MatchCollectibleRef[] }) {
-  if (items.length === 0) return null;
-  return (
-    <ul className="offer-list">
-      {items.map((item) => (
-        <li key={item.id}>
-          <span className="card-number">{item.number}</span> {item.name}
-          {item.rarity && <span className="badge small">{rarityLabel(item.rarity)}</span>}
-        </li>
-      ))}
-    </ul>
-  );
-}
+import type { CatalogSet, CollectorMatch } from "../lib/api";
 
 function CompletionRow({ label, before, after }: { label: string; before: number; after: number }) {
   return (
@@ -66,7 +52,7 @@ function MatchCard({ match, setId }: { match: CollectorMatch; setId: string }) {
             {isDonation ? "You can receive" : "You receive"} <strong>{match.current_user.cards_received}</strong>{" "}
             missing {match.current_user.cards_received === 1 ? "card" : "cards"}
           </p>
-          <CardChips items={match.proposed_exchange.you_receive} />
+          <OfferCards items={match.proposed_exchange.you_receive} />
         </div>
         <div>
           {isDonation ? (
@@ -77,7 +63,7 @@ function MatchCard({ match, setId }: { match: CollectorMatch; setId: string }) {
                 They receive <strong>{match.other_collector?.cards_received}</strong> missing{" "}
                 {match.other_collector?.cards_received === 1 ? "card" : "cards"}
               </p>
-              <CardChips items={match.proposed_exchange.they_receive} />
+              <OfferCards items={match.proposed_exchange.they_receive} />
             </>
           )}
         </div>
