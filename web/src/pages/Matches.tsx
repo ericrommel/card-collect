@@ -91,6 +91,11 @@ function MatchCard({ match, setId }: { match: CollectorMatch; setId: string }) {
 
       {error && <p className="error">{error}</p>}
       <div className="match-actions">
+        <p className="match-tally">
+          {isDonation
+            ? `You can receive ${match.current_user.cards_received} ${match.current_user.cards_received === 1 ? "card" : "cards"}. Nothing goes back.`
+            : `You receive ${match.current_user.cards_received} ${match.current_user.cards_received === 1 ? "card" : "cards"}. They receive ${match.other_collector?.cards_received ?? 0} ${(match.other_collector?.cards_received ?? 0) === 1 ? "card" : "cards"}.`}
+        </p>
         {match.open_exchange_id ? (
           <Link to={`/exchanges#${match.open_exchange_id}`} className="secondary">
             View exchange

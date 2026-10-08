@@ -147,14 +147,14 @@ only — it is not a price or fairness estimate; see
 formula and [docs/risks.md](docs/risks.md) for the residual risk of it
 being misread as one. The home page shows the top few of these for sets
 you have started. On a phone, the completion change and the next action
-sit above the card faces, so proposing does not require scrolling through
-every card.
+sit above the card faces, and both counts sit above those faces, so
+proposing does not require scrolling through every card.
 
 ## Exchanges
 
 From a match, "Propose this trade" or "Ask for these cards" opens an
 exchange. On a phone, that button and the actions on an open exchange sit
-above the card faces. On a phone those cards are rows, so each name sits
+above the card faces, and both counts come before the faces. On a phone those cards are rows, so each name sits
 beside its face. An open exchange says how each set would change if it finishes,
 using the copies people have now. The other collector accepts or declines. Cards stay where they
 are until **both** people confirm that the cards have actually changed

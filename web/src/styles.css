@@ -1100,6 +1100,10 @@ select {
   gap: 0.75rem;
 }
 
+.match-tally {
+  display: none;
+}
+
 .match-card,
 .exchange-card {
   display: flex;
@@ -1369,6 +1373,12 @@ select {
   .exchange-card > .match-actions,
   .exchange-card > .confirm-panel {
     order: 6;
+  }
+
+  .match-tally {
+    display: block;
+    flex-basis: 100%;
+    margin: 0;
   }
 
   .auth-page {

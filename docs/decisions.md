@@ -186,6 +186,10 @@ The phone set page puts the set code on the same line as the title. That rule al
 
 The password fields sit at the bottom of the account page. On a phone the next field opened underneath the navigation, and focusing it left it there. Focusing a field or the save button now moves it above that bar. A wide screen has no bottom bar.
 
+## 2026-10-08 — Both counts come before the faces on a phone
+
+On a phone the next action sits above the cards. The cards you would receive were then listed in full before the line that says what you would give, so that count was easy to miss. One line with both counts now sits with the action. Each list still has its own heading. A wide screen does not repeat that line, because the two sides are already next to each other.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
