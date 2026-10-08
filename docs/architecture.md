@@ -284,9 +284,24 @@ order (`orderBy: { id: "asc" }`) only matters as a starting point —
   the session out of the login response or out of `localStorage`.
 - A request authenticated by the cookie is rejected when its `Origin` is
   not the app. Outside production, localhost on any port is allowed so the
-  dev server can move. SameSite=Lax already keeps the cookie off cross-site
-  POSTs. Bearer requests are not origin-checked; they are the explicit
-  non-browser credential.
+  dev server can move. Safe reads still accept a missing Origin. A cookie
+  write (POST, PATCH, DELETE) does not: the browser sends Origin on those,
+  and a missing one is rejected. Sign-in and registration follow the same
+  rule unless the client sends `X-Auth-Mode: bearer`. That header cannot
+  ride on a cross-site form post; it forces a CORS preflight, and the API
+  only allows the configured app origin. Bearer requests are not
+  origin-checked; they are the explicit non-browser credential.
+- Sign-in and registration share a limit of 20 attempts per minute per
+  socket address. Proposing an exchange is limited to 30 per minute per
+  account. The process does not trust `X-Forwarded-For` (`trust proxy` is
+  off), so a client cannot pick its own rate-limit key. The suite raises
+  the sign-in limit while `VITEST` is set.
+- API responses send `nosniff`, `no-referrer`, `DENY` framing, `no-store`,
+  and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`.
+  They do not send `X-Powered-By`.
+  The Vite dev server does not use that policy, because its own scripts
+  would break. A host that serves the built web app needs to set framing
+  and nosniff itself. The HTML sets `referrer` to `no-referrer`.
 - Every `my/*` route requires the cookie or a bearer token and scopes all
   reads/writes to `req.userId` from that token — never from a client-supplied id.
 - Cross-user mutation of a `UserCopy` is blocked by ownership check in

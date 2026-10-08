@@ -8,8 +8,9 @@ httpOnly session cookie set by `/auth/register` or `/auth/login`, or
 `X-Auth-Mode: bearer`. Tokens expire after 7 days. The web app uses the
 cookie only.
 
-Error responses have the shape `{ "error": "message" }` (400/401/403/404/409)
+Error responses have the shape `{ "error": "message" }` (400/401/403/404/409/429)
 or `{ "error": "Invalid request", "details": {...} }` for validation errors.
+A body that is not JSON is `400` with `{ "error": "Invalid request" }` and no details.
 
 ## Auth
 
@@ -56,7 +57,13 @@ load. It does not respond with 401.
 Accepts the session cookie or `Authorization: Bearer <token>`. → `200 { "user": {...} }` — the caller's own profile only.
 
 A cookie-authenticated request whose `Origin` is not the app's origin is
-`403`. Bearer requests are not checked this way.
+`403`. A cookie-authenticated POST, PATCH, or DELETE with no `Origin` is
+also `403`. Bearer requests are not checked this way. Register and login
+require an allowed `Origin` unless the request sends `X-Auth-Mode: bearer`.
+
+Register and login share a limit of 20 attempts per minute per socket
+address. The response is `429` with `Retry-After: 60`. Proposing an
+exchange is limited to 30 per minute per account, with the same status.
 
 ## Catalog (read-only, no auth required)
 

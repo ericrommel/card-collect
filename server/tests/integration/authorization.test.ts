@@ -88,7 +88,9 @@ describe("authorization", () => {
     const email = `selfonly-${Date.now()}@example.com`;
     const res = await request(app)
       .post("/api/auth/register")
+      .set("Origin", "http://localhost:5173")
       .send({ email, password: "password123", displayName: "Self Only" });
+    expect(res.status).toBe(201);
     expect(res.body.user.email).toBe(email);
     expect(res.body.user.passwordHash).toBeUndefined();
   });

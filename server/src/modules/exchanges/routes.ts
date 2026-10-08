@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
+import { ApiError } from "../../middleware/apiError.js";
 import { requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
+import { createHitWindow } from "../../lib/hitWindow.js";
 import type { ExchangeAction } from "../../domain/exchange.js";
 import { actOnExchange, getExchangeForUser, listExchangesForUser, proposeExchange } from "./service.js";
 
@@ -10,6 +12,28 @@ exchangesRouter.use(requireAuth);
 
 function userId(req: import("express").Request): string {
   return (req as AuthenticatedRequest).userId;
+}
+
+const proposeHitWindow = createHitWindow(60_000);
+
+function proposeAttemptLimit(): number {
+  if (process.env.PROPOSE_RATE_LIMIT) {
+    const parsed = Number(process.env.PROPOSE_RATE_LIMIT);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  }
+  return 30;
+}
+
+function limitProposals(
+  req: import("express").Request,
+  res: import("express").Response,
+  next: import("express").NextFunction,
+) {
+  if (proposeHitWindow.tooMany(userId(req), proposeAttemptLimit())) {
+    res.setHeader("Retry-After", "60");
+    throw ApiError.tooManyRequests("Too many proposals. Wait a minute and try again.");
+  }
+  next();
 }
 
 const proposeSchema = z.object({
@@ -28,6 +52,7 @@ exchangesRouter.get(
 
 exchangesRouter.post(
   "/",
+  limitProposals,
   asyncHandler(async (req, res) => {
     const body = proposeSchema.parse(req.body);
     const exchange = await proposeExchange(userId(req), {

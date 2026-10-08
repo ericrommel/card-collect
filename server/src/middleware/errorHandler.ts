@@ -12,6 +12,11 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     res.status(400).json({ error: "Invalid request", details: err.flatten() });
     return;
   }
+  // express.json rejects a body it cannot parse. That is the client's mistake.
+  if (err instanceof SyntaxError && "status" in err && err.status === 400) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
   console.error(err);
   res.status(500).json({ error: "Internal server error" });
 }

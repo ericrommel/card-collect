@@ -92,6 +92,11 @@ Areas to cover:
 ### Initial Mitigations
 
 - enforce ownership authorization server-side;
+- keep the web session in an httpOnly cookie, and reject cookie writes that do not come from the app origin;
+- limit sign-in attempts and exchange proposals in the API process;
+- send nosniff, no-referrer, frame denial, and no-store on API responses;
+- do not trust `X-Forwarded-For` for those limits;
+- patch non-major dependency advisories in the lockfile. Vite, Vitest, and React Router still need major upgrades, so those advisories stay open. `trust proxy` stays off, which keeps the proxy-addr spoofing bug from choosing a rate-limit key even on an unpatched release;
 - use established authentication libraries/providers;
 - no secrets in source control;
 - validate and constrain all uploads;

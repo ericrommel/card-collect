@@ -12,7 +12,9 @@ synthetic set. **Harbor Atlas** is an original 396-card catalog (three sets)
 for trying a large collection. Neither is an official product, and the card
 faces are generated patterns, not publisher artwork. The domain model stays
 generic (see [docs/architecture.md](docs/architecture.md) and
-[docs/decisions.md](docs/decisions.md)).
+[docs/decisions.md](docs/decisions.md)). The web session stays in an httpOnly
+cookie. A cookie write is accepted only from the app, and sign-in and
+proposals are rate-limited.
 
 ```text
 V0         — Collection tracking (owned/missing/duplicates/completion) + matching

@@ -41,8 +41,10 @@ export function readSessionCookie(req: Request): string | undefined {
  * Cookie-authenticated browser requests must come from the configured
  * app origin. Outside production, any localhost port is allowed so the
  * Vite dev server can move off 5173 without becoming a CSRF hole.
- * A missing Origin is allowed: SameSite=Lax already withholds the cookie
- * on cross-site POSTs, and non-browser clients use the bearer header.
+ *
+ * A missing Origin is treated as allowed here so safe reads (and tools
+ * that do not send Origin) still work. State-changing requests use
+ * isAllowedMutationOrigin, which rejects a missing Origin.
  */
 export function isAllowedBrowserOrigin(origin: string | undefined): boolean {
   if (!origin) return true;
@@ -54,4 +56,9 @@ export function isAllowedBrowserOrigin(origin: string | undefined): boolean {
   } catch {
     return false;
   }
+}
+
+/** Login, logout, and cookie-authenticated writes must name an allowed origin. */
+export function isAllowedMutationOrigin(origin: string | undefined): boolean {
+  return Boolean(origin) && isAllowedBrowserOrigin(origin);
 }
