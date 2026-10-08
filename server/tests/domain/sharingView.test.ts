@@ -8,11 +8,13 @@ function baseInput(overrides: Partial<PublicShareInput> = {}): PublicShareInput 
     setCode: "SV-01",
     totalCount: 24,
     completionPercentage: 66.7,
-    ownedCollectibles: [{ number: "SV01-001", name: "Straw Hat Captain", rarity: "L" }],
-    missingCollectibles: [{ number: "SV01-020", name: "Voyage's End Treasure", rarity: "SEC" }],
-    duplicateCollectibles: [{ number: "SV01-003", name: "Sniper's Steady Aim", rarity: "C", duplicate_quantity: 1 }],
-    tradeOffers: [{ number: "SV01-003", name: "Sniper's Steady Aim", rarity: "C" }],
-    giveAwayOffers: [{ number: "SV01-012", name: "Grand Line Current", rarity: "C" }],
+    ownedCollectibles: [{ number: "SV01-001", name: "Straw Hat Captain", rarity: "L", kind: null, ink: null }],
+    missingCollectibles: [{ number: "SV01-020", name: "Voyage's End Treasure", rarity: "SEC", kind: null, ink: null }],
+    duplicateCollectibles: [
+      { number: "SV01-003", name: "Sniper's Steady Aim", rarity: "C", kind: null, ink: null, duplicate_quantity: 1 },
+    ],
+    tradeOffers: [{ number: "SV01-003", name: "Sniper's Steady Aim", rarity: "C", kind: null, ink: null }],
+    giveAwayOffers: [{ number: "SV01-012", name: "Grand Line Current", rarity: "C", kind: null, ink: null }],
     visibility: {
       showCompletion: true,
       showOwned: true,

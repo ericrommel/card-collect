@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { CardFace, inkFromMetadata } from "../components/CardFace";
+import { kindFromMetadata } from "../lib/cardMotif";
 import {
   ApiError,
   addCopy,
@@ -293,12 +294,16 @@ export function AddCardPage() {
                       name={entry.collectible.name}
                       rarity={entry.collectible.rarity}
                       ink={inkFromMetadata(entry.collectible.metadata)}
+                      kind={kindFromMetadata(entry.collectible.metadata)}
                     />
                     <span className="row-copy">
                       <strong>{entry.collectible.name}</strong>
                       <span className="muted small">
                         {entry.collectible.number}
                         {entry.collectible.rarity ? ` · ${rarityLabel(entry.collectible.rarity)}` : ""}
+                        {kindFromMetadata(entry.collectible.metadata)
+                          ? ` · ${kindFromMetadata(entry.collectible.metadata)}`
+                          : ""}
                         {entry.is_owned ? ` · You have ${entry.owned_quantity}` : " · Missing"}
                       </span>
                     </span>
@@ -321,6 +326,7 @@ export function AddCardPage() {
                 name={selected.collectible.name}
                 rarity={selected.collectible.rarity}
                 ink={inkFromMetadata(selected.collectible.metadata)}
+                kind={kindFromMetadata(selected.collectible.metadata)}
               />
               <h2>{selected.collectible.name}</h2>
               <p className="muted small">

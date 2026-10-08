@@ -9,6 +9,7 @@ export interface PublicCardRef {
   name: string;
   number: string;
   rarity?: string | null;
+  kind?: string | null;
 }
 
 export interface PublicSectionSource<T> {
@@ -58,12 +59,14 @@ export function defaultPublicSection<T>(sections: PublicSection<T>[]): PublicSec
   return (filled ?? sections[0])?.id ?? null;
 }
 
-/** Name, number, stored rarity, or the readable rarity label. A blank query keeps every card. */
+/** Name, number, kind, stored rarity, or the readable rarity label. A blank query keeps every card. */
 export function publicCardsMatching<T extends PublicCardRef>(items: T[], query: string): T[] {
   const needle = query.trim().toLowerCase();
   if (!needle) return items;
   return items.filter((card) => {
     const label = rarityLabel(card.rarity) ?? "";
-    return `${card.name} ${card.number} ${card.rarity ?? ""} ${label}`.toLowerCase().includes(needle);
+    return `${card.name} ${card.number} ${card.rarity ?? ""} ${label} ${card.kind ?? ""}`
+      .toLowerCase()
+      .includes(needle);
   });
 }

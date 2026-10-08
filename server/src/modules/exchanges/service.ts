@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { catalogFace, type CatalogFace } from "../../catalog/faceMetadata.js";
 import { prisma } from "../../db.js";
 import { ApiError } from "../../middleware/apiError.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
@@ -26,6 +27,13 @@ export interface ExchangeCardView {
   name: string;
   rarity: string | null;
   condition: string | null;
+  /**
+   * Read from the current catalog for this set and number. Not stored on
+   * the exchange line. Null when the catalog has no known kind.
+   */
+  kind: string | null;
+  /** Same source as `kind`. Null when the catalog has no known ink. */
+  ink: string | null;
 }
 
 export interface ExchangeView {
@@ -101,6 +109,8 @@ function toCard(line: {
     name: line.collectibleName,
     rarity: line.rarity,
     condition: line.condition,
+    kind: null,
+    ink: null,
   };
 }
 
@@ -136,12 +146,12 @@ export function toExchangeView(row: ExchangeRow, viewerId: string): ExchangeView
 type ExchangeDb = Prisma.TransactionClient | typeof prisma;
 
 interface ProjectionCache {
-  totals: Map<string, number>;
+  catalogs: Map<string, { total: number; faces: Map<string, CatalogFace> }>;
   quantities: Map<string, Map<string, number>>;
 }
 
 function newProjectionCache(): ProjectionCache {
-  return { totals: new Map(), quantities: new Map() };
+  return { catalogs: new Map(), quantities: new Map() };
 }
 
 function projectSide(
@@ -161,12 +171,23 @@ function projectSide(
   };
 }
 
-async function setTotal(setId: string, cache: ProjectionCache): Promise<number> {
-  const cached = cache.totals.get(setId);
-  if (cached !== undefined) return cached;
+async function loadSetCatalog(setId: string, cache: ProjectionCache) {
+  const cached = cache.catalogs.get(setId);
+  if (cached) return cached;
   const collectibles = await catalogProvider.listCollectibles(setId);
-  cache.totals.set(setId, collectibles.length);
-  return collectibles.length;
+  const loaded = {
+    total: collectibles.length,
+    faces: new Map(collectibles.map((card) => [card.number, catalogFace(card.metadata)])),
+  };
+  cache.catalogs.set(setId, loaded);
+  return loaded;
+}
+
+function withFaces(cards: ExchangeCardView[], faces: Map<string, CatalogFace>): ExchangeCardView[] {
+  return cards.map((card) => {
+    const face = faces.get(card.number) ?? { kind: null, ink: null };
+    return { ...card, kind: face.kind, ink: face.ink };
+  });
 }
 
 async function quantitiesByNumber(userId: string, setId: string, db: ExchangeDb, cache: ProjectionCache) {
@@ -191,9 +212,14 @@ async function withProjection(
   cache: ProjectionCache,
 ): Promise<ExchangeView> {
   const view = toExchangeView(row, viewerId);
-  if (view.status !== "PROPOSED" && view.status !== "ACCEPTED") return view;
+  const catalog = await loadSetCatalog(row.setId, cache);
+  const faced: ExchangeView = {
+    ...view,
+    you_give: withFaces(view.you_give, catalog.faces),
+    you_receive: withFaces(view.you_receive, catalog.faces),
+  };
+  if (faced.status !== "PROPOSED" && faced.status !== "ACCEPTED") return faced;
 
-  const total = await setTotal(row.setId, cache);
   const otherId = row.proposerId === viewerId ? row.counterpartyId : row.proposerId;
   const yours = await quantitiesByNumber(viewerId, row.setId, db, cache);
   const theirs = await quantitiesByNumber(otherId, row.setId, db, cache);
@@ -201,10 +227,10 @@ async function withProjection(
   const youReceive = row.lines.filter((line) => line.toUserId === viewerId).map((line) => line.collectibleNumber);
 
   return {
-    ...view,
+    ...faced,
     projected_completion: {
-      yours: projectSide(total, yours, youReceive, youGive),
-      theirs: projectSide(total, theirs, youGive, youReceive),
+      yours: projectSide(catalog.total, yours, youReceive, youGive),
+      theirs: projectSide(catalog.total, theirs, youGive, youReceive),
     },
   };
 }

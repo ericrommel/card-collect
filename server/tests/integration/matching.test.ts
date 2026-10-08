@@ -50,6 +50,10 @@ afterAll(async () => {
 describe("GET /api/my/matches — ranked trade/donation matches", () => {
   it("ranks a mutual trade above a smaller donation, includes the documented breakdown, and never leaks sensitive fields", async () => {
     const { setId, variantIds } = await createTestSet(6);
+    await prisma.collectible.updateMany({
+      where: { setId, number: "c4" },
+      data: { metadata: JSON.stringify({ kind: "Place", ink: "Sea", note: "not-for-the-match" }) },
+    });
 
     const me = await registerUser(`me-${Date.now()}@example.com`);
     // I own c1 and two copies of c2, so offering one c2 still leaves c2 in the set.
@@ -114,6 +118,11 @@ describe("GET /api/my/matches — ranked trade/donation matches", () => {
     ]);
     expect((trade.proposed_exchange as any).they_receive.map((c: any) => c.number)).toEqual(["c2"]);
     expect((trade.proposed_exchange as any).they_receive).toMatchObject([{ number: "c2", condition: "Played" }]);
+    const received = (
+      trade.proposed_exchange as { you_receive: Array<{ number: string; kind: string | null; ink: string | null }> }
+    ).you_receive;
+    expect(received.find((card) => card.number === "c4")).toMatchObject({ kind: "Place", ink: "Sea" });
+    expect(received.find((card) => card.number === "c5")).toMatchObject({ kind: null, ink: null });
 
     // 16. donation stays explicitly typed, with no fabricated reciprocal side.
     expect(donation.type).toBe("DONATION");
@@ -125,6 +134,7 @@ describe("GET /api/my/matches — ranked trade/donation matches", () => {
 
     // 15. no sensitive/internal fields anywhere in the response.
     const raw = JSON.stringify(res.body);
+    expect(raw).not.toContain("not-for-the-match");
     expect(raw).not.toContain(me.email);
     expect(raw).not.toContain(trader.email);
     expect(raw).not.toContain(donor.email);

@@ -47,6 +47,10 @@ export interface CatalogSearchHit {
   number: string;
   name: string;
   rarity: string | null;
+  /** Known catalog kind, or null. Other metadata is not included. */
+  kind: string | null;
+  /** Known catalog ink, or null. Other metadata is not included. */
+  ink: string | null;
   set: { id: string; name: string; code: string };
   universeName: string;
   /** Default printing, when the catalog has one. Not a physical copy id. */

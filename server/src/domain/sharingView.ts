@@ -22,6 +22,10 @@ export interface ShareCollectibleRef {
   number: string;
   name: string;
   rarity: string | null;
+  /** Catalog kind used to draw the face. Null when the catalog has no known kind. */
+  kind: string | null;
+  /** Catalog ink used to color the face. Null when the catalog has no known ink. */
+  ink: string | null;
 }
 
 export interface ShareDuplicateRef extends ShareCollectibleRef {

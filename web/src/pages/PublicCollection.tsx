@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { CardFace } from "../components/CardFace";
 import * as api from "../lib/api";
+import { cardMotif } from "../lib/cardMotif";
 import { rarityLabel } from "../lib/labels";
 import { ApiError } from "../lib/api";
 import type { PublicCollectibleRef, PublicShareView } from "../lib/api";
@@ -18,13 +19,21 @@ function PublicGrid({ items }: { items: (PublicCollectibleRef & { duplicate_quan
     <ul className="public-grid">
       {items.map((item) => (
         <li key={`${item.number}-${item.name}`}>
-          <CardFace size="sm" number={item.number} name={item.name} rarity={item.rarity} />
+          <CardFace
+            size="sm"
+            number={item.number}
+            name={item.name}
+            rarity={item.rarity}
+            kind={item.kind}
+            ink={item.ink}
+          />
           <span className="public-copy">
             <span className="tile-name">{item.name}</span>
             <span className="tile-sub">
               {item.number}
               {item.rarity ? ` · ${rarityLabel(item.rarity)}` : ""}
             </span>
+            {cardMotif(item.kind) && <span className="tile-sub">{cardMotif(item.kind)}</span>}
             {item.duplicate_quantity ? <span className="badge dup">+{item.duplicate_quantity} extra</span> : null}
           </span>
         </li>

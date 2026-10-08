@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { catalogFace } from "../../src/catalog/faceMetadata.js";
 import { cardMotif, kindFromMetadata } from "../../../web/src/lib/cardMotif.ts";
 
 describe("cardMotif", () => {
@@ -16,5 +17,12 @@ describe("cardMotif", () => {
     expect(kindFromMetadata({ kind: "Object", ink: "Sea" })).toBe("Object");
     expect(kindFromMetadata({ ink: "Sea" })).toBeNull();
     expect(kindFromMetadata(null)).toBeNull();
+  });
+
+  it("draws every kind the catalog is willing to publish", () => {
+    for (const kind of ["Person", "Place", "Object", "Event"]) {
+      expect(catalogFace({ kind }).kind).toBe(kind);
+      expect(cardMotif(kind)).toBe(kind);
+    }
   });
 });
