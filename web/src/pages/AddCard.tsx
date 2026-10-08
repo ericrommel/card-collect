@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { CardFace, inkFromMetadata } from "../components/CardFace";
+import { OptionalBackPhoto } from "../components/OptionalBackPhoto";
 import { kindFromMetadata } from "../lib/cardMotif";
+import { saveCopyPhotos } from "../lib/saveCopyPhotos";
 import {
   ApiError,
   addCopy,
@@ -9,7 +11,6 @@ import {
   listSets,
   listUniverses,
   setProgress as loadSetProgress,
-  uploadCopyPhoto,
   type Availability,
   type CatalogSet,
   type ConditionGrade,
@@ -36,6 +37,7 @@ export function AddCardPage() {
   const [availability, setAvailability] = useState<Availability>("KEEP");
   const [condition, setCondition] = useState<ConditionGrade | "">("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [backPhoto, setBackPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [identify, setIdentify] = useState<IdentifyResponse | null>(null);
   const [identifyError, setIdentifyError] = useState<string | null>(null);
@@ -98,6 +100,7 @@ export function AddCardPage() {
   async function onPhoto(file: File | undefined) {
     if (!file) return;
     setPhoto(file);
+    setBackPhoto(null);
     setIdentify(null);
     setIdentifyError(null);
     setStatus(null);
@@ -132,22 +135,12 @@ export function AddCardPage() {
     setStatus(null);
     try {
       const created = await addCopy(variant.id, availability, condition || null);
-      if (photo) {
-        try {
-          await uploadCopyPhoto(created.copy.id, "front", photo);
-        } catch (err) {
-          setStatus(
-            `Added ${selected.collectible.name}, but the photo was not saved. ${err instanceof ApiError ? err.message : ""}`.trim(),
-          );
-          setPhoto(null);
-          setIdentify(null);
-          setSelectedId(null);
-          setProgressData(await loadSetProgress(setId));
-          return;
-        }
-      }
-      setStatus(`Added ${selected.collectible.name}.`);
+      const photoProblem = await saveCopyPhotos(created.copy.id, { front: photo, back: backPhoto });
+      setStatus(
+        photoProblem ? `Added ${selected.collectible.name}. ${photoProblem}` : `Added ${selected.collectible.name}.`,
+      );
       setPhoto(null);
+      setBackPhoto(null);
       setIdentify(null);
       setSelectedId(null);
       setProgressData(await loadSetProgress(setId));
@@ -226,7 +219,13 @@ export function AddCardPage() {
 
           {preview && (
             <section className="card">
-              <img src={preview} alt="Photo you selected" className="add-preview" />
+              <div className="add-photo-pair">
+                <figure className="add-photo-figure">
+                  <img src={preview} alt="Front of the card you selected" className="add-preview" />
+                  <figcaption className="muted small">Front</figcaption>
+                </figure>
+                <OptionalBackPhoto file={backPhoto} onChange={setBackPhoto} />
+              </div>
               {identify && (
                 <p className={identify.status === "candidates" ? "notice-line" : "muted"}>{identify.message}</p>
               )}
@@ -268,6 +267,18 @@ export function AddCardPage() {
                   </div>
                 );
               })}
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  setPhoto(null);
+                  setBackPhoto(null);
+                  setIdentify(null);
+                  setIdentifyError(null);
+                }}
+              >
+                Remove photo
+              </button>
             </section>
           )}
 

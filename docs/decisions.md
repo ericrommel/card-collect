@@ -230,6 +230,10 @@ The set list used a colored block and a code. Each set now shows one card from t
 
 On a wide screen the before and after percentages sat at the far edge of the match, away from "Your collection" and "Their collection". They now sit on the same line as that label. A phone still shows the change before the card faces.
 
+## 2026-10-08 — A back photo can be added with the card
+
+Adding a card could save a front photo only. You can also add a photo of the back before the copy is saved. It stays optional. Choosing another front photo clears a back that has not been saved yet. The app does not check that the two photos are the same card, and neither photo proves that you hold it. Recognition still looks at the front only.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

@@ -1591,7 +1591,8 @@ select {
   .account-panel input,
   .account-panel button,
   .recent-card,
-  .exchange-row {
+  .exchange-row,
+  .back-photo {
     scroll-margin-top: calc(var(--header-h) + 0.5rem);
     scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
   }
@@ -1766,6 +1767,27 @@ select {
   object-fit: contain;
   background: var(--bg);
   border-radius: 12px;
+}
+
+.add-photo-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.add-photo-figure {
+  margin: 0;
+  flex: 1 1 140px;
+  max-width: 220px;
+}
+
+.add-photo-figure .add-preview {
+  width: 100%;
+}
+
+.back-photo {
+  flex: 1 1 100%;
 }
 
 .add-results {
