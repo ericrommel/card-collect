@@ -4,6 +4,12 @@ import { ApiError, searchCatalog, type CatalogSearchHit } from "../lib/api";
 import { rarityLabel } from "../lib/labels";
 import { CardFace } from "./CardFace";
 
+function ownedLabel(count: number): string {
+  if (count <= 0) return "Missing";
+  if (count === 1) return "Owned";
+  return `${count} copies`;
+}
+
 export function CardSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CatalogSearchHit[] | null>(null);
@@ -55,7 +61,7 @@ export function CardSearch() {
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
-      <p className="muted small">Search the sample catalog, then open the set to see if you have that card.</p>
+      <p className="muted small">Search the sample catalog. A result says whether you have that card.</p>
       {searching && <p className="muted small">Searching…</p>}
       {error && <p className="error small">{error}</p>}
       {results && results.length === 0 && !searching && <p className="muted">No cards match.</p>}
@@ -66,7 +72,14 @@ export function CardSearch() {
               <Link className="search-hit" to={`/sets/${hit.set.id}?q=${encodeURIComponent(hit.number)}`}>
                 <CardFace size="sm" number={hit.number} name={hit.name} rarity={hit.rarity} />
                 <span className="row-copy">
-                  <strong>{hit.name}</strong>
+                  <span className="search-hit-title">
+                    <strong>{hit.name}</strong>
+                    {hit.owned_quantity !== undefined && (
+                      <span className={hit.owned_quantity > 0 ? "badge owned" : "badge missing"}>
+                        {ownedLabel(hit.owned_quantity)}
+                      </span>
+                    )}
+                  </span>
                   <span className="muted small">
                     {hit.set.code} {hit.number}
                     {hit.rarity ? ` · ${rarityLabel(hit.rarity)}` : ""} · {hit.set.name}

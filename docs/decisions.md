@@ -96,7 +96,11 @@ Sale is still only a label. The page says the app does not take payment.
 
 ## 2026-10-08 — Catalog search stays inside the provider
 
-Home and the catalog page search card names, numbers, and set names. The local provider loads the sample rows and ranks them in process. A licensed provider can replace that method without a second search API. Fewer than two characters returns nothing, and a broad query stops at 24 cards. The result does not include ownership. Opening it lands in the set, which already knows what you have.
+Home and the catalog page search card names, numbers, and set names. The local provider loads the sample rows and ranks them in process. A licensed provider can replace that method without a second search API. Fewer than two characters returns nothing, and a broad query stops at 24 cards. Opening a result lands in the set. A later change adds the caller's own copy count when they are signed in.
+
+## 2026-10-08 — Signed-in search shows your copies
+
+Catalog search stays a public read. A working session adds `owned_quantity` for that person only: how many physical copies they have, including zero. A missing or rejected session leaves the field out and still returns the cards. Someone else's copies are not included.
 
 ## Not done, on purpose
 

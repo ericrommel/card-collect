@@ -280,6 +280,8 @@ export interface CatalogSearchHit {
   rarity: string | null;
   set: { id: string; name: string; code: string };
   universeName: string;
+  /** Present only for a signed-in search. Zero means this person has no copy. */
+  owned_quantity?: number;
 }
 
 export function searchCatalog(query: string) {
