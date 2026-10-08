@@ -121,8 +121,13 @@ characters returns an empty list rather than an error. A longer value is
 
 Matches the card name, the card number, or the set name and code. The
 closest matches come first. At most 24 rows are returned; `truncated` is
-true when more cards matched. The response does not say whether the
-caller owns a card.
+true when more cards matched.
+
+When the request has a working session, each result also has
+`owned_quantity`: how many physical copies of that card the caller has,
+including `0`. The field is omitted when there is no session, or when the
+session no longer works. Those requests still return `200`. The count is
+never another person's collection.
 
 ### `GET /catalog/sets/:id/collectibles`
 

@@ -810,6 +810,13 @@ select {
   background: var(--bg);
 }
 
+.search-hit-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
 .tile-name,
 .public-grid .tile-name {
   font-weight: 700;
