@@ -486,3 +486,5 @@ client uses the same routes with a bearer token. It would:
   file input. Recognition stays behind `CardIdentifier`.
 
 No mobile-specific backend changes are anticipated before that point.
+
+The current client can be installed from a browser (`web/public/manifest.webmanifest` and `web/public/sw.js`). The installed item is this website. The service worker does not cache `/api` responses, so a home-screen icon does not keep a private offline collection.

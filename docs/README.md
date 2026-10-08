@@ -6,7 +6,7 @@ Implemented: accounts and httpOnly sessions (cookie writes require the app origi
 
 Sample data only: Starter Voyage (synthetic, 24 cards) and Harbor Atlas (original, 396 cards). These are not official sets. Card faces are generated patterns.
 
-Not implemented: licensed publisher catalogs, automatic card identification, AI condition estimates, native Android or iOS apps, payments, chat, and precise location. A photo can be attached, but recognition is unavailable until a provider is configured. See [decisions.md](decisions.md).
+Not implemented: licensed publisher catalogs, automatic card identification, AI condition estimates, native Android or iOS apps, payments, chat, and precise location. The website can be installed from a browser; that is not a native app. A photo can be attached, but recognition is unavailable until a provider is configured. See [decisions.md](decisions.md).
 
 ## Product Vision
 
