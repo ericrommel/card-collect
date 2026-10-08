@@ -30,7 +30,7 @@ const SECTION_TITLE: Record<PublicSectionId, string> = {
   trade: "For trade",
   give_away: "Donations",
   missing: "Missing",
-  duplicates: "Duplicates",
+  duplicates: "Extras",
   owned: "Owned",
 };
 

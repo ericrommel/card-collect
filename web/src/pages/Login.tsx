@@ -58,8 +58,8 @@ export function LoginPage() {
         <p className="eyebrow">Cards Collect</p>
         <h1>Know what you own. Find the trade that finishes the set.</h1>
         <p className="muted">
-          Track copies, conditions, and duplicates. Propose a trade or a donation without sharing your email or where
-          you are.
+          Track copies, conditions, and extras. Propose a trade or a donation without sharing your email or where you
+          are.
         </p>
         <div className="auth-faces" aria-hidden="true">
           <CardFace number="HA01-001" name="Lantern Keeper" rarity="Common" ink="Sea" kind="Place" />

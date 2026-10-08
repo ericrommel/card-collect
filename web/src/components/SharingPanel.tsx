@@ -25,7 +25,7 @@ const VISIBILITY_FIELDS: { key: keyof ShareVisibility; label: string }[] = [
   { key: "completion", label: "Completion %" },
   { key: "owned", label: "Owned cards" },
   { key: "missing", label: "Missing cards" },
-  { key: "duplicates", label: "Duplicates" },
+  { key: "duplicates", label: "Extras" },
   { key: "trade", label: "Cards for trade" },
   { key: "give_away", label: "Cards to give away" },
 ];
@@ -193,7 +193,7 @@ export function SharingPanel({ setId }: { setId: string }) {
           </div>
 
           <p className="muted small">
-            The link opens on cards for trade when there are any, then donations, missing cards, duplicates, and owned
+            The link opens on cards for trade when there are any, then donations, missing cards, extras, and owned
             cards. A copy already in an open exchange is not shown as available.
           </p>
           <p className="muted small">Visible to anyone with the link:</p>
