@@ -282,6 +282,10 @@ On a phone the password explanation sat above the fields, so the new password wa
 
 Below 389px the set switcher uses another row, so the first card's number and ownership sat under the navigation. The card face is a little shorter there. Below 337px, search stays beside Filter and the sort row stays on one line, which keeps that text above the navigation on a 320px-wide phone. The set name in the switcher stays whole. A wider phone and a wide screen keep the taller face.
 
+## 2026-10-08 — The first exchange card stays above the navigation
+
+On a narrow phone the exchange header and the count line wrapped, so the first card's number sat under the navigation. The header and the count stay on one line. The name and the number each stay on their own line, and the kind sits beside the condition. A wider phone and a wide screen are unchanged.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
