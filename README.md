@@ -88,9 +88,11 @@ reset. Password guesses are limited to 10 a minute.
 
 Home shows only numbers the API computed: owned, missing, extras, copies
 offered for trade, sale, or donation, and exchanges that need a response.
-Match highlights are limited to sets you have already started. Overall
-completion counts every catalogued card, including sets you have not
-opened, and the page says so.
+Sets you have started come first, and the one with more of your cards comes
+before a smaller one. On a phone those sets sit under the greeting, before
+the count tiles and the search box. Match highlights are limited to sets
+you have already started. Overall completion counts every catalogued card,
+including sets you have not opened, and the page says so.
 
 Home and the catalog can search the sample catalog by card name, number,
 or set. Each result says whether you have that card. You can add a Keep

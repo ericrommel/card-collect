@@ -142,7 +142,9 @@ rows. Overall completion is owned collectibles divided by every catalogued
 collectible, including sets the user has not started. Match highlights are
 computed only for sets with `owned_count > 0`, then cut to the top three
 trades and top three donations. An untouched set can still have donations;
-those stay on that set's Matches page.
+those stay on that set's Matches page. Home shows the same sets with
+started collections first, then by how many cards are owned. That order is
+applied in the browser. The API list stays in release order.
 
 `/sets/:setId` loads the progress checklist and the caller's copies once.
 Search, filters, and sort run in the browser. Bulk adds, updates, and

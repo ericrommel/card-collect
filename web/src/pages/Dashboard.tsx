@@ -7,6 +7,7 @@ import type { DashboardHighlight, DashboardSetSummary } from "../lib/api";
 import { proposeExchange } from "../lib/api";
 import { AVAILABILITY_LABEL, EXCHANGE_STATUS_LABEL } from "../lib/labels";
 import { useAuth } from "../state/AuthContext";
+import { orderDashboardSets } from "../lib/dashboardSets";
 import { useDashboard } from "../lib/useDashboard";
 
 function groupSets(sets: DashboardSetSummary[]) {
@@ -108,12 +109,12 @@ export function DashboardPage() {
   if (error || !data) return <p className="error">{error ?? "Could not load your collection."}</p>;
 
   const { totals } = data;
-  const groups = groupSets(data.sets);
+  const groups = groupSets(orderDashboardSets(data.sets));
   const highlights = [...data.highlights.trades, ...data.highlights.donations];
   const firstName = user?.display_name.split(" ")[0] ?? "there";
 
   return (
-    <div className="page-stack">
+    <div className="page-stack dash-home">
       <section className="dash-hero">
         <div>
           <p className="eyebrow">Your collection</p>
@@ -198,26 +199,28 @@ export function DashboardPage() {
         )}
       </ul>
 
-      {groups.map((group) => (
-        <section key={group.id} className="page-stack">
-          <div className="section-heading">
-            <h2>{group.name}</h2>
-          </div>
-          {group.notice && <p className="notice-line">{group.notice}</p>}
-          <div className="set-grid">
-            {group.sets.map((set) => (
-              <SetCover key={set.id} set={set} />
-            ))}
-          </div>
-        </section>
-      ))}
+      <div className="dash-sets">
+        {groups.map((group) => (
+          <section key={group.id} className="page-stack">
+            <div className="section-heading">
+              <h2>{group.name}</h2>
+            </div>
+            {group.notice && <p className="notice-line">{group.notice}</p>}
+            <div className="set-grid">
+              {group.sets.map((set) => (
+                <SetCover key={set.id} set={set} />
+              ))}
+            </div>
+          </section>
+        ))}
 
-      {groups.length === 0 && (
-        <div className="card empty-state">
-          <h2>No sets yet</h2>
-          <p className="muted">When a catalog is loaded, your sets will show up here.</p>
-        </div>
-      )}
+        {groups.length === 0 && (
+          <div className="card empty-state">
+            <h2>No sets yet</h2>
+            <p className="muted">When a catalog is loaded, your sets will show up here.</p>
+          </div>
+        )}
+      </div>
 
       <div className="dash-columns">
         <section>

@@ -378,6 +378,12 @@ select {
   font-size: clamp(2rem, 4vw, 2.8rem);
 }
 
+.dash-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
 .hero-bar {
   margin-top: 0.4rem;
 }
@@ -1321,6 +1327,62 @@ select {
 
   .stat-row {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dash-home {
+    gap: 0.65rem;
+  }
+
+  .dash-home .attention-banner {
+    order: 1;
+  }
+
+  .dash-home .dash-sets {
+    order: 2;
+  }
+
+  .dash-home .stat-row {
+    order: 3;
+  }
+
+  .dash-home .card-search {
+    order: 4;
+  }
+
+  .dash-home .dash-columns {
+    order: 5;
+  }
+
+  .dash-hero h1 {
+    font-size: 1.65rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .dash-hero p {
+    margin: 0;
+  }
+
+  .set-cover {
+    min-width: 0;
+    gap: 0.55rem;
+  }
+
+  .set-cover-open {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .set-cover-body {
+    min-width: 0;
+  }
+
+  .set-monogram {
+    width: 84px;
+    aspect-ratio: 3 / 4;
+    flex: none;
+    font-size: 0.95rem;
+    padding: 0.45rem;
   }
 
   .top-nav {
