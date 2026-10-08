@@ -22,6 +22,7 @@ import {
   type ExplorerView,
   type OwnershipFilter,
 } from "../lib/explorerQuery";
+import { duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS, rarityLabel, titleCaseKey } from "../lib/labels";
 
 const OWNERSHIP: { id: OwnershipFilter; label: string }[] = [
@@ -257,6 +258,31 @@ export function SetExplorerPage() {
     await run(async () => {
       await api.addCopy(variant.id, "KEEP");
       setStatus(`Added ${entry.collectible.name}.`);
+    });
+  }
+
+  async function offerDuplicates() {
+    const plan = planDuplicateOffers(selectedEntries.map((entry) => entry.copies));
+    if (plan.cards === 0) {
+      setActionError(
+        "Those cards don't have a free duplicate. Add a copy, or open one card to offer the copy you have.",
+      );
+      return;
+    }
+    await run(async () => {
+      const batches: { ids: string[]; availability: Availability }[] = [
+        { ids: plan.keepIds, availability: "KEEP" },
+        { ids: plan.offerIds, availability: "TRADE" },
+      ];
+      for (const batch of batches) {
+        for (let index = 0; index < batch.ids.length; index += BULK_CHUNK) {
+          await api.bulkUpdateCopies({
+            copy_ids: batch.ids.slice(index, index + BULK_CHUNK),
+            availability: batch.availability,
+          });
+        }
+      }
+      setStatus(duplicateOfferStatus(plan));
     });
   }
 
@@ -730,10 +756,13 @@ export function SetExplorerPage() {
             <button type="button" className="secondary small" disabled={busy} onClick={() => void addAnother()}>
               Add a copy
             </button>
+            <button type="button" className="secondary small" disabled={busy} onClick={() => void offerDuplicates()}>
+              Offer duplicates
+            </button>
             <label>
-              Availability
+              All copies
               <select
-                aria-label="Set availability for selected copies"
+                aria-label="Set availability for every free copy of the selected cards"
                 defaultValue=""
                 disabled={busy}
                 onChange={(event) => {
