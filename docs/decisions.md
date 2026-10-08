@@ -128,6 +128,12 @@ On a phone, home showed the search box and every count before any set, so the co
 
 A match or an open exchange listed every card before the button that moves it forward. On a phone that button was below the fold. The completion change and the next action now come first. The cards follow. A wide screen keeps the cards beside the summary, with the action after them.
 
+## 2026-10-08 — A shared collection opens on the offers
+
+A public link stacked every owned card above the trade and donation lists. On a large set, the useful part of the link was under a long catalog. The page now shows one list at a time. Offers come before missing cards, and the owned catalog is last. It opens on the first of those lists that has cards. Search stays in the list on screen and says when another list has the name. On a phone each card is a row, so its name stays above the navigation. A wide screen keeps the card grid.
+
+A copy already reserved for an open exchange stays in the owned count, and it is left out of the public trade and donation lists. Another free copy of the same card is still listed. The page does not say that a copy is reserved.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

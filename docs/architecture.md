@@ -473,6 +473,18 @@ for one Set — `modules/sharing/`. Design decisions:
   because there is no code that forwards a Prisma object into the
   response; every field has to be deliberately threaded through
   `PublicShareInput` first. Condition is intentionally not threaded.
+- **Public offers skip a reserved copy.** The public trade and donation
+  lists use the same filter as matching: a copy with
+  `reservedByExchangeId` set is left out. Another free copy of that card
+  is still listed. Owned, missing, duplicate, and completion figures
+  still count the reserved copy. The JSON does not say that a copy is
+  reserved.
+- **The public page shows one list at a time.** The browser orders the
+  lists the API already returned: for trade, donations, missing,
+  duplicates, then owned. It opens the first list that has cards. Search
+  filters that list and points to another list when the name is there.
+  On a phone each card is a row. A wide screen keeps the card grid.
+  The API shape does not change.
 - **No location, age, or contact fields exist anywhere in the schema**,
   so there's nothing for the public endpoint to accidentally expose on
   that front in V0 — `server/tests/integration/sharing.test.ts` asserts

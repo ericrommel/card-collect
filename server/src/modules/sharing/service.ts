@@ -2,7 +2,7 @@ import { prisma } from "../../db.js";
 import { createHitWindow } from "../../lib/hitWindow.js";
 import { ApiError } from "../../middleware/apiError.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
-import { getUserCopies, isOfferable } from "../collection/service.js";
+import { getUserCopies, toAvailabilityTagged } from "../collection/service.js";
 import { calculateProgress } from "../../domain/progress.js";
 import {
   buildPublicShareView,
@@ -245,12 +245,13 @@ export async function getPublicShareView(shareId: string): Promise<PublicShareVi
       };
     });
 
+  // Same rule as matching: a copy reserved for an open exchange is not offered.
+  // Another free copy of that card still is. Owned and missing counts are unchanged.
+  const offerable = toAvailabilityTagged(copies);
   const offerableCollectibleIds = (availability: "TRADE" | "GIVE_AWAY") => {
     const ids = new Set<string>();
-    for (const copy of copies) {
-      if (copy.availability === availability && isOfferable(copy.availability)) {
-        ids.add(copy.variant.collectible.id);
-      }
+    for (const copy of offerable) {
+      if (copy.availability === availability) ids.add(copy.collectibleId);
     }
     return [...ids];
   };

@@ -188,6 +188,8 @@ Exact home coordinates should never be part of the normal discovery experience.
 
 ## I7 — Collection Sharing
 
+**Status:** a read-only page can show the lists the owner turns on, one list at a time. Social preview images, milestones, and showcase cards are not built.
+
 Generate user-controlled pages/cards for sharing:
 
 - collection progress;

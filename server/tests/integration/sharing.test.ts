@@ -370,6 +370,53 @@ describe("collection sharing", () => {
     expect(regen.body.share.last_viewed_at).toBeNull();
     expect(regen.body.share.share_id).not.toBe(shareId);
   });
+
+  it("omits a reserved copy from public offers and keeps a free copy of the same card", async () => {
+    const stamp = Date.now();
+    const ownerName = `share-owner-${stamp}`;
+    const otherName = `share-other-${stamp}`;
+    const owner = await registerUser(`${ownerName}@example.com`);
+    const other = await registerUser(`${otherName}@example.com`);
+
+    await addCopy(owner, variantIds[0], "TRADE");
+    await addCopy(owner, variantIds[1], "TRADE");
+    await addCopy(owner, variantIds[1], "TRADE");
+    await addCopy(owner, variantIds[3], "GIVE_AWAY");
+    await addCopy(other, variantIds[2], "TRADE");
+
+    const matches = await request(app).get(`/api/my/matches?setId=${setId}`).set("Authorization", `Bearer ${owner}`);
+    expect(matches.status).toBe(200);
+    const trade = (
+      matches.body.matches as Array<{ type: string; collector: { display_name: string; ref: string } }>
+    ).find((match) => match.type === "MUTUAL_TRADE" && match.collector.display_name === otherName);
+    expect(trade?.collector.ref).toBeTruthy();
+
+    const proposed = await request(app)
+      .post("/api/my/exchanges")
+      .set("Authorization", `Bearer ${owner}`)
+      .send({ set_id: setId, collector_ref: trade!.collector.ref, type: "MUTUAL_TRADE" });
+    expect(proposed.status).toBe(201);
+
+    const enableRes = await request(app)
+      .put(`/api/my/sets/${setId}/share`)
+      .set("Authorization", `Bearer ${owner}`)
+      .send({ enabled: true });
+    expect(enableRes.status).toBe(200);
+
+    const publicRes = await request(app).get(`/api/public/collections/${enableRes.body.share.share_id}`);
+    expect(publicRes.status).toBe(200);
+    const tradeNumbers = (publicRes.body.trade_offers as Array<{ number: string }>).map((card) => card.number);
+    expect(tradeNumbers).toEqual(["S-002"]);
+    expect(publicRes.body.give_away_offers).toEqual([expect.objectContaining({ number: "S-004" })]);
+    expect((publicRes.body.owned as Array<{ number: string }>).map((card) => card.number).sort()).toEqual([
+      "S-001",
+      "S-002",
+      "S-004",
+    ]);
+    const raw = JSON.stringify(publicRes.body);
+    expect(raw).not.toContain("reserved");
+    expect(raw).not.toContain(proposed.body.exchange.id as string);
+  });
 });
 
 function expectedExpiry(): number {

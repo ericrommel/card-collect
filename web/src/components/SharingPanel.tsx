@@ -192,6 +192,10 @@ export function SharingPanel({ setId }: { setId: string }) {
             </button>
           </div>
 
+          <p className="muted small">
+            The link opens on cards for trade when there are any, then donations, missing cards, duplicates, and owned
+            cards. A copy already in an open exchange is not shown as available.
+          </p>
           <p className="muted small">Visible to anyone with the link:</p>
           <div className="visibility-grid">
             {VISIBILITY_FIELDS.map(({ key, label }) => (
