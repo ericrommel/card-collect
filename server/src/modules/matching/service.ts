@@ -1,7 +1,8 @@
 import { prisma } from "../../db.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
-import { getUserCopies, toAvailabilityTagged } from "../collection/service.js";
+import { getUserCopies, toAvailabilityTagged, type CopyWithDetails } from "../collection/service.js";
 import { calculateProgress, type ProgressResult } from "../../domain/progress.js";
+import { previewOfferedCopies, type PreviewCopy } from "../../domain/exchange.js";
 import { findDonationCandidate, findMutualTradeCandidate } from "../../domain/matching.js";
 import {
   compareMatches,
@@ -40,12 +41,59 @@ export interface PublicMatch {
   /** MUTUAL_TRADE only. */
   balance?: { difference: number };
   proposed_exchange: {
-    you_receive: CollectibleRef[];
+    you_receive: MatchCardRef[];
     /** Always [] for DONATION — never a fabricated reciprocal side. */
-    they_receive: CollectibleRef[];
+    they_receive: MatchCardRef[];
   };
   /** Present when an open exchange of this type already exists with this collector. */
   open_exchange_id?: string;
+}
+
+/**
+ * Catalog card. `condition` is present when the physical copy this match
+ * would use could be named. It is omitted when that copy could not be
+ * chosen, so a missing field is not the same as an unset note.
+ */
+export interface MatchCardRef extends CollectibleRef {
+  condition?: string | null;
+}
+
+/**
+ * Copies this pair may still be offered. A copy reserved for someone else
+ * is left out, so its condition cannot appear on this match.
+ */
+function copiesForPreview(copies: CopyWithDetails[], allowedReservationIds: ReadonlySet<string>): PreviewCopy[] {
+  return copies
+    .filter((copy) => copy.reservedByExchangeId == null || allowedReservationIds.has(copy.reservedByExchangeId))
+    .map((copy) => ({
+      id: copy.id,
+      ownerId: copy.ownerId,
+      collectibleId: copy.variant.collectible.id,
+      availability: copy.availability as PreviewCopy["availability"],
+      reserved: copy.reservedByExchangeId != null,
+      createdAtMs: copy.createdAt.getTime(),
+      condition: copy.condition,
+    }));
+}
+
+/**
+ * Attaches the condition of the copy previewOfferedCopies chooses.
+ * When that copy cannot be named, the cards stay unlabeled rather than
+ * claiming the condition was never set. Copy ids are not copied onto the card.
+ */
+function withConditions(
+  refs: CollectibleRef[],
+  copies: PreviewCopy[],
+  availability: "TRADE" | "GIVE_AWAY",
+): MatchCardRef[] {
+  if (refs.length === 0) return refs;
+  const preview = previewOfferedCopies(
+    copies,
+    refs.map((ref) => ref.id),
+    availability,
+  );
+  if (!preview) return refs;
+  return refs.map((ref, index) => ({ ...ref, condition: preview[index].condition }));
 }
 
 function toPublicSide(side: SideProgress): PublicSideProgress {
@@ -57,7 +105,11 @@ function toPublicSide(side: SideProgress): PublicSideProgress {
   };
 }
 
-function toPublicMatch(match: ScoredMatch, openExchangeId?: string): PublicMatch {
+function toPublicMatch(
+  match: ScoredMatch,
+  cards: { youReceive: MatchCardRef[]; theyReceive: MatchCardRef[] },
+  openExchangeId?: string,
+): PublicMatch {
   return {
     collector: { display_name: match.collectorDisplayName, ref: match.collectorRef ?? "" },
     type: match.type,
@@ -66,8 +118,8 @@ function toPublicMatch(match: ScoredMatch, openExchangeId?: string): PublicMatch
     ...(match.otherCollector ? { other_collector: toPublicSide(match.otherCollector) } : {}),
     ...(match.balance ? { balance: match.balance } : {}),
     proposed_exchange: {
-      you_receive: match.proposedExchange.currentUserReceives,
-      they_receive: match.proposedExchange.otherCollectorReceives,
+      you_receive: cards.youReceive,
+      they_receive: cards.theyReceive,
     },
     ...(openExchangeId ? { open_exchange_id: openExchangeId } : {}),
   };
@@ -77,8 +129,9 @@ function toPublicMatch(match: ScoredMatch, openExchangeId?: string): PublicMatch
  * Computes and ranks candidate exchanges between the requesting user and
  * every other collector, scoped to one Set. Fields that leave this
  * function are display name, an opaque collector ref (not the account
- * id), catalog collectible identifiers, and progress numbers — no email,
- * user id, UserCopy id, or contact info. See
+ * id), catalog collectible identifiers, the condition of the copy that
+ * would be used, and progress numbers — no email, user id, UserCopy id,
+ * or contact info. See
  * docs/architecture.md#trade-score-formula for how `score` is derived,
  * and domain/tradeScore.ts#compareMatches for the ranking/tie-break
  * rules applied below.
@@ -117,7 +170,12 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
     openExchangeByKey.set(`${otherId}:${exchange.type}`, exchange.id);
   }
 
-  const ranked: { scored: ScoredMatch; openExchangeId?: string }[] = [];
+  const ranked: {
+    scored: ScoredMatch;
+    youReceive: MatchCardRef[];
+    theyReceive: MatchCardRef[];
+    openExchangeId?: string;
+  }[] = [];
 
   for (const other of otherUsers) {
     const otherCopies = await getUserCopies(other.id, setId);
@@ -133,6 +191,8 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
     );
     const myTaggedCopies = toAvailabilityTagged(myCopies, pairExchangeIds);
     const otherTaggedCopies = toAvailabilityTagged(otherCopies, pairExchangeIds);
+    const myPreviewCopies = copiesForPreview(myCopies, pairExchangeIds);
+    const theirPreviewCopies = copiesForPreview(otherCopies, pairExchangeIds);
 
     const tradeCandidate = findMutualTradeCandidate(
       myProgress.missingCollectibleIds,
@@ -144,6 +204,8 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       const breakdown = scoreMutualTrade(mySnapshot, otherSnapshot, tradeCandidate, collectiblesById);
       ranked.push({
         scored: { ...breakdown, collectorDisplayName: other.displayName, collectorRef: other.publicId },
+        youReceive: withConditions(breakdown.proposedExchange.currentUserReceives, theirPreviewCopies, "TRADE"),
+        theyReceive: withConditions(breakdown.proposedExchange.otherCollectorReceives, myPreviewCopies, "TRADE"),
         openExchangeId: openExchangeByKey.get(`${other.id}:MUTUAL_TRADE`),
       });
     }
@@ -153,6 +215,8 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       const breakdown = scoreDonation(mySnapshot, donationIds, collectiblesById);
       ranked.push({
         scored: { ...breakdown, collectorDisplayName: other.displayName, collectorRef: other.publicId },
+        youReceive: withConditions(breakdown.proposedExchange.currentUserReceives, theirPreviewCopies, "GIVE_AWAY"),
+        theyReceive: breakdown.proposedExchange.otherCollectorReceives,
         openExchangeId: openExchangeByKey.get(`${other.id}:DONATION`),
       });
     }
@@ -160,5 +224,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
 
   ranked.sort((a, b) => compareMatches(a.scored, b.scored));
 
-  return ranked.map((entry) => toPublicMatch(entry.scored, entry.openExchangeId));
+  return ranked.map((entry) =>
+    toPublicMatch(entry.scored, { youReceive: entry.youReceive, theyReceive: entry.theyReceive }, entry.openExchangeId),
+  );
 }

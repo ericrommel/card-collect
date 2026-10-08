@@ -126,6 +126,8 @@ export interface MatchCollectibleRef {
   number: string;
   name: string;
   rarity: string | null;
+  /** Present when the copy this match would use could be named. Null means the note was never set. */
+  condition?: string | null;
 }
 
 export interface MatchSideProgress {

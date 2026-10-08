@@ -518,8 +518,8 @@ from being over-trusted by an end user who never reads the docs.
 - the web UI labels it "Match" / "Donation Match," not "Fair Trade" or
   "Value Match", and the Matches page and each open exchange say the
   score is about finishing the set, not card value or a fair price;
-- user-entered condition is shown on an exchange and is explicitly not an
-  input to the score;
+- user-entered condition is shown on a match and on an exchange, and is
+  explicitly not an input to the score;
 - the completion change is net. Giving away your only copy of a card
   lowers that side, so swapping two unique cards does not look like both
   collections grew;

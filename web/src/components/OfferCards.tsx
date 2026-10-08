@@ -34,7 +34,13 @@ export function OfferCards({
                 {item.number}
                 {item.rarity ? ` · ${rarityLabel(item.rarity)}` : ""}
               </span>
-              {showCondition && <span className="badge small">{item.condition ?? "Not set"}</span>}
+              {showCondition &&
+                "condition" in item &&
+                (item.condition ? (
+                  <span className="badge condition">{item.condition}</span>
+                ) : (
+                  <span className="muted small">Not set</span>
+                ))}
             </span>
           </li>
         ))}

@@ -45,7 +45,7 @@ function HighlightCard({
         You receive <strong>{item.you_receive_count}</strong>
         {item.you_receive_count > item.you_receive_preview.length ? `, showing ${item.you_receive_preview.length}` : ""}
       </p>
-      <OfferCards items={item.you_receive_preview} limit={3} />
+      <OfferCards items={item.you_receive_preview} limit={3} showCondition />
       {donation ? (
         <p className="muted small">No cards go back. A donation is not a trade.</p>
       ) : (
@@ -54,7 +54,7 @@ function HighlightCard({
             You give <strong>{item.you_give_count}</strong>
             {item.you_give_count > item.you_give_preview.length ? `, showing ${item.you_give_preview.length}` : ""}
           </p>
-          <OfferCards items={item.you_give_preview} limit={3} />
+          <OfferCards items={item.you_give_preview} limit={3} showCondition />
         </>
       )}
       <p className="small">
@@ -228,7 +228,8 @@ export function DashboardPage() {
             <h2>Matches</h2>
           </div>
           <p className="muted small">
-            Ranked by how much a trade or donation helps finish a set you have started. The score is not a price.
+            Ranked by how much a trade or donation helps finish a set you have started. The score is not a price. A
+            condition is the copy that would change hands, not a grade.
           </p>
           {actionError && <p className="error">{actionError}</p>}
           {highlights.length === 0 ? (

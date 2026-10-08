@@ -108,6 +108,15 @@ export interface SelectedCopy {
   availability: "TRADE" | "GIVE_AWAY";
 }
 
+export interface PreviewCopy extends OfferableCopy {
+  condition: string | null;
+}
+
+export interface PreviewedCopy {
+  collectibleId: string;
+  condition: string | null;
+}
+
 /**
  * One physical copy per requested collectible.
  * Eligible: the requested availability, and not already reserved.
@@ -134,6 +143,43 @@ export function selectCopiesForProposal(
     if (!copy) return null;
     used.add(copy.id);
     chosen.push({ id: copy.id, ownerId: copy.ownerId, collectibleId, availability });
+  }
+
+  return chosen;
+}
+
+/**
+ * Condition to show for each card on a match, in the requested order.
+ *
+ * A copy already reserved for this pair is the one in the open exchange,
+ * so it is shown instead of a free duplicate. Otherwise the oldest free
+ * copy is shown, which is the copy selectCopiesForProposal would reserve.
+ * Pass only copies this pair may still be offered: a copy reserved for
+ * someone else must be left out by the caller.
+ * Condition never decides which copy is chosen.
+ * Returns null when any requested card has no eligible copy, so the caller
+ * does not invent a "Not set".
+ */
+export function previewOfferedCopies(
+  copies: readonly PreviewCopy[],
+  collectibleIds: readonly string[],
+  availability: "TRADE" | "GIVE_AWAY",
+): PreviewedCopy[] | null {
+  const pool = copies
+    .filter((copy) => copy.availability === availability)
+    .slice()
+    .sort((a, b) => a.createdAtMs - b.createdAtMs || a.id.localeCompare(b.id));
+
+  const used = new Set<string>();
+  const chosen: PreviewedCopy[] = [];
+
+  for (const collectibleId of collectibleIds) {
+    const reserved = pool.find((copy) => copy.collectibleId === collectibleId && copy.reserved && !used.has(copy.id));
+    const free = pool.find((copy) => copy.collectibleId === collectibleId && !copy.reserved && !used.has(copy.id));
+    const copy = reserved ?? free;
+    if (!copy) return null;
+    used.add(copy.id);
+    chosen.push({ collectibleId, condition: copy.condition });
   }
 
   return chosen;

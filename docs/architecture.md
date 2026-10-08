@@ -416,11 +416,15 @@ person changes it.
 ### Condition
 
 A physical copy can carry a user-entered condition: Mint, Near Mint,
-Excellent, Good, Played, or Poor, or unset. The exchange snapshots that
-value onto each line so both people see what was offered. Condition does
-not affect the Trade Score. It is not a professional grade and not an AI
-estimate. Public share pages still do not include it — `PublicShareInput`
-has to gain a field before it can appear there.
+Excellent, Good, Played, or Poor, or unset. A match shows that note for
+the copy a new proposal would reserve (the oldest free copy of the right
+availability), or for the copy already reserved when this pair has an open
+exchange. The response still carries the catalog id, not the `UserCopy`
+id. The exchange snapshots the same value onto each line when the proposal
+is saved. Condition does not affect the Trade Score. It is not a
+professional grade and not an AI estimate. Public share pages still do not
+include it — `PublicShareInput` has to gain a field before it can appear
+there.
 
 ### What an exchange response contains
 
