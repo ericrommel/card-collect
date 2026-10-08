@@ -150,6 +150,10 @@ Choosing a rarity, a condition, a detail such as ink, or a sort used to live onl
 
 The lists behind the home counts were plain rows of names. They now use the same covers as home and the catalog, so a set you have started still comes first and the progress stays visible. Opening the cover applies the filter for that count. The other shortcuts on the cover stay, without repeating the list you are already on.
 
+## 2026-10-08 — The phone filter list scrolls on its own
+
+Opening filters on a phone used to stack every choice down the page, so the cards moved under the navigation. The filter list now scrolls inside itself. While it is open, the sample notice and the progress summary step aside, and they come back when the list closes. The cards stay on screen. A wide screen is unchanged.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

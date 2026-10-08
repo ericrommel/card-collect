@@ -116,7 +116,8 @@ one card by its number.
 
 Inside a set, filter by owned, missing, duplicates, rarity, availability,
 condition, and sample metadata. The address keeps that list, including the
-sort, so a refresh stays on it. The owned, missing, and extras counts on
+sort, so a refresh stays on it. On a phone the filter list scrolls on its
+own, so the cards stay on screen. The owned, missing, and extras counts on
 the set open that list. A card shows its condition when every copy
 agrees. Copies that differ say Mixed. A card with no condition note stays
 unmarked, and a public page still does not show condition. Sort, switch between grid and list, and
