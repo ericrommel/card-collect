@@ -52,7 +52,7 @@ A JPEG or PNG can be taken or chosen. The server checks the file type from the b
 
 No recognition service is configured. The identify route returns that fact and does not create a copy. The route accepts a replaceable provider, and any candidates it returns are labeled as guesses. The copy is still created only by the separate add action.
 
-Each photo is limited to 5 MB. An account can keep 200 photos. HEIC is rejected. The app does not re-encode the picture, so this is a metadata strip and a type check, not a full image sanitizer.
+Each photo is limited to 5 MB. An account can keep 200 photos. HEIC is rejected. Bytes after the JPEG end marker are dropped. The app does not re-encode the picture, so this is still a metadata strip and a type check, not a full image sanitizer.
 
 ## 2026-10-08 — Share links expire
 
@@ -153,6 +153,10 @@ The lists behind the home counts were plain rows of names. They now use the same
 ## 2026-10-08 — The phone filter list scrolls on its own
 
 Opening filters on a phone used to stack every choice down the page, so the cards moved under the navigation. The filter list now scrolls inside itself. While it is open, the sample notice and the progress summary step aside, and they come back when the list closes. The cards stay on screen. A wide screen is unchanged.
+
+## 2026-10-08 — A JPEG photo ends at its end marker
+
+A photo could carry extra bytes after the JPEG end marker, and those bytes were stored with the picture. They are now dropped. A PNG with anything after its end chunk was already rejected. The picture is still not re-encoded.
 
 ## Not done, on purpose
 

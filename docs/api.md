@@ -204,8 +204,9 @@ Deleting a copy also deletes its photos.
 
 `:side` is `front` or `back`. The body is the raw JPEG or PNG, with
 `Content-Type: image/jpeg` or `image/png`, at most 5 MB. The server checks
-the bytes, strips metadata segments, and stores the file for that account
-only. Replacing the same side overwrites it. An account can keep 200
+the bytes, strips metadata segments, drops anything after the JPEG end
+marker, and stores the file for that account only. Replacing the same side
+overwrites it. An account can keep 200
 photos. → `201 { "image": { "side": "front", "content_type": "image/jpeg" } }`.
 `400` for another file type, `413` when it is too large, `404` when the
 copy is not the caller's, `409` at the photo cap, `429` when this account

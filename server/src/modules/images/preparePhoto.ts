@@ -8,9 +8,10 @@ export type PhotoContentType = "image/jpeg" | "image/png";
 
 /**
  * Checks the file type from the bytes and drops metadata segments.
- * This does not re-encode the picture, so it is not a guarantee against
- * every malformed file. SVG and other types are rejected. Location data
- * that lives in JPEG EXIF/XMP or PNG text chunks is removed.
+ * Bytes after the JPEG end marker are dropped. This does not re-encode
+ * the picture, so it is not a guarantee against every malformed file.
+ * SVG and other types are rejected. Location data that lives in JPEG
+ * EXIF/XMP or PNG text chunks is removed.
  */
 export function prepareCardPhoto(input: Buffer): { bytes: Buffer; contentType: PhotoContentType } {
   if (input.length === 0) throw ApiError.badRequest(PHOTO_TYPE);
@@ -42,7 +43,11 @@ function stripJpeg(input: Buffer): Buffer {
       return Buffer.concat(parts);
     }
     if (marker === 0xda) {
-      parts.push(Buffer.from([0xff, 0xda]), input.subarray(offset));
+      if (offset + 2 > input.length) throw ApiError.badRequest(PHOTO_TYPE);
+      const segmentLength = input.readUInt16BE(offset);
+      if (segmentLength < 2 || offset + segmentLength > input.length) throw ApiError.badRequest(PHOTO_TYPE);
+      const scan = entropyUntilEoi(input.subarray(offset + segmentLength));
+      parts.push(Buffer.from([0xff, 0xda]), input.subarray(offset, offset + segmentLength), scan);
       return Buffer.concat(parts);
     }
     if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
@@ -58,6 +63,23 @@ function stripJpeg(input: Buffer): Buffer {
       parts.push(Buffer.from([0xff, marker]), input.subarray(offset, offset + segmentLength));
     }
     offset += segmentLength;
+  }
+  throw ApiError.badRequest(PHOTO_TYPE);
+}
+
+/** Keeps the entropy-coded scan through the end marker and drops anything after it. */
+function entropyUntilEoi(scan: Buffer): Buffer {
+  for (let index = 0; index < scan.length; index += 1) {
+    if (scan[index] !== 0xff) continue;
+    if (index + 1 >= scan.length) throw ApiError.badRequest(PHOTO_TYPE);
+    const next = scan[index + 1];
+    if (next === 0x00 || (next >= 0xd0 && next <= 0xd7)) {
+      index += 1;
+      continue;
+    }
+    if (next === 0xd9) return scan.subarray(0, index + 2);
+    if (next === 0xff) continue;
+    throw ApiError.badRequest(PHOTO_TYPE);
   }
   throw ApiError.badRequest(PHOTO_TYPE);
 }
