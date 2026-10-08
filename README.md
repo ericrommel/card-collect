@@ -121,7 +121,8 @@ From a set, Matches ranks every other collector by a **Trade Score**
 (0-100) — how much closer a proposed trade or donation gets you (and, for
 trades, them) to completing the set. Each match shows the score, whether
 it is a trade or a donation, what each person would receive, and the
-projected completion change. The score measures collection usefulness
+projected completion change. Giving away your only copy of a card lowers
+that number; a spare copy does not. The score measures collection usefulness
 only — it is not a price or fairness estimate; see
 [docs/architecture.md](docs/architecture.md#trade-score-formula) for the
 formula and [docs/risks.md](docs/risks.md) for the residual risk of it
@@ -131,7 +132,8 @@ you have started.
 ## Exchanges
 
 From a match, "Propose this trade" or "Ask for these cards" opens an
-exchange. The other collector accepts or declines. Cards stay where they
+exchange. An open exchange says how each set would change if it finishes,
+using the copies people have now. The other collector accepts or declines. Cards stay where they
 are until **both** people confirm that the cards have actually changed
 hands — then those copies move and are marked `KEEP`. Either person can
 cancel until that second confirmation. The app does not send a message,

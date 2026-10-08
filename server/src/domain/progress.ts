@@ -106,3 +106,36 @@ export function estimateCompletionAfter(
   const newOwnedCount = Math.min(totalCount, currentOwnedCount + additionalCollectibleIds.length);
   return completionPercentageOf(newOwnedCount, totalCount);
 }
+
+/**
+ * Distinct cards owned after the listed copies move.
+ *
+ * Giving a card still counts as owning it when another copy stays.
+ * A card that leaves and is missing from the quantity map is treated as
+ * the person's only copy, so the projection cannot claim they keep it.
+ * Keys may be collectible ids or numbers; the map and both lists must match.
+ */
+export function ownedCountAfterTransfer(
+  totalCount: number,
+  ownedCount: number,
+  quantityByKey: ReadonlyMap<string, number>,
+  receivedKeys: readonly string[],
+  givenKeys: readonly string[],
+): number {
+  const delta = new Map<string, number>();
+  for (const key of givenKeys) delta.set(key, (delta.get(key) ?? 0) - 1);
+  for (const key of receivedKeys) delta.set(key, (delta.get(key) ?? 0) + 1);
+
+  let owned = ownedCount;
+  for (const [key, change] of delta) {
+    if (change === 0) continue;
+    const listed = quantityByKey.get(key);
+    const beforeQty = listed === undefined ? (change < 0 ? -change : 0) : listed;
+    const afterQty = beforeQty + change;
+    if (beforeQty > 0 && afterQty <= 0) owned -= 1;
+    if (beforeQty <= 0 && afterQty > 0) owned += 1;
+  }
+  if (owned < 0) owned = 0;
+  if (owned > totalCount) owned = totalCount;
+  return owned;
+}

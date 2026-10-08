@@ -102,6 +102,10 @@ Home and the catalog page search card names, numbers, and set names. The local p
 
 Catalog search stays a public read. A working session adds `owned_quantity` for that person only: how many physical copies they have, including zero. A missing or rejected session leaves the field out and still returns the cards. Someone else's copies are not included.
 
+## 2026-10-08 — Completion after a trade is net
+
+A match used to add every card someone would receive and ignore a card they would give away. Trading away your only copy then looked like the set grew. The score and an open exchange now keep a spare and drop a card when none would remain. A declined, cancelled, or completed exchange leaves that projection empty instead of inventing the earlier percentages.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

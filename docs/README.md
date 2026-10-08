@@ -4,7 +4,7 @@
 
 Implemented: accounts and httpOnly sessions (cookie writes require the app origin; sign-in, password changes, and proposals are rate-limited; signing out or changing the password ends every session for that account), a collection dashboard, a visual set explorer with bulk edits, an add-a-card flow with optional private photos, manual condition, Trade Score matches, trades and donations with reservation and dual confirmation, and revocable public sharing that expires after 30 days. The owner can see how many times a public link was opened, not who opened it. Home and the catalog can search the sample catalog by name, number, or set. A signed-in result says how many copies you have; a search without a working session does not.
 
-Sample data only: Starter Voyage (synthetic, 24 cards) and Harbor Atlas (original, 396 cards). These are not official sets. Card faces are generated patterns.
+Sample data only: Starter Voyage (synthetic, 24 cards) and Harbor Atlas (original, 396 cards). These are not official sets. Card faces are generated patterns. A trade's completion change keeps a spare copy and drops a card when the only copy would leave.
 
 Not implemented: licensed publisher catalogs, automatic card identification, AI condition estimates, native Android or iOS apps, payments, chat, and precise location. The website can be installed from a browser; that is not a native app. A photo can be attached, but recognition is unavailable until a provider is configured. See [decisions.md](decisions.md).
 

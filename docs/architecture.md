@@ -180,11 +180,12 @@ composes three independent steps for every other user in the system:
      copies), never double-counted as one. `KEEP` and `SELL` copies are
      never read by either function.
 2. **Scoring** (`domain/tradeScore.ts`) — turns a candidate plus each
-   side's `{totalCount, ownedCount}` snapshot into a `TradeScoreBreakdown`
-   (score + the structured components below), via
-   `domain/progress.ts#estimateCompletionAfter` for the projected
-   completion — computed in memory from plain numbers, never by writing
-   to `UserCopy` or reading it back.
+   side's snapshot (`totalCount`, `ownedCount`, and how many copies they
+   have of each card) into a `TradeScoreBreakdown`. Projected completion
+   comes from `domain/progress.ts#ownedCountAfterTransfer`: a received
+   card you do not have adds one, and a card you give away drops off only
+   when no copy would remain. It is computed in memory and never writes
+   `UserCopy`.
 3. **Ranking** (`domain/tradeScore.ts#compareMatches`) — sorts the full
    list; see "Ranking and tie-breaking" below.
 
@@ -206,9 +207,13 @@ has (missing cards, `TRADE`/`GIVE_AWAY` copies, completion before/after).
 Full implementation: `domain/tradeScore.ts`.
 
 1. **Per side, compute the raw completion gain** in percentage points
-   (0-100) on the set's own scale: `completionAfter - completionBefore`,
-   where `completionAfter` comes from `estimateCompletionAfter` given the
-   candidate's proposed collectibles.
+   on the set's own scale: `completionAfter - completionBefore`.
+   `completionAfter` is the distinct cards that person would own once
+   the copies move. Receiving a missing card adds one. Giving a card
+   subtracts one only when they would have none left. A spare copy
+   staying behind does not change the count. A negative gain is still
+   shown, and it contributes 0 to the scaled score below, so trading
+   away your only copy does not rank as if the set had grown.
 2. **Scale each gain with a square root:**
    `scaledGain = 100 * sqrt(rawGainPercent / 100)`. This is the one
    nonlinear step in the formula, and it exists for a specific reason: a

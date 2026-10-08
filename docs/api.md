@@ -394,6 +394,8 @@ the full tie-break order); the client does not need to sort. → `200`:
   `DONATION` (never a fabricated reciprocal side).
 - `completion_before`/`completion_after`/`score` are plain numbers on a
   0-100 scale (not the 0-1 fraction the pre-V0.2 shape used).
+  `completion_after` is the set once the copies move. Giving away your
+  only copy of a card lowers it. Giving a spare does not.
 - `proposed_exchange` collectible refs use the same catalog identifiers
   as `/catalog/sets/:id/collectibles` — never a `UserCopy` id, which
   would identify one specific physical copy belonging to another user.
@@ -432,6 +434,10 @@ snapshotted at proposal time — not `UserCopy` ids.
   "you_confirmed": false,
   "they_confirmed": false,
   "actions": ["accept", "decline"],
+  "projected_completion": {
+    "yours": { "before": 33.3, "after": 66.7 },
+    "theirs": { "before": 33.3, "after": 33.3 }
+  },
   "created_at": "ISO-8601",
   "updated_at": "ISO-8601"
 }
@@ -463,6 +469,12 @@ not send card ids. → `201 { "exchange": Exchange }`.
 
 A `DONATION` is always requested by the person who would receive the
 cards. Nothing is taken from them.
+
+`projected_completion` is set on `PROPOSED` and `ACCEPTED` exchanges and
+`null` after the exchange is declined, cancelled, or completed. It uses
+the copies each person has now. A finished exchange does not store the
+percentages from when it was proposed. `yours.after` can be lower than
+`yours.before` when a card with no spare copy would leave.
 
 ### `POST /my/exchanges/:id/accept`
 

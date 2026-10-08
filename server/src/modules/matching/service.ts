@@ -1,7 +1,7 @@
 import { prisma } from "../../db.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
 import { getUserCopies, toAvailabilityTagged } from "../collection/service.js";
-import { calculateProgress } from "../../domain/progress.js";
+import { calculateProgress, type ProgressResult } from "../../domain/progress.js";
 import { findDonationCandidate, findMutualTradeCandidate } from "../../domain/matching.js";
 import {
   compareMatches,
@@ -10,9 +10,18 @@ import {
   type CollectibleRef,
   type MatchType,
   type ScoredMatch,
+  type SetProgressSnapshot,
   type SideProgress,
 } from "../../domain/tradeScore.js";
 import { ApiError } from "../../middleware/apiError.js";
+
+function snapshotFromProgress(progress: ProgressResult): SetProgressSnapshot {
+  const quantityByCollectible = new Map<string, number>();
+  for (const entry of progress.entries) {
+    if (entry.ownedQuantity > 0) quantityByCollectible.set(entry.collectibleId, entry.ownedQuantity);
+  }
+  return { totalCount: progress.totalCount, ownedCount: progress.ownedCount, quantityByCollectible };
+}
 
 export interface PublicSideProgress {
   cards_received: number;
@@ -88,7 +97,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
     collectibles.map((c) => ({ id: c.id })),
     myCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
   );
-  const mySnapshot = { totalCount: myProgress.totalCount, ownedCount: myProgress.ownedCount };
+  const mySnapshot = snapshotFromProgress(myProgress);
 
   // Deterministic base enumeration; final ordering is fully decided by
   // compareMatches below regardless of this query's row order.
@@ -116,7 +125,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       collectibles.map((c) => ({ id: c.id })),
       otherCopies.map((c) => ({ collectibleId: c.variant.collectible.id })),
     );
-    const otherSnapshot = { totalCount: otherProgress.totalCount, ownedCount: otherProgress.ownedCount };
+    const otherSnapshot = snapshotFromProgress(otherProgress);
     const pairExchangeIds = new Set(
       openExchanges
         .filter((exchange) => exchange.proposerId === other.id || exchange.counterpartyId === other.id)
