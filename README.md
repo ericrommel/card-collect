@@ -157,7 +157,7 @@ From a match, "Propose this trade" or "Ask for these cards" opens an
 exchange. On a phone, that button and the actions on an open exchange sit
 above the card faces, and both counts come before the faces. On a phone those cards are rows, so each name sits
 beside its face. On a narrower phone the first card's name, number, and condition stay above the navigation. An open exchange says how each set would change if it finishes,
-using the copies people have now. The other collector accepts or declines. A proposal you received says that nothing changes unless you accept. The line above already says who proposed it. Cards stay where they
+using the copies people have now. The other collector accepts or declines. Decline and cancel ask first. Accept does not, because the cards still move only after both people confirm. A proposal you received says that nothing changes unless you accept. The line above already says who proposed it. Cards stay where they
 are until **both** people confirm that the cards have actually changed
 hands — then those copies move and are marked `KEEP`. Either person can
 cancel until that second confirmation. The app does not send a message,

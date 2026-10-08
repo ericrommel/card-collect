@@ -294,6 +294,10 @@ On a narrow phone the first set in the catalog wrapped its shortcuts, and the tr
 
 The set line already says "They proposed this." The status under it said that again, then said nothing changes unless you accept. The status now says only that nothing changes unless you accept.
 
+## 2026-10-08 — Decline and cancel ask first
+
+Accept, decline, and cancel used to happen as soon as the button was pressed. Decline and cancel now ask first. Dismissing the question leaves the exchange as it is. Accept does not ask, because the cards still move only after both people confirm that they changed hands.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
