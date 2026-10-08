@@ -1197,6 +1197,12 @@ select {
   padding-top: 0.6rem;
 }
 
+.match-completion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+}
+
 .confirm-panel {
   background: var(--surface-2);
   border: 0;
@@ -1206,8 +1212,13 @@ select {
 
 .completion-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
+  align-items: baseline;
   gap: 0.5rem;
+}
+
+.completion-values {
+  white-space: nowrap;
 }
 
 .sharing-panel {
