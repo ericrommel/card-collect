@@ -14,7 +14,7 @@ faces are generated patterns, not publisher artwork. The domain model stays
 generic (see [docs/architecture.md](docs/architecture.md) and
 [docs/decisions.md](docs/decisions.md)). The web session stays in an httpOnly
 cookie. A cookie write is accepted only from the app. Sign-in, proposals,
-and catalog search are rate-limited. From a set, Add cards searches the catalog or
+catalog search, and public set checklists are rate-limited. From a set, Add cards searches the catalog or
 attaches a private photo. The app does not identify the card by itself.
 Trades and donations show the cards and the condition of the copy that would change hands.
 

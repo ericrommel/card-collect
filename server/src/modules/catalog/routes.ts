@@ -111,8 +111,34 @@ async function ownedQuantities(ownerId: string, collectibleIds: string[]): Promi
   return counts;
 }
 
+/**
+ * One request is a whole set. 120 a minute is enough to move between sets,
+ * and it stops a tight loop. This window is not the search window.
+ * The suite raises it so other tests can load a checklist freely.
+ */
+export const catalogChecklistHitWindow = createHitWindow(60_000);
+
+export function catalogChecklistAttemptLimit(): number {
+  const raw = process.env.CATALOG_CHECKLIST_RATE_LIMIT;
+  if (raw) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  }
+  return process.env.VITEST ? 10_000 : 120;
+}
+
+function limitCatalogChecklist(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const key = `checklist:${req.ip ?? "unknown"}`;
+  if (catalogChecklistHitWindow.tooMany(key, catalogChecklistAttemptLimit())) {
+    res.setHeader("Retry-After", "60");
+    throw ApiError.tooManyRequests("Too many set loads. Wait a minute and try again.");
+  }
+  next();
+}
+
 catalogRouter.get(
   "/sets/:id/collectibles",
+  limitCatalogChecklist,
   asyncHandler(async (req, res) => {
     const set = await catalogProvider.getSet(req.params.id);
     if (!set) throw ApiError.notFound("Set not found");

@@ -316,11 +316,15 @@ order (`orderBy: { id: "asc" }`) only matters as a starting point —
   account. Changing a password is limited to 10 attempts per minute per
   account. Catalog search is limited to 120 requests per minute per socket
   address, including a query that is too short or too long to return cards.
-  A query shorter than 2 characters does not read the catalog. Loading a
-  set is not part of that limit. The process does not trust
-  `X-Forwarded-For` (`trust proxy` is off), so a client cannot pick its own
-  rate-limit key. The suite raises the sign-in and catalog-search limits
-  while `VITEST` is set, unless a test sets the limit itself.
+  A query shorter than 2 characters does not read the catalog. The public
+  set checklist has its own limit of 120 requests per minute per socket
+  address, including a set id that does not exist. Search and checklist
+  loads do not share a budget. The set list and a single set's details are
+  not part of either limit. The signed-in set page reads progress, which is
+  also separate. The process does not trust `X-Forwarded-For` (`trust proxy`
+  is off), so a client cannot pick its own rate-limit key. The suite raises
+  the sign-in, catalog-search, and checklist limits while `VITEST` is set,
+  unless a test sets the limit itself.
 - Each token carries the account's session version (`sv`). Signing out, or
   changing the password, increments that version. Older cookies and bearer
   tokens then fail as an invalid session. Password change issues a new
