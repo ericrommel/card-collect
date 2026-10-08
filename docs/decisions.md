@@ -278,6 +278,10 @@ On a phone, More makes the selection bar taller, and that bar was covering the c
 
 On a phone the password explanation sat above the fields, so the new password was under the navigation. The fields come first now. The same explanation stays on the page, directly above the button: this browser stays signed in, other browsers are signed out, sign out ends every session, and there is no reset email. On a narrow phone the header stays one line, so those fields still clear the navigation.
 
+## 2026-10-08 — A narrower phone still shows the first card's name
+
+Below 389px the set switcher uses another row, so the first card's number and ownership sat under the navigation. The card face is a little shorter there. Below 337px, search stays beside Filter and the sort row stays on one line, which keeps that text above the navigation on a 320px-wide phone. The set name in the switcher stays whole. A wider phone and a wide screen keep the taller face.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
