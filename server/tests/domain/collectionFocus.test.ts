@@ -44,6 +44,29 @@ describe("set links", () => {
       "Showing cards you don't have and copies for trade.",
     );
   });
+
+  it("keeps rarity, condition, sort, and a detail in the address", () => {
+    const filters = filtersFromSearchParams(
+      new URLSearchParams("rarity=Rare&rarity=Rare&rarity=Common&condition=Near+Mint&sort=name&m=ink:Sea&m=nope"),
+    );
+    expect(filters.rarities).toEqual(["Rare", "Common"]);
+    expect(filters.condition).toBe("Near Mint");
+    expect(filters.sort).toBe("name");
+    expect(filters.metadata).toEqual({ ink: ["Sea"] });
+    expect(searchParamsFromFilters(filters).toString()).toBe(
+      "rarity=Common&rarity=Rare&condition=Near+Mint&sort=name&m=ink%3ASea",
+    );
+    expect(explorerLead(filters)).toBe("Showing 2 rarities and Near Mint and Sea.");
+  });
+
+  it("ignores a bad sort, a bad condition, and a detail with no value", () => {
+    const filters = filtersFromSearchParams(new URLSearchParams("sort=price&condition=Gem&m=:Sea&m=ink:"));
+    expect(filters.sort).toBe("number");
+    expect(filters.condition).toBe("any");
+    expect(filters.metadata).toEqual({});
+    expect(searchParamsFromFilters(filters).toString()).toBe("");
+    expect(explorerLead({ ...EMPTY_FILTERS, condition: "unset" })).toBe("Showing copies with no condition.");
+  });
 });
 
 describe("collection focus", () => {

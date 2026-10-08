@@ -142,6 +142,10 @@ The exchanges page listed everything by the last update, so a proposal you recei
 
 Matches, exchanges, and a shared collection show the name a person chose. Register and the account page only checked the length, so that name could be an email address or a web address. Those names are refused. The message is "Use a name that isn't an email address or a link." The check looks for `@`, `http://`, `https://`, and `www.`. It does not try to guess a phone number. A name already saved stays until that person edits it.
 
+## 2026-10-08 — Set filters stay in the address
+
+Choosing a rarity, a condition, a detail such as ink, or a sort used to live only on the page. A refresh, or a copied link, went back to every card in number order. Those choices now stay in the address with the search and the ownership and availability filters. An unknown value is ignored. Show all cards clears those filters and keeps the search and the sort. The owned, missing, extras, and set-size counts on the set do the same job: each one shows that list and clears a narrower filter. Choosing the count that is already on returns to every card.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

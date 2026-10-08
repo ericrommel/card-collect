@@ -1,4 +1,10 @@
-import type { CatalogCollectible, CatalogVariant, ConditionGrade, UserCopy } from "./api";
+import {
+  CONDITION_GRADES,
+  type CatalogCollectible,
+  type CatalogVariant,
+  type ConditionGrade,
+  type UserCopy,
+} from "./api";
 
 export type OwnershipFilter = "all" | "owned" | "missing" | "duplicates";
 export type AvailabilityFilter = "any" | "keep" | "trade" | "sell" | "donation";
@@ -154,10 +160,45 @@ export function applyExplorerQuery(entries: ExplorerEntry[], filters: ExplorerFi
 
 const OWNERSHIP_PARAMS: OwnershipFilter[] = ["all", "owned", "missing", "duplicates"];
 const AVAILABILITY_PARAMS: AvailabilityFilter[] = ["any", "keep", "trade", "sell", "donation"];
+const SORT_PARAMS: ExplorerSort[] = ["number", "name", "rarity", "owned", "missing", "duplicates"];
+const CONDITION_PARAMS: ConditionFilter[] = ["unset", ...CONDITION_GRADES];
+
+function uniqueParams(params: URLSearchParams, key: string, limit: number): string[] {
+  const seen = new Set<string>();
+  const values: string[] = [];
+  for (const raw of params.getAll(key)) {
+    const value = raw.trim();
+    if (!value || value.length > 40 || seen.has(value)) continue;
+    seen.add(value);
+    values.push(value);
+    if (values.length >= limit) break;
+  }
+  return values;
+}
+
+function metadataFromSearchParams(params: URLSearchParams): Record<string, string[]> {
+  const metadata: Record<string, string[]> = {};
+  let count = 0;
+  for (const raw of params.getAll("m")) {
+    const splitAt = raw.indexOf(":");
+    if (splitAt <= 0) continue;
+    const key = raw.slice(0, splitAt).trim();
+    const value = raw.slice(splitAt + 1).trim();
+    if (!key || !value || key.length > 40 || value.length > 40) continue;
+    const values = metadata[key] ?? [];
+    if (values.includes(value) || values.length >= 12) continue;
+    metadata[key] = [...values, value];
+    count += 1;
+    if (count >= 24) break;
+  }
+  return metadata;
+}
 
 export function filtersFromSearchParams(params: URLSearchParams): ExplorerFilters {
   const ownership = params.get("ownership");
   const availability = params.get("availability");
+  const condition = params.get("condition");
+  const sort = params.get("sort");
   return {
     ...EMPTY_FILTERS,
     search: params.get("q") ?? "",
@@ -165,15 +206,27 @@ export function filtersFromSearchParams(params: URLSearchParams): ExplorerFilter
     availability: AVAILABILITY_PARAMS.includes(availability as AvailabilityFilter)
       ? (availability as AvailabilityFilter)
       : "any",
+    rarities: uniqueParams(params, "rarity", 12),
+    condition: CONDITION_PARAMS.includes(condition as ConditionFilter) ? (condition as ConditionFilter) : "any",
+    metadata: metadataFromSearchParams(params),
+    sort: SORT_PARAMS.includes(sort as ExplorerSort) ? (sort as ExplorerSort) : "number",
   };
 }
 
-/** Only the fields a link needs. Sort and the other filters stay on the page. */
+/** The address is the list. Defaults stay off it, and an unknown value is left out. */
 export function searchParamsFromFilters(filters: ExplorerFilters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.search.trim()) params.set("q", filters.search);
   if (filters.ownership !== "all") params.set("ownership", filters.ownership);
   if (filters.availability !== "any") params.set("availability", filters.availability);
+  for (const rarity of [...filters.rarities].sort((a, b) => a.localeCompare(b))) params.append("rarity", rarity);
+  if (filters.condition !== "any") params.set("condition", filters.condition);
+  if (filters.sort !== "number") params.set("sort", filters.sort);
+  for (const key of Object.keys(filters.metadata).sort((a, b) => a.localeCompare(b))) {
+    for (const value of [...filters.metadata[key]].sort((a, b) => a.localeCompare(b))) {
+      params.append("m", `${key}:${value}`);
+    }
+  }
   return params;
 }
 
@@ -186,6 +239,15 @@ export function explorerLead(filters: ExplorerFilters): string | null {
   if (filters.availability === "trade") parts.push("copies for trade");
   if (filters.availability === "sell") parts.push("copies for sale");
   if (filters.availability === "donation") parts.push("copies you would give away");
+  if (filters.rarities.length === 1) parts.push(filters.rarities[0]);
+  else if (filters.rarities.length > 1) parts.push(`${filters.rarities.length} rarities`);
+  if (filters.condition === "unset") parts.push("copies with no condition");
+  else if (filters.condition !== "any") parts.push(filters.condition);
+  const details = Object.values(filters.metadata).reduce((sum, values) => sum + values.length, 0);
+  if (details === 1) {
+    const value = Object.values(filters.metadata).find((values) => values.length > 0)?.[0];
+    if (value) parts.push(value);
+  } else if (details > 1) parts.push(`${details} details`);
   return parts.length === 0 ? null : `Showing ${parts.join(" and ")}.`;
 }
 
