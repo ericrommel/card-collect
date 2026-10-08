@@ -16,7 +16,7 @@ generic (see [docs/architecture.md](docs/architecture.md) and
 cookie. A cookie write is accepted only from the app, and sign-in and
 proposals are rate-limited. From a set, Add cards searches the catalog or
 attaches a private photo. The app does not identify the card by itself.
-Trades and donations show the cards, and an exchange shows each copy's condition.
+Trades and donations show the cards and the condition of the copy that would change hands.
 
 ```text
 V0         — Collection tracking (owned/missing/duplicates/completion) + matching
@@ -139,8 +139,8 @@ it keeps the cards you selected.
 From a set, Matches ranks every other collector by a **Trade Score**
 (0-100) — how much closer a proposed trade or donation gets you (and, for
 trades, them) to completing the set. Each match shows the score, whether
-it is a trade or a donation, what each person would receive, and the
-projected completion change. Giving away your only copy of a card lowers
+it is a trade or a donation, what each person would receive, the condition
+of the copy that would change hands, and the projected completion change. Giving away your only copy of a card lowers
 that number; a spare copy does not. The score measures collection usefulness
 only — it is not a price or fairness estimate; see
 [docs/architecture.md](docs/architecture.md#trade-score-formula) for the
@@ -165,8 +165,9 @@ share an email, or suggest a meeting place.
 A copy in an open exchange is reserved: it cannot be edited or deleted,
 and other collectors are not offered it. On the card you can also note a
 condition (Mint through Poor). That note is your description, not a grade,
-and it does not change the match score. The exchange shows the condition
-that was set when you proposed.
+and it does not change the match score. A match shows the condition of the
+copy that would be set aside. The exchange keeps the condition that was
+set when you proposed.
 
 Open exchanges are listed under Exchanges. Ones that need you come first:
 a proposal you received, or an accepted exchange you have not confirmed.

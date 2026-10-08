@@ -2,19 +2,21 @@ import { describe, expect, it } from "vitest";
 import {
   allowedActions,
   applyExchangeAction,
+  previewOfferedCopies,
   selectCopiesForProposal,
   type ExchangeState,
-  type OfferableCopy,
+  type PreviewCopy,
 } from "../../src/domain/exchange.js";
 
 const proposed: ExchangeState = { status: "PROPOSED", proposerConfirmed: false, counterpartyConfirmed: false };
 
-function copy(partial: Partial<OfferableCopy> & Pick<OfferableCopy, "id" | "collectibleId">): OfferableCopy {
+function copy(partial: Partial<PreviewCopy> & Pick<PreviewCopy, "id" | "collectibleId">): PreviewCopy {
   return {
     ownerId: "owner",
     availability: "TRADE",
     reserved: false,
     createdAtMs: 0,
+    condition: null,
     ...partial,
   };
 }
@@ -116,5 +118,50 @@ describe("selectCopiesForProposal", () => {
   it("does not use one copy to fill the same collectible twice", () => {
     const copies = [copy({ id: "only", collectibleId: "c1" })];
     expect(selectCopiesForProposal(copies, ["c1", "c1"], "TRADE")).toBeNull();
+  });
+});
+
+describe("previewOfferedCopies", () => {
+  it("uses the oldest free copy, not the one with a nicer condition", () => {
+    const copies = [
+      copy({ id: "newer", collectibleId: "c1", createdAtMs: 20, condition: "Mint" }),
+      copy({ id: "older", collectibleId: "c1", createdAtMs: 10, condition: "Played" }),
+      copy({ id: "kept", collectibleId: "c1", availability: "KEEP", createdAtMs: 1, condition: "Mint" }),
+    ];
+    expect(previewOfferedCopies(copies, ["c1"], "TRADE")).toEqual([{ collectibleId: "c1", condition: "Played" }]);
+  });
+
+  it("shows a copy already reserved for this pair ahead of an older free duplicate", () => {
+    const copies = [
+      copy({ id: "free", collectibleId: "c1", createdAtMs: 10, condition: "Mint" }),
+      copy({ id: "held", collectibleId: "c1", createdAtMs: 30, reserved: true, condition: "Good" }),
+    ];
+    expect(previewOfferedCopies(copies, ["c1"], "TRADE")).toEqual([{ collectibleId: "c1", condition: "Good" }]);
+  });
+
+  it("ignores a reserved copy of the wrong availability and an unset condition stays unset", () => {
+    const copies = [
+      copy({ id: "gift", collectibleId: "c1", availability: "GIVE_AWAY", reserved: true, condition: "Poor" }),
+      copy({ id: "trade", collectibleId: "c1", condition: null }),
+    ];
+    expect(previewOfferedCopies(copies, ["c1"], "TRADE")).toEqual([{ collectibleId: "c1", condition: null }]);
+  });
+
+  it("returns null instead of labeling a card that has no eligible copy", () => {
+    const copies = [copy({ id: "a", collectibleId: "c1", availability: "GIVE_AWAY", condition: "Good" })];
+    expect(previewOfferedCopies(copies, ["c1"], "TRADE")).toBeNull();
+    expect(previewOfferedCopies(copies, ["c1", "c2"], "GIVE_AWAY")).toBeNull();
+  });
+
+  it("keeps the requested order and does not reuse one copy", () => {
+    const copies = [
+      copy({ id: "a", collectibleId: "c2", condition: "Excellent" }),
+      copy({ id: "b", collectibleId: "c1", condition: "Near Mint" }),
+    ];
+    expect(previewOfferedCopies(copies, ["c1", "c2"], "TRADE")).toEqual([
+      { collectibleId: "c1", condition: "Near Mint" },
+      { collectibleId: "c2", condition: "Excellent" },
+    ]);
+    expect(previewOfferedCopies(copies, ["c1", "c1"], "TRADE")).toBeNull();
   });
 });

@@ -158,6 +158,10 @@ Opening filters on a phone used to stack every choice down the page, so the card
 
 A photo could carry extra bytes after the JPEG end marker, and those bytes were stored with the picture. They are now dropped. A PNG with anything after its end chunk was already rejected. The picture is still not re-encoded.
 
+## 2026-10-08 — A match shows the condition of the copy it would use
+
+The condition note lived on the exchange, after someone had already proposed. A match now shows it first. The copy is the oldest free one a new proposal would reserve, unless this pair already has that card set aside, in which case the reserved copy is shown. A copy reserved for someone else is left out. The score does not change, and the response still does not include the copy id. A public page still does not show condition.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

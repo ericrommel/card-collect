@@ -371,8 +371,8 @@ the full tie-break order); the client does not need to sort. → `200`:
       },
       "balance": { "difference": 1 },
       "proposed_exchange": {
-        "you_receive": [{ "id", "number", "name", "rarity" }],
-        "they_receive": [{ "id", "number", "name", "rarity" }]
+        "you_receive": [{ "id", "number", "name", "rarity", "condition" }],
+        "they_receive": [{ "id", "number", "name", "rarity", "condition" }]
       },
       "open_exchange_id": "present only when this pair already has an open exchange of this type"
     },
@@ -387,7 +387,7 @@ the full tie-break order); the client does not need to sort. → `200`:
         "completion_gain": 4.1
       },
       "proposed_exchange": {
-        "you_receive": [{ "id", "number", "name", "rarity" }],
+        "you_receive": [{ "id", "number", "name", "rarity", "condition" }],
         "they_receive": []
       }
     }
@@ -411,6 +411,11 @@ the full tie-break order); the client does not need to sort. → `200`:
 - `proposed_exchange` collectible refs use the same catalog identifiers
   as `/catalog/sets/:id/collectibles` — never a `UserCopy` id, which
   would identify one specific physical copy belonging to another user.
+  `condition` is the note on the copy that would be reserved, or on the
+  copy already reserved for an open exchange with this person. It is
+  `null` when that note was never set. The field is omitted only when no
+  eligible copy could be named. It does not change the score. A copy
+  reserved for someone else is not used.
 - Only collectors with at least one candidate (a possible trade or
   donation) are included — no zero-signal noise.
 - `collector.ref` is an unguessable token for proposing an exchange. It
