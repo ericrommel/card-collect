@@ -7,6 +7,7 @@ import { SetCover } from "../components/SetCover";
 import type { DashboardHighlight, DashboardSetSummary, Exchange } from "../lib/api";
 import { proposeExchange } from "../lib/api";
 import { cardMotif } from "../lib/cardMotif";
+import { highlightAction, previewCountSentence } from "../lib/highlightAction";
 import { AVAILABILITY_LABEL, EXCHANGE_STATUS_LABEL } from "../lib/labels";
 import { useAuth } from "../state/AuthContext";
 import { orderDashboardSets } from "../lib/dashboardSets";
@@ -38,6 +39,7 @@ function HighlightCard({
   onPropose: (item: DashboardHighlight) => void;
 }) {
   const donation = item.type === "DONATION";
+  const action = highlightAction(item);
   return (
     <article className="card highlight-card">
       <div className="match-header">
@@ -49,19 +51,13 @@ function HighlightCard({
       <p className="muted small">
         <Link to={`/sets/${item.set.id}`}>{item.set.name}</Link>
       </p>
-      <p>
-        You receive <strong>{item.you_receive_count}</strong>
-        {item.you_receive_count > item.you_receive_preview.length ? `, showing ${item.you_receive_preview.length}` : ""}
-      </p>
+      <p>{previewCountSentence("You receive", item.you_receive_count, item.you_receive_preview.length)}</p>
       <OfferCards items={item.you_receive_preview} limit={3} showCondition />
       {donation ? (
         <p className="muted small">No cards go back. A donation is not a trade.</p>
       ) : (
         <>
-          <p>
-            You give <strong>{item.you_give_count}</strong>
-            {item.you_give_count > item.you_give_preview.length ? `, showing ${item.you_give_preview.length}` : ""}
-          </p>
+          <p>{previewCountSentence("You give", item.you_give_count, item.you_give_preview.length)}</p>
           <OfferCards items={item.you_give_preview} limit={3} showCondition />
         </>
       )}
@@ -79,12 +75,20 @@ function HighlightCard({
           " A card without another copy would leave."}
       </p>
       <div className="match-actions">
-        <button type="button" className="primary small" disabled={busy} onClick={() => onPropose(item)}>
-          {item.open_exchange_id ? "View exchange" : donation ? "Ask for these" : "Propose trade"}
-        </button>
-        <Link to={`/sets/${item.set.id}/matches`} className="secondary small">
-          All matches
-        </Link>
+        {action === "review" ? (
+          <Link to={`/sets/${item.set.id}/matches`} className="primary small">
+            Review this match
+          </Link>
+        ) : (
+          <button type="button" className="primary small" disabled={busy} onClick={() => onPropose(item)}>
+            {action === "view" ? "View exchange" : action === "ask" ? "Ask for these" : "Propose trade"}
+          </button>
+        )}
+        {action !== "review" && (
+          <Link to={`/sets/${item.set.id}/matches`} className="secondary small">
+            All matches
+          </Link>
+        )}
       </div>
     </article>
   );

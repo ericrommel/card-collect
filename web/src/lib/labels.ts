@@ -17,13 +17,6 @@ export const EXCHANGE_STATUS_LABEL: Record<ExchangeStatus, string> = {
   COMPLETED: "Completed",
 };
 
-/** Plain completion change. A drop means every copy of some card would leave. */
-export function completionShift(who: string, before: number, after: number): string {
-  if (before === after) return `${who} stays at ${before}%.`;
-  const direction = after < before ? " A card without another copy would leave." : "";
-  return `${who} goes from ${before}% to ${after}%.${direction}`;
-}
-
 export function titleCaseKey(key: string): string {
   return key.replace(/[_-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

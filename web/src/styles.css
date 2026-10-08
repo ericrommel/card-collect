@@ -257,6 +257,7 @@ a.secondary {
 
 button.secondary.small,
 a.secondary.small,
+a.primary.small,
 button.primary.small {
   min-height: 36px;
   padding: 0.3rem 0.7rem;
@@ -1627,9 +1628,15 @@ select {
     margin-left: 0.4rem;
   }
 
-  .add-card-page .explorer-heading .muted {
+  .add-card-page .explorer-heading .muted,
+  .page-intro .explorer-heading .muted {
     display: block;
     margin: 0.35rem 0 0;
+  }
+
+  .highlight-card .match-actions a,
+  .highlight-card .match-actions button {
+    min-height: 44px;
   }
 
   .explorer .notice-line {

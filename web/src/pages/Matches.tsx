@@ -1,19 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { CompletionRow } from "../components/CompletionRow";
 import { OfferCards } from "../components/OfferCards";
 import * as api from "../lib/api";
 import type { CatalogSet, CollectorMatch } from "../lib/api";
-
-function CompletionRow({ label, before, after }: { label: string; before: number; after: number }) {
-  return (
-    <div className="completion-row">
-      <span className="muted small">{label}</span>
-      <span className="completion-values">
-        {before}% <span className="arrow">&rarr;</span> <strong>{after}%</strong>
-      </span>
-    </div>
-  );
-}
 
 function MatchCard({ match, setId }: { match: CollectorMatch; setId: string }) {
   const navigate = useNavigate();
@@ -128,22 +118,27 @@ export function MatchesPage() {
       .finally(() => setLoading(false));
   }, [setId]);
 
-  if (loading) return <p className="muted">Finding matches...</p>;
-  if (error) return <p className="error">{error}</p>;
-
   return (
-    <div>
-      <p>
-        <Link to={`/sets/${setId}`}>&larr; Back to checklist</Link>
-      </p>
-      <h2>Matches for {set?.name ?? "this set"}</h2>
-      <p className="muted">
-        Ranked by how much closer each trade or donation gets you (and, for trades, them) to completing the set. The
-        score is about finishing the set, not about card value or a fair price. Each card shows the condition of the
-        copy that would change hands. That note is not a professional grade.
-      </p>
+    <div className="page-stack page-intro">
+      <div className="explorer-heading">
+        <div>
+          {set && (
+            <p className="eyebrow">
+              <Link to={`/sets/${setId}`}>{`${set.name} · ${set.code}`}</Link>
+            </p>
+          )}
+          <h1>Matches</h1>
+          <p className="muted">
+            Ranked by how much a trade or donation helps finish this set. The score is not a price. A condition is the
+            copy that would change hands, not a grade.
+          </p>
+        </div>
+      </div>
 
-      {matches.length === 0 && (
+      {!setId && <p className="error">Set not found.</p>}
+      {setId && loading && <p className="muted">Finding matches…</p>}
+      {error && <p className="error">{error}</p>}
+      {!loading && !error && matches.length === 0 && (
         <p className="muted">No matches yet. Add cards you own, or mark a duplicate for trade or as a donation.</p>
       )}
 

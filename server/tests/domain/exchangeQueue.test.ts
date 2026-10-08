@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { exchangeNeedsYou, openExchangeSummary, orderOpenExchanges } from "../../../web/src/lib/exchangeQueue.ts";
+import {
+  confirmationProgress,
+  exchangeNeedsYou,
+  openExchangeSummary,
+  orderOpenExchanges,
+} from "../../../web/src/lib/exchangeQueue.ts";
 
 function exchange(status: string, role: string, youConfirmed = false) {
   return { id: `${status}-${role}-${youConfirmed}`, status, role, you_confirmed: youConfirmed };
@@ -43,5 +48,14 @@ describe("openExchangeSummary", () => {
     expect(openExchangeSummary(0, 1)).toBe("1 is waiting on the other person.");
     expect(openExchangeSummary(0, 3)).toBe("3 are waiting on the other person.");
     expect(openExchangeSummary(1, 2)).toBe("1 exchange needs you. 2 are waiting on the other person.");
+  });
+});
+
+describe("confirmationProgress", () => {
+  it("says whether each person has confirmed", () => {
+    expect(confirmationProgress(false, false)).toBe("You have not confirmed yet. They have not confirmed yet.");
+    expect(confirmationProgress(true, false)).toBe("You have confirmed. They have not confirmed yet.");
+    expect(confirmationProgress(false, true)).toBe("You have not confirmed yet. They have confirmed.");
+    expect(confirmationProgress(true, true)).toBe("You have confirmed. They have confirmed.");
   });
 });
