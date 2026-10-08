@@ -32,6 +32,7 @@ import { bulkAvailabilityConfirm, bulkConditionConfirm } from "../lib/bulkConfir
 import { duplicateOfferConfirm, duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
 import { explorerDetail } from "../lib/explorerDetail";
 import { toggleVisibleSelection } from "../lib/explorerSelection";
+import { liftShift } from "../lib/liftAboveBar";
 import { useNarrowViewport } from "../lib/useNarrowViewport";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS, rarityLabel, titleCaseKey } from "../lib/labels";
 
@@ -81,6 +82,25 @@ function revealSelectedCard(root: HTMLElement, collectibleId: string) {
   if (rect.top >= Math.max(headerBottom, toolsBottom) + 4 && rect.bottom <= barTop - 8 && rect.bottom > rect.top)
     return;
   card.scrollIntoView({ block: "center", inline: "nearest" });
+}
+
+/** Move the selected card's name and number above the bar when More makes that bar taller. */
+function liftSelectedCard(root: HTMLElement, collectibleId: string) {
+  const card = root.querySelector<HTMLElement>(`[data-collectible-id="${CSS.escape(collectibleId)}"]`);
+  const barTop = root.querySelector(".bulk-bar")?.getBoundingClientRect().top;
+  if (!card || barTop == null) return;
+  const name = card.querySelector<HTMLElement>(".tile-name");
+  const subs = [...card.querySelectorAll<HTMLElement>(".tile-sub")];
+  const topEl = name ?? card;
+  const bottomEl = subs.at(-1) ?? name ?? card;
+  const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+  const toolsBottom = root.querySelector(".explorer-toolbar")?.getBoundingClientRect().bottom ?? headerBottom;
+  const shift = liftShift(
+    { top: topEl.getBoundingClientRect().top, bottom: bottomEl.getBoundingClientRect().bottom },
+    barTop,
+    Math.max(headerBottom, toolsBottom) + 4,
+  );
+  if (shift > 0) window.scrollBy({ top: shift, behavior: "auto" });
 }
 
 function TileSubtitle({ entry }: { entry: ExplorerEntry }) {
@@ -149,6 +169,7 @@ export function SetExplorerPage() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const filterPanelRef = useRef<HTMLDivElement>(null);
   const pinnedSelection = useRef(false);
+  const liftedForMore = useRef(false);
   const skipSearchReveal = useRef(true);
 
   useEffect(() => {
@@ -182,6 +203,19 @@ export function SetExplorerPage() {
     if (!collectibleId || !root) return;
     revealSelectedCard(root, collectibleId);
   }, [narrow, selected]);
+
+  useEffect(() => {
+    if (!narrow || !bulkMore || selected.size === 0) {
+      liftedForMore.current = false;
+      return;
+    }
+    if (liftedForMore.current) return;
+    liftedForMore.current = true;
+    const collectibleId = selected.values().next().value;
+    const root = resultsRef.current;
+    if (!collectibleId || !root) return;
+    liftSelectedCard(root, collectibleId);
+  }, [narrow, bulkMore, selected]);
 
   const load = useCallback(
     async (mode: "initial" | "refresh" = "refresh") => {
