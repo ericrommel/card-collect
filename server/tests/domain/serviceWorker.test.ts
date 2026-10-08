@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const webPublic = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../web/public");
+const webRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../web");
+const webPublic = path.join(webRoot, "public");
 
 describe("installable website", () => {
   it("does not cache API responses", () => {
@@ -23,6 +24,12 @@ describe("installable website", () => {
     expect(manifest.icons.map((icon: { sizes: string }) => icon.sizes)).toEqual(
       expect.arrayContaining(["192x192", "512x512"]),
     );
+    const html = readFileSync(path.join(webRoot, "index.html"), "utf8");
+    expect(html).toContain('name="robots" content="noindex, nofollow"');
+    const viteConfig = readFileSync(path.join(webRoot, "vite.config.ts"), "utf8");
+    expect(viteConfig).toContain('"X-Robots-Tag": "noindex, nofollow"');
+    const webPackage = readFileSync(path.join(webRoot, "package.json"), "utf8");
+    expect(webPackage).toContain("--config vite.config.ts");
     for (const icon of manifest.icons) {
       const relative = String(icon.src).replace(/^\/+/, "");
       expect(readFileSync(path.join(webPublic, relative)).subarray(0, 8)).toEqual(

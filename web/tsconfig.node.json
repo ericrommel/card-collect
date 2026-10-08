@@ -5,7 +5,10 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
-    "strict": true
+    "strict": true,
+    // Declarations only. Emitting vite.config.js would shadow vite.config.ts,
+    // because Vite loads the JavaScript file first.
+    "emitDeclarationOnly": true
   },
   "include": ["vite.config.ts"]
 }
