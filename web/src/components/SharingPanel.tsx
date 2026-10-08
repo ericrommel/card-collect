@@ -2,6 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import * as api from "../lib/api";
 import type { ShareSettings, ShareVisibility } from "../lib/api";
 
+function formatShareEnd(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "an unknown time";
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+function linkIsOpen(expiresAt: string | null): boolean {
+  if (!expiresAt) return false;
+  return new Date(expiresAt).getTime() > Date.now();
+}
+
 const VISIBILITY_FIELDS: { key: keyof ShareVisibility; label: string }[] = [
   { key: "completion", label: "Completion %" },
   { key: "owned", label: "Owned cards" },
@@ -59,8 +70,26 @@ export function SharingPanel({ setId }: { setId: string }) {
     }
   }
 
+  async function handleRenew() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await api.renewShare(setId);
+      setSettings(res.share);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to renew the link");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleRegenerate() {
-    if (!window.confirm("Regenerate the public link? The current link will stop working immediately.")) {
+    const days = settings?.link_lifetime_days ?? 30;
+    if (
+      !window.confirm(
+        `Regenerate the public link? The current link will stop working immediately. The new one lasts ${days} days.`,
+      )
+    ) {
       return;
     }
     setBusy(true);
@@ -132,6 +161,11 @@ export function SharingPanel({ setId }: { setId: string }) {
 
       {settings?.enabled && (
         <>
+          <p className={linkIsOpen(settings.expires_at) ? "muted small" : "error small"} role="status">
+            {linkIsOpen(settings.expires_at)
+              ? `Anyone with this link can see the parts you choose until ${formatShareEnd(settings.expires_at ?? "")}. Search engines are asked not to list it.`
+              : `This link stopped working${settings.expires_at ? ` on ${formatShareEnd(settings.expires_at)}` : ""}. Renew it to use the same address again.`}
+          </p>
           <div className="share-link-row">
             <input type="text" readOnly value={publicUrl} onFocus={(e) => e.target.select()} />
             <button className="secondary small" onClick={() => handleCopyLink(publicUrl)}>
@@ -140,6 +174,9 @@ export function SharingPanel({ setId }: { setId: string }) {
             <a className="secondary small" href={`/c/${settings.share_id}`} target="_blank" rel="noreferrer">
               Open
             </a>
+            <button className="secondary small" disabled={busy} onClick={() => void handleRenew()}>
+              Renew for {settings.link_lifetime_days} days
+            </button>
             <button className="link-danger" disabled={busy} onClick={handleRegenerate}>
               Regenerate
             </button>

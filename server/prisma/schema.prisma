@@ -152,14 +152,18 @@ model CopyImage {
 /// resistant identifier used in the public URL; it is deliberately a
 /// separate random token from `id` (the internal row id) so it can be
 /// rotated ("regenerate") without disturbing the row's identity or the
-/// owner's saved visibility preferences. `enabled` is the single on/off
-/// switch a public GET honors — a disabled row's shareId resolves to 404,
-/// never to a "sharing is off" response, so a client can't distinguish a
-/// revoked link from one that never existed.
+/// owner's saved visibility preferences. `enabled` turns the link on or
+/// off. A disabled row's shareId resolves to 404, never to a "sharing is
+/// off" response, so a client can't distinguish a revoked link from one
+/// that never existed. `expiresAt` is checked too: a past or missing time
+/// is the same 404 while sharing is on.
 model CollectionShare {
   id      String  @id @default(cuid())
   shareId String  @unique
   enabled Boolean @default(false)
+  /// End of the public link. Null while sharing is off. Renewing keeps
+  /// shareId and sets a new time; regenerating also starts a new window.
+  expiresAt DateTime?
 
   showCompletion Boolean @default(true)
   showOwned      Boolean @default(true)

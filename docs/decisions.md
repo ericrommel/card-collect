@@ -54,6 +54,12 @@ No recognition service is configured. The identify route returns that fact and d
 
 Each photo is limited to 5 MB. An account can keep 200 photos. HEIC is rejected. The app does not re-encode the picture, so this is a metadata strip and a type check, not a full image sanitizer.
 
+## 2026-10-08 — Share links expire
+
+A public link works for 30 days from the moment sharing is turned on. Renewing keeps the same address and starts another 30 days from today. Regenerating throws the old address away and, if sharing is still on, starts a new window. Turning sharing off clears the end time.
+
+An expired link is the same 404 as a link that never existed. The public response does not say that the collection exists. There is still no record of who opened the link.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
