@@ -210,6 +210,10 @@ A missing card on a wide screen put a full Add button under the name. That card 
 
 The cards you would give were listed first. On a phone the whole give list sat above the receive list, so the cards you would gain were easy to miss. Those cards now come first, and the first one stays above the navigation. A wide screen still shows what you give on the left and what you receive on the right. A match already led with the cards you would receive.
 
+## 2026-10-08 — A catalog kind has its own mark
+
+Cards in a large set were hard to tell apart because every face used a different pattern. A place, person, object, or event now uses one mark, and the kind is written under the name. A card without a kind keeps the pattern. A match and a public page still use the pattern, because those lists do not include the kind.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

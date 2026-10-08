@@ -1,3 +1,5 @@
+import { cardMotif, type CardMotif } from "../lib/cardMotif";
+
 const WASHES: Record<string, { paper: string; ink: string }> = {
   Sea: { paper: "#e7f3f1", ink: "#0e6b5c" },
   Ember: { paper: "#f8efe4", ink: "#8d4b1f" },
@@ -34,22 +36,54 @@ function washFor(ink: string | null | undefined, seed: number): { paper: string;
   return WASHES[keys[seed % keys.length]];
 }
 
+/** One mark per catalog kind, so a large set can be scanned. Not official artwork. */
+function KindMark({ motif, ink, paper }: { motif: CardMotif; ink: string; paper: string }) {
+  if (motif === "Person") {
+    return (
+      <g fill={ink}>
+        <circle cx="31.5" cy="30" r="7.5" />
+        <path d="M16 66c1.5-14 8-20 15.5-20S45 52 47 66z" />
+      </g>
+    );
+  }
+  if (motif === "Place") {
+    return (
+      <g fill={ink}>
+        <polygon points="14,40 31.5,22 49,40" />
+        <rect x="18" y="38" width="27" height="26" />
+        <rect x="28.5" y="50" width="6" height="14" fill={paper} />
+      </g>
+    );
+  }
+  if (motif === "Object") {
+    return <polygon points="31.5,24 49,44 31.5,66 14,44" fill={ink} />;
+  }
+  return (
+    <g fill={ink}>
+      <rect x="18" y="22" width="3.2" height="44" />
+      <polygon points="21.2,22 50,33 21.2,46" />
+    </g>
+  );
+}
+
 /**
- * Original geometric stand-in for a card face. It is generated from the
- * card's own number and name. It is not official artwork and does not
- * claim to depict a real collectible.
+ * Original geometric stand-in for a card face. A known kind uses one shared
+ * mark. Other cards use a pattern from the number and name. It is not
+ * official artwork and does not claim to depict a real collectible.
  */
 export function CardFace({
   number,
   name,
   rarity,
   ink,
+  kind,
   size = "md",
 }: {
   number: string;
   name: string;
   rarity: string | null;
   ink?: string | null;
+  kind?: string | null;
   size?: "sm" | "md";
 }) {
   const seed = hashString(`${number}:${name}`);
@@ -62,6 +96,7 @@ export function CardFace({
     rarityKey === "secret" ||
     rarityKey === "sr" ||
     rarityKey === "l";
+  const motif = cardMotif(kind);
   const shapes = [0, 1, 2].map((index) => {
     const n = hashString(`${seed}:${index}`);
     return {
@@ -90,28 +125,32 @@ export function CardFace({
       )}
       <rect x="1.25" y="1.25" width="60.5" height="9" rx="6" fill={frame} />
       <rect x="1.25" y="6" width="60.5" height="4.5" fill={frame} />
-      {shapes.map((shape, index) =>
-        shape.kind === 0 ? (
-          <circle key={index} cx={shape.x} cy={shape.y} r={shape.r} fill={wash.ink} opacity="0.88" />
-        ) : shape.kind === 1 ? (
-          <rect
-            key={index}
-            x={shape.x - shape.r}
-            y={shape.y - shape.r}
-            width={shape.r * 2}
-            height={shape.r * 2}
-            rx="1"
-            fill={wash.ink}
-            opacity="0.82"
-          />
-        ) : (
-          <polygon
-            key={index}
-            points={`${shape.x},${shape.y - shape.r} ${shape.x + shape.r},${shape.y + shape.r * 0.75} ${shape.x - shape.r},${shape.y + shape.r * 0.75}`}
-            fill={wash.ink}
-            opacity="0.82"
-          />
-        ),
+      {motif ? (
+        <KindMark motif={motif} ink={wash.ink} paper={wash.paper} />
+      ) : (
+        shapes.map((shape, index) =>
+          shape.kind === 0 ? (
+            <circle key={index} cx={shape.x} cy={shape.y} r={shape.r} fill={wash.ink} opacity="0.88" />
+          ) : shape.kind === 1 ? (
+            <rect
+              key={index}
+              x={shape.x - shape.r}
+              y={shape.y - shape.r}
+              width={shape.r * 2}
+              height={shape.r * 2}
+              rx="1"
+              fill={wash.ink}
+              opacity="0.82"
+            />
+          ) : (
+            <polygon
+              key={index}
+              points={`${shape.x},${shape.y - shape.r} ${shape.x + shape.r},${shape.y + shape.r * 0.75} ${shape.x - shape.r},${shape.y + shape.r * 0.75}`}
+              fill={wash.ink}
+              opacity="0.82"
+            />
+          ),
+        )
       )}
       <text x="6" y="80" fill={wash.ink} fontSize="4.5" fontFamily="ui-monospace, monospace">
         {caption}

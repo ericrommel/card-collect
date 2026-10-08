@@ -4,6 +4,7 @@ import type { Availability, ConditionGrade } from "../lib/api";
 import { CONDITION_GRADES } from "../lib/api";
 import type { ExplorerEntry } from "../lib/explorerQuery";
 import { defaultVariant } from "../lib/explorerQuery";
+import { kindFromMetadata } from "../lib/cardMotif";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS, rarityLabel, titleCaseKey } from "../lib/labels";
 import { CardFace, inkFromMetadata } from "./CardFace";
 import { CopyPhotos } from "./CopyPhotos";
@@ -117,6 +118,7 @@ function CardColumn({
         name={collectible.name}
         rarity={collectible.rarity}
         ink={inkFromMetadata(collectible.metadata)}
+        kind={kindFromMetadata(collectible.metadata)}
       />
       <h3>{collectible.name}</h3>
       <p className="muted small">
