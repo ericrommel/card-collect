@@ -285,6 +285,8 @@ export interface CatalogSearchHit {
   rarity: string | null;
   set: { id: string; name: string; code: string };
   universeName: string;
+  /** Default printing. Null when the catalog has no default variant. Not a physical copy. */
+  defaultVariantId: string | null;
   /** Present only for a signed-in search. Zero means this person has no copy. */
   owned_quantity?: number;
 }

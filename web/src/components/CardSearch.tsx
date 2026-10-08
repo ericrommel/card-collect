@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ApiError, searchCatalog, type CatalogSearchHit } from "../lib/api";
+import { ApiError, addCopy, searchCatalog, type CatalogSearchHit } from "../lib/api";
 import { rarityLabel } from "../lib/labels";
 import { CardFace } from "./CardFace";
 
@@ -10,12 +10,13 @@ function ownedLabel(count: number): string {
   return `${count} copies`;
 }
 
-export function CardSearch() {
+export function CardSearch({ onAdded }: { onAdded?: () => void | Promise<void> }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<CatalogSearchHit[] | null>(null);
   const [truncated, setTruncated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+  const [addingId, setAddingId] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query.trim();
@@ -50,6 +51,26 @@ export function CardSearch() {
     };
   }, [query]);
 
+  async function addOne(hit: CatalogSearchHit) {
+    if (!hit.defaultVariantId || addingId) return;
+    setAddingId(hit.id);
+    setError(null);
+    try {
+      await addCopy(hit.defaultVariantId, "KEEP");
+      setResults(
+        (current) =>
+          current?.map((item) =>
+            item.id === hit.id ? { ...item, owned_quantity: (item.owned_quantity ?? 0) + 1 } : item,
+          ) ?? null,
+      );
+      await onAdded?.();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not add that card.");
+    } finally {
+      setAddingId(null);
+    }
+  }
+
   return (
     <section className="card card-search">
       <label>
@@ -61,15 +82,17 @@ export function CardSearch() {
           onChange={(event) => setQuery(event.target.value)}
         />
       </label>
-      <p className="muted small">Search the sample catalog. A result says whether you have that card.</p>
+      <p className="muted small">
+        Search the sample catalog. A result says whether you have that card. Add a copy without opening the set.
+      </p>
       {searching && <p className="muted small">Searching…</p>}
       {error && <p className="error small">{error}</p>}
       {results && results.length === 0 && !searching && <p className="muted">No cards match.</p>}
       {results && results.length > 0 && (
         <ul className="search-results">
           {results.map((hit) => (
-            <li key={hit.id}>
-              <Link className="search-hit" to={`/sets/${hit.set.id}?q=${encodeURIComponent(hit.number)}`}>
+            <li key={hit.id} className="search-hit">
+              <Link className="search-hit-open" to={`/sets/${hit.set.id}?q=${encodeURIComponent(hit.number)}`}>
                 <CardFace size="sm" number={hit.number} name={hit.name} rarity={hit.rarity} />
                 <span className="row-copy">
                   <span className="search-hit-title">
@@ -86,6 +109,17 @@ export function CardSearch() {
                   </span>
                 </span>
               </Link>
+              {hit.owned_quantity !== undefined && hit.defaultVariantId && (
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={addingId === hit.id}
+                  aria-label={hit.owned_quantity > 0 ? `Add another copy of ${hit.name}` : `Add a copy of ${hit.name}`}
+                  onClick={() => void addOne(hit)}
+                >
+                  {addingId === hit.id ? "Adding…" : hit.owned_quantity > 0 ? "Add another" : "Add a copy"}
+                </button>
+              )}
             </li>
           ))}
         </ul>

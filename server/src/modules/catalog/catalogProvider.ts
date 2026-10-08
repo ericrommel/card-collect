@@ -49,6 +49,8 @@ export interface CatalogSearchHit {
   rarity: string | null;
   set: { id: string; name: string; code: string };
   universeName: string;
+  /** Default printing, when the catalog has one. Not a physical copy id. */
+  defaultVariantId: string | null;
 }
 
 export interface CatalogProvider {

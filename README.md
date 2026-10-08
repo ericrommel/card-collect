@@ -93,8 +93,9 @@ completion counts every catalogued card, including sets you have not
 opened, and the page says so.
 
 Home and the catalog can search the sample catalog by card name, number,
-or set. Each result says whether you have that card, then opens the set
-already searched. A search without a working session does not include
+or set. Each result says whether you have that card. You can add a Keep
+copy from the result. It has no condition until you set one, and the
+counts on that page update. You can also open the set already searched. A search without a working session does not include
 that count.
 
 The numbers on home open a list of the sets that match: missing cards,

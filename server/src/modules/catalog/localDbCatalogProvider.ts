@@ -64,6 +64,7 @@ export class LocalDbCatalogProvider implements CatalogProvider {
         name: true,
         rarity: true,
         set: { select: { id: true, name: true, code: true, universe: { select: { name: true } } } },
+        variants: { where: { isDefault: true }, select: { id: true }, take: 1 },
       },
     });
     const cards: CatalogSearchHit[] = rows.map((row) => ({
@@ -73,6 +74,7 @@ export class LocalDbCatalogProvider implements CatalogProvider {
       rarity: row.rarity,
       set: { id: row.set.id, name: row.set.name, code: row.set.code },
       universeName: row.set.universe.name,
+      defaultVariantId: row.variants[0]?.id ?? null,
     }));
     const found = searchCatalogCards(cards, query, limit);
     return { hits: found.results, truncated: found.truncated };

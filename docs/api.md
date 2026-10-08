@@ -117,11 +117,16 @@ derived from the slug, not stored on the universe row.
 characters returns an empty list rather than an error. A longer value is
 `400 { "error": "Invalid request" }`.
 
-→ `200 { "results": [{ "id", "number", "name", "rarity", "universeName", "set": { "id", "name", "code" } }], "truncated": false }`
+→ `200 { "results": [{ "id", "number", "name", "rarity", "universeName", "defaultVariantId", "set": { "id", "name", "code" } }], "truncated": false }`
 
 Matches the card name, the card number, or the set name and code. The
 closest matches come first. At most 24 rows are returned; `truncated` is
 true when more cards matched.
+
+`defaultVariantId` is the catalog's default printing, or `null` when that
+card has none. It is not a physical copy. A signed-in person can add a
+Keep copy of that printing without opening the set. The new copy has no
+condition until they set one.
 
 When the request has a working session, each result also has
 `owned_quantity`: how many physical copies of that card the caller has,

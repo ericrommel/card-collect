@@ -84,7 +84,7 @@ function HighlightCard({
 export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data, loading, error } = useDashboard();
+  const { data, loading, error, reload } = useDashboard();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -141,7 +141,7 @@ export function DashboardPage() {
         </div>
       </section>
 
-      <CardSearch />
+      <CardSearch onAdded={reload} />
 
       {data.exchanges.needs_action_count > 0 && (
         <Link to="/exchanges" className="attention-banner">

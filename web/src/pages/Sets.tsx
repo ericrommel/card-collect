@@ -14,7 +14,7 @@ function groupSets(sets: DashboardSetSummary[]) {
 }
 
 export function SetsPage() {
-  const { data, loading, error } = useDashboard();
+  const { data, loading, error, reload } = useDashboard();
   if (loading) return <p className="muted">Loading catalog…</p>;
   if (error || !data) return <p className="error">{error ?? "Could not load the catalog."}</p>;
 
@@ -27,7 +27,7 @@ export function SetsPage() {
         <h1>Sets</h1>
         <p className="muted">Choose a set to search, filter, and update the cards you own.</p>
       </div>
-      <CardSearch />
+      <CardSearch onAdded={reload} />
       {groups.length === 0 && (
         <div className="card empty-state">
           <p>No sets are loaded yet.</p>
