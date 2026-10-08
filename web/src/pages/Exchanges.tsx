@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { OfferCards } from "../components/OfferCards";
 import * as api from "../lib/api";
 import type { Exchange, ExchangeAction } from "../lib/api";
+import { exchangeNeedsYou, openExchangeSummary, orderOpenExchanges } from "../lib/exchangeQueue";
 import { EXCHANGE_STATUS_LABEL, completionShift } from "../lib/labels";
 
 const ACTION_LABEL: Record<ExchangeAction, string> = {
@@ -178,10 +179,11 @@ export function ExchangesPage() {
   if (loading) return <p className="muted">Loading exchanges...</p>;
   if (error && exchanges.length === 0) return <p className="error">{error}</p>;
 
-  const visible = exchanges.filter((exchange) => {
-    const open = exchange.status === "PROPOSED" || exchange.status === "ACCEPTED";
-    return filter === "open" ? open : !open;
-  });
+  const open = exchanges.filter((exchange) => exchange.status === "PROPOSED" || exchange.status === "ACCEPTED");
+  const needsYou = open.filter(exchangeNeedsYou).length;
+  const past = exchanges.filter((exchange) => exchange.status !== "PROPOSED" && exchange.status !== "ACCEPTED");
+  const visible = filter === "open" ? orderOpenExchanges(open) : past;
+  const summary = filter === "open" ? openExchangeSummary(needsYou, open.length - needsYou) : null;
 
   return (
     <div>
@@ -198,6 +200,11 @@ export function ExchangesPage() {
           Past
         </button>
       </div>
+      {summary && (
+        <p className="notice-line" role="status">
+          {summary}
+        </p>
+      )}
       {error && <p className="error">{error}</p>}
       {visible.length === 0 && (
         <p className="muted">

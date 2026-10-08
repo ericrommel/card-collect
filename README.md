@@ -149,7 +149,8 @@ every card.
 
 From a match, "Propose this trade" or "Ask for these cards" opens an
 exchange. On a phone, that button and the actions on an open exchange sit
-above the card faces. An open exchange says how each set would change if it finishes,
+above the card faces. On a phone those cards are rows, so each name sits
+beside its face. An open exchange says how each set would change if it finishes,
 using the copies people have now. The other collector accepts or declines. Cards stay where they
 are until **both** people confirm that the cards have actually changed
 hands — then those copies move and are marked `KEEP`. Either person can
@@ -162,8 +163,11 @@ condition (Mint through Poor). That note is your description, not a grade,
 and it does not change the match score. The exchange shows the condition
 that was set when you proposed.
 
-Open exchanges are listed under Exchanges. Past exchanges, including the
-completed sample trade, are on the Past tab.
+Open exchanges are listed under Exchanges. Ones that need you come first:
+a proposal you received, or an accepted exchange you have not confirmed.
+The page says how many are waiting on you and how many are waiting on the
+other person. Past exchanges, including the completed sample trade, are
+on the Past tab.
 
 ## Collection sharing
 

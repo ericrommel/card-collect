@@ -134,6 +134,10 @@ A public link stacked every owned card above the trade and donation lists. On a 
 
 A copy already reserved for an open exchange stays in the owned count, and it is left out of the public trade and donation lists. Another free copy of the same card is still listed. The page does not say that a copy is reserved.
 
+## 2026-10-08 — Open exchanges that need you come first
+
+The exchanges page listed everything by the last update, so a proposal you received could sit under one you are only waiting on. Open exchanges that need you now come first. The page says how many need you and how many are waiting on the other person. That is the same split as the home count. The API list is unchanged. On a phone, the cards in that list are rows, so each name sits beside its face and stays above the navigation. A wide screen keeps the card grid.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
