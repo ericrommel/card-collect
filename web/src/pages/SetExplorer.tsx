@@ -192,7 +192,7 @@ export function SetExplorerPage() {
   }, [selected.size]);
 
   useEffect(() => {
-    if (!narrow || selected.size === 0) {
+    if (selected.size === 0) {
       pinnedSelection.current = false;
       return;
     }
@@ -201,7 +201,8 @@ export function SetExplorerPage() {
     const collectibleId = selected.values().next().value;
     const root = resultsRef.current;
     if (!collectibleId || !root) return;
-    revealSelectedCard(root, collectibleId);
+    if (narrow) revealSelectedCard(root, collectibleId);
+    else liftSelectedCard(root, collectibleId);
   }, [narrow, selected]);
 
   useEffect(() => {
