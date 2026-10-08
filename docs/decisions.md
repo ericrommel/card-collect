@@ -170,6 +170,10 @@ A full-width card, with the sample notice and a filter sentence above it, put th
 
 Marking a group of cards meant turning Select on, then choosing Select visible, then Mark owned. Select these does the first two for the cards on screen. Mark owned is still its own step, so a long list is not added by one tap. Cards you already selected stay selected when you add another group. Unselect visible clears only the cards on screen.
 
+## 2026-10-08 — Catalog search is limited per address
+
+Catalog search is public and reads the whole sample catalog, so a script could ask as fast as the server answers. Each socket address can search 120 times a minute. The page already waits a quarter second after typing stops, so refining a name stays inside that. People on the same network share the limit. A search that is too short or too long still counts, and a search shorter than two characters does not read the catalog. The response is 429 and asks them to wait a minute. Opening a set uses the checklist route, which is not part of this limit. The process still does not trust `X-Forwarded-For`. The test suite raises the limit unless a test sets it.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

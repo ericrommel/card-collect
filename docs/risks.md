@@ -94,7 +94,7 @@ Areas to cover:
 
 - enforce ownership authorization server-side;
 - keep the web session in an httpOnly cookie, and reject cookie writes that do not come from the app origin;
-- limit sign-in attempts, password changes, and exchange proposals in the API process;
+- limit sign-in attempts, password changes, exchange proposals, and public catalog search in the API process. Search is 120 a minute per socket address. Loading a set is not part of that limit;
 - end every session for an account when that person signs out or changes the password. Older cookies and bearer tokens stop working. There is still no email reset and no way to revoke a single other device on its own;
 - send nosniff, no-referrer, frame denial, and no-store on API responses;
 - do not trust `X-Forwarded-For` for those limits;

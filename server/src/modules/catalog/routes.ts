@@ -1,8 +1,9 @@
-import { Router } from "express";
+import express, { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../db.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { ApiError } from "../../middleware/apiError.js";
+import { createHitWindow } from "../../lib/hitWindow.js";
 import { resolveSessionUserId } from "../../middleware/requireAuth.js";
 import { catalogProvider } from "./localDbCatalogProvider.js";
 
@@ -45,8 +46,35 @@ const searchQuerySchema = z.object({
 /** Enough to choose a card. A broader query says there are more, instead of returning the whole catalog. */
 const SEARCH_LIMIT = 24;
 
+/**
+ * A useful search reads every catalog row, so a tight loop is expensive.
+ * 120 a minute is two a second: enough to refine a name after the page's
+ * short pause, and shared by everyone on the same socket address.
+ * The suite raises it so other tests can search freely.
+ */
+export const catalogSearchHitWindow = createHitWindow(60_000);
+
+export function catalogSearchAttemptLimit(): number {
+  const raw = process.env.CATALOG_SEARCH_RATE_LIMIT;
+  if (raw) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  }
+  return process.env.VITEST ? 10_000 : 120;
+}
+
+function limitCatalogSearch(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const key = `search:${req.ip ?? "unknown"}`;
+  if (catalogSearchHitWindow.tooMany(key, catalogSearchAttemptLimit())) {
+    res.setHeader("Retry-After", "60");
+    throw ApiError.tooManyRequests("Too many searches. Wait a minute and try again.");
+  }
+  next();
+}
+
 catalogRouter.get(
   "/search",
+  limitCatalogSearch,
   asyncHandler(async (req, res) => {
     const { q = "" } = searchQuerySchema.parse(req.query);
     const { hits, truncated } = await catalogProvider.searchCollectibles(q, SEARCH_LIMIT);

@@ -314,9 +314,13 @@ order (`orderBy: { id: "asc" }`) only matters as a starting point —
 - Sign-in and registration share a limit of 20 attempts per minute per
   socket address. Proposing an exchange is limited to 30 per minute per
   account. Changing a password is limited to 10 attempts per minute per
-  account. The process does not trust `X-Forwarded-For` (`trust proxy` is
-  off), so a client cannot pick its own rate-limit key. The suite raises
-  the sign-in limit while `VITEST` is set.
+  account. Catalog search is limited to 120 requests per minute per socket
+  address, including a query that is too short or too long to return cards.
+  A query shorter than 2 characters does not read the catalog. Loading a
+  set is not part of that limit. The process does not trust
+  `X-Forwarded-For` (`trust proxy` is off), so a client cannot pick its own
+  rate-limit key. The suite raises the sign-in and catalog-search limits
+  while `VITEST` is set, unless a test sets the limit itself.
 - Each token carries the account's session version (`sv`). Signing out, or
   changing the password, increments that version. Older cookies and bearer
   tokens then fail as an invalid session. Password change issues a new

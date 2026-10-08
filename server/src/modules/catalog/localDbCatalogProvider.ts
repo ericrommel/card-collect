@@ -57,6 +57,8 @@ export class LocalDbCatalogProvider implements CatalogProvider {
   }
 
   async searchCollectibles(query: string, limit: number): Promise<{ hits: CatalogSearchHit[]; truncated: boolean }> {
+    // A one-character query matches too much to be useful. Skip the table read.
+    if (query.trim().length < 2) return { hits: [], truncated: false };
     const rows = await prisma.collectible.findMany({
       select: {
         id: true,
