@@ -1446,6 +1446,7 @@ select {
   .bulk-primary button.small {
     padding-left: 0.55rem;
     padding-right: 0.55rem;
+    white-space: nowrap;
   }
 
   .bulk-extra {
@@ -1460,6 +1461,7 @@ select {
   }
 
   .bulk-bar button,
+  .bulk-bar button.small,
   .bulk-bar select {
     min-height: 44px;
   }
