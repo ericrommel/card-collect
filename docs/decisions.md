@@ -206,6 +206,10 @@ A front photo lived only inside the card editor, so the grid kept the sample dra
 
 A missing card on a wide screen put a full Add button under the name. That card was taller than the ones beside it. Add now sits on the corner of the picture, as it already did on a phone. The list still keeps Add in the row. Mark owned is still a separate step.
 
+## 2026-10-08 — On a phone, an exchange leads with what you receive
+
+The cards you would give were listed first. On a phone the whole give list sat above the receive list, so the cards you would gain were easy to miss. Those cards now come first, and the first one stays above the navigation. A wide screen still shows what you give on the left and what you receive on the right. A match already led with the cards you would receive.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

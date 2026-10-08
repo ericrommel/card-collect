@@ -1407,6 +1407,19 @@ select {
     order: 8;
   }
 
+  /* The cards you would gain come before the cards you would give. A wide screen stays side by side. */
+  .exchange-card > .match-columns > :first-child {
+    order: 2;
+  }
+
+  .exchange-card > .match-columns > :last-child {
+    order: 1;
+  }
+
+  .exchange-card > p {
+    margin: 0;
+  }
+
   .match-card > .match-actions,
   .exchange-card > .match-actions,
   .exchange-card > .confirm-panel {
