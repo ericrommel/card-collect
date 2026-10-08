@@ -6,11 +6,13 @@ function PhotoSide({
   side,
   label,
   present,
+  onChange,
 }: {
   copy: UserCopy;
   side: "front" | "back";
   label: string;
   present: boolean;
+  onChange?: (event: "saved" | "removed") => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [shown, setShown] = useState(present);
@@ -30,6 +32,7 @@ function PhotoSide({
       await uploadCopyPhoto(copy.id, side, file);
       setShown(true);
       setVersion((current) => current + 1);
+      onChange?.("saved");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "The photo was not saved.");
     } finally {
@@ -43,6 +46,7 @@ function PhotoSide({
     try {
       await deleteCopyPhoto(copy.id, side);
       setShown(false);
+      onChange?.("removed");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "The photo was not removed.");
     } finally {
@@ -82,13 +86,25 @@ function PhotoSide({
   );
 }
 
-export function CopyPhotos({ copy }: { copy: UserCopy }) {
+export function CopyPhotos({ copy, onChange }: { copy: UserCopy; onChange?: (event: "saved" | "removed") => void }) {
   return (
     <div className="copy-photos">
-      <PhotoSide copy={copy} side="front" label="Front photo" present={Boolean(copy.has_front_image)} />
+      <PhotoSide
+        copy={copy}
+        side="front"
+        label="Front photo"
+        present={Boolean(copy.has_front_image)}
+        onChange={onChange}
+      />
       <details>
         <summary>Back photo</summary>
-        <PhotoSide copy={copy} side="back" label="Back photo" present={Boolean(copy.has_back_image)} />
+        <PhotoSide
+          copy={copy}
+          side="back"
+          label="Back photo"
+          present={Boolean(copy.has_back_image)}
+          onChange={onChange}
+        />
       </details>
       <p className="muted small">
         Photos stay on your account. A photo is not proof that you own the card, and the front and back are not checked

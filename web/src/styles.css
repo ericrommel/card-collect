@@ -782,6 +782,20 @@ select {
   flex: none;
 }
 
+.owned-photo {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  object-fit: cover;
+  border-radius: 10px;
+  background: var(--surface-2);
+  display: block;
+}
+
+.owned-photo-sm {
+  width: 54px;
+  flex: none;
+}
+
 .card-search {
   display: flex;
   flex-direction: column;
@@ -1617,6 +1631,13 @@ select {
   .card-grid .card-face {
     width: auto;
     max-height: 176px;
+    margin-inline: auto;
+  }
+
+  .card-grid .owned-photo {
+    width: auto;
+    height: 176px;
+    max-width: 100%;
     margin-inline: auto;
   }
 

@@ -14,12 +14,14 @@ function CopyEditor({
   onAvailability,
   onCondition,
   onRemove,
+  onPhotosChange,
 }: {
   entry: ExplorerEntry;
   busy: boolean;
   onAvailability: (copyId: string, availability: Availability) => void;
   onCondition: (copyId: string, condition: ConditionGrade | null) => void;
   onRemove: (copyId: string) => void;
+  onPhotosChange?: (event: "saved" | "removed") => void;
 }) {
   const collectible = entry.collectible;
   if (entry.copies.length === 0) {
@@ -69,7 +71,7 @@ function CopyEditor({
               ))}
             </select>
           </label>
-          <CopyPhotos copy={copy} />
+          <CopyPhotos copy={copy} onChange={onPhotosChange} />
           {copy.reserved && copy.exchange_id ? (
             <Link to={`/exchanges#${copy.exchange_id}`} className="reserved-note">
               In an exchange
@@ -92,6 +94,7 @@ function CardColumn({
   onAvailability,
   onCondition,
   onRemove,
+  onPhotosChange,
 }: {
   entry: ExplorerEntry;
   busy: boolean;
@@ -99,6 +102,7 @@ function CardColumn({
   onAvailability: (copyId: string, availability: Availability) => void;
   onCondition: (copyId: string, condition: ConditionGrade | null) => void;
   onRemove: (copyId: string) => void;
+  onPhotosChange?: (event: "saved" | "removed") => void;
 }) {
   const collectible = entry.collectible;
   const metadata = Object.entries(collectible.metadata ?? {}).filter(
@@ -140,6 +144,7 @@ function CardColumn({
         onAvailability={onAvailability}
         onCondition={onCondition}
         onRemove={onRemove}
+        onPhotosChange={onPhotosChange}
       />
       <div className="detail-add">
         {(collectible.variants.length > 0 ? collectible.variants : fallback ? [fallback] : []).map((variant) => (
@@ -169,6 +174,7 @@ export function CardDetail({
   onAvailability,
   onCondition,
   onRemove,
+  onPhotosChange,
 }: {
   entries: ExplorerEntry[];
   mode: "single" | "compare" | "bulk";
@@ -180,6 +186,7 @@ export function CardDetail({
   onAvailability: (copyId: string, availability: Availability) => void;
   onCondition: (copyId: string, condition: ConditionGrade | null) => void;
   onRemove: (copyId: string) => void;
+  onPhotosChange?: (event: "saved" | "removed") => void;
 }) {
   const panelRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -214,6 +221,7 @@ export function CardDetail({
               onAvailability={onAvailability}
               onCondition={onCondition}
               onRemove={onRemove}
+              onPhotosChange={onPhotosChange}
             />
           ))}
         </div>
