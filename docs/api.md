@@ -98,7 +98,9 @@ require an allowed `Origin` unless the request sends `X-Auth-Mode: bearer`.
 Register and login share a limit of 20 attempts per minute per socket
 address. The response is `429` with `Retry-After: 60`. Proposing an
 exchange is limited to 30 per minute per account, and changing a password
-to 10 per minute per account, with the same status.
+to 10 per minute per account, with the same status. Catalog search is
+limited to 120 requests per minute per socket address, with the same
+status. Loading a set is not part of that limit.
 
 ## Catalog (read-only, no auth required)
 
@@ -120,10 +122,17 @@ derived from the slug, not stored on the universe row.
 ### `GET /catalog/search?q=<text>`
 
 `q` is optional, trimmed, and at most 80 characters. Fewer than 2
-characters returns an empty list rather than an error. A longer value is
-`400 { "error": "Invalid request" }`.
+characters returns an empty list rather than an error, and does not read
+the catalog. A longer value is `400 { "error": "Invalid request" }`.
 
 → `200 { "results": [{ "id", "number", "name", "rarity", "universeName", "defaultVariantId", "set": { "id", "name", "code" } }], "truncated": false }`
+
+The same socket address can search 120 times a minute. A query that is
+too short or too long still counts. Past that, the response is `429`
+with `Retry-After: 60` and
+`{ "error": "Too many searches. Wait a minute and try again." }`.
+`GET /catalog/sets/:id/collectibles` is a separate read and is not limited
+this way, so opening a set still loads its checklist.
 
 Matches the card name, the card number, or the set name and code. The
 closest matches come first. At most 24 rows are returned; `truncated` is
