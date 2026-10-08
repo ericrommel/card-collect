@@ -17,6 +17,10 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     res.status(400).json({ error: "Invalid request" });
     return;
   }
+  if (typeof err === "object" && err !== null && "status" in err && err.status === 413) {
+    res.status(413).json({ error: "That image is too large. Use a photo under 5 MB." });
+    return;
+  }
   console.error(err);
   res.status(500).json({ error: "Internal server error" });
 }

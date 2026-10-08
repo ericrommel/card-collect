@@ -91,9 +91,11 @@ The product must clearly state that this is an automated estimate rather than pr
 
 ## I3 — Guided / Verified Capture
 
-**Status:** not started. The collection explorer adds cards by search and
-bulk selection. There is no camera capture and no automatic identification.
-An uncertain guess must not be stored as a verified copy.
+**Status:** partially implemented. A person can search a set or attach a
+JPEG/PNG photo, then confirm the card before a copy is saved. Photos are
+private, metadata segments are stripped, and recognition is not configured.
+An uncertain guess is not stored as a verified copy. The stronger checks
+below are not built.
 
 Introduce a stronger capture flow for valuable cards.
 

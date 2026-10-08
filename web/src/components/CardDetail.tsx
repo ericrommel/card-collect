@@ -5,6 +5,7 @@ import type { ExplorerEntry } from "../lib/explorerQuery";
 import { defaultVariant } from "../lib/explorerQuery";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS, rarityLabel, titleCaseKey } from "../lib/labels";
 import { CardFace, inkFromMetadata } from "./CardFace";
+import { CopyPhotos } from "./CopyPhotos";
 
 function CopyEditor({
   entry,
@@ -67,6 +68,7 @@ function CopyEditor({
               ))}
             </select>
           </label>
+          <CopyPhotos copy={copy} />
           {copy.reserved && copy.exchange_id ? (
             <Link to={`/exchanges#${copy.exchange_id}`} className="reserved-note">
               In an exchange

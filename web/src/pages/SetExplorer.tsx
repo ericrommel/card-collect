@@ -364,6 +364,9 @@ export function SetExplorerPage() {
                 ))}
               </select>
             </label>
+            <Link to={`/sets/${setId}/add`} className="primary">
+              Add cards
+            </Link>
             <Link to={`/sets/${setId}/matches`} className="secondary">
               Matches
             </Link>

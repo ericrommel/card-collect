@@ -22,6 +22,7 @@ model User {
   createdAt    DateTime @default(now())
 
   copies             UserCopy[]
+  copyImages         CopyImage[]
   collectionShares   CollectionShare[]
   proposedExchanges  Exchange[] @relation("ExchangeProposer")
   receivedExchanges  Exchange[] @relation("ExchangeCounterparty")
@@ -121,8 +122,29 @@ model UserCopy {
   reservedByExchange   Exchange? @relation(fields: [reservedByExchangeId], references: [id])
 
   exchangeLines ExchangeLine[]
+  images        CopyImage[]
 
   @@map("user_copies")
+}
+
+/// A private photo of one physical copy. Front and back are separate rows.
+/// The file is not a catalog image, and it is not proof of ownership.
+model CopyImage {
+  id          String   @id @default(cuid())
+  side        String
+  contentType String
+  byteLength  Int
+  createdAt   DateTime @default(now())
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  copyId String
+  copy   UserCopy @relation(fields: [copyId], references: [id], onDelete: Cascade)
+
+  @@unique([copyId, side])
+  @@index([ownerId])
+  @@map("copy_images")
 }
 
 /// A user's public-sharing configuration for one Set. At most one row per

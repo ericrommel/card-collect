@@ -9,6 +9,7 @@ import { exchangesRouter } from "./modules/exchanges/routes.js";
 import { dashboardRouter } from "./modules/dashboard/routes.js";
 import { mySharingRouter } from "./modules/sharing/routes.js";
 import { publicSharingRouter } from "./modules/sharing/publicRoutes.js";
+import { imageRouter } from "./modules/images/routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 export function createApp() {
@@ -33,6 +34,7 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/catalog", catalogRouter);
   app.use("/api/my/collection", collectionRouter);
+  app.use("/api/my/collection", imageRouter);
   app.use("/api/my/sets", mySetsRouter);
   app.use("/api/my/dashboard", dashboardRouter);
   app.use("/api/my/sets", mySharingRouter);

@@ -85,6 +85,8 @@ export interface UserCopy {
   condition: string | null;
   reserved: boolean;
   exchange_id: string | null;
+  has_front_image: boolean;
+  has_back_image: boolean;
   created_at: string;
   updated_at: string;
   variant: {
@@ -260,11 +262,55 @@ export function myCollection(setId?: string) {
   return apiFetch<{ copies: UserCopy[] }>(`/my/collection${qs}`);
 }
 
-export function addCopy(variantId: string, availability: Availability = "KEEP") {
+export function addCopy(variantId: string, availability: Availability = "KEEP", condition?: ConditionGrade | null) {
   return apiFetch<{ copy: UserCopy }>("/my/collection/copies", {
     method: "POST",
-    body: JSON.stringify({ variantId, availability }),
+    body: JSON.stringify({ variantId, availability, ...(condition ? { condition } : {}) }),
   });
+}
+
+export interface IdentifyCandidate {
+  set_code: string;
+  number: string;
+  name: string;
+  confidence: number;
+}
+
+export interface IdentifyResponse {
+  status: "unavailable" | "candidates";
+  candidates: IdentifyCandidate[];
+  message: string;
+}
+
+async function sendPhoto<T>(path: string, file: File): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+    credentials: "include",
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new ApiError(res.status, body.error ?? `Request failed (${res.status})`);
+  return body as T;
+}
+
+export function uploadCopyPhoto(copyId: string, side: "front" | "back", file: File) {
+  return sendPhoto<{ image: { side: string; content_type: string } }>(
+    `/my/collection/copies/${encodeURIComponent(copyId)}/images/${side}`,
+    file,
+  );
+}
+
+export function deleteCopyPhoto(copyId: string, side: "front" | "back") {
+  return apiFetch<void>(`/my/collection/copies/${encodeURIComponent(copyId)}/images/${side}`, { method: "DELETE" });
+}
+
+export function identifyPhoto(file: File) {
+  return sendPhoto<IdentifyResponse>("/my/collection/identify", file);
+}
+
+export function copyImageUrl(copyId: string, side: "front" | "back", version = 0) {
+  return `/api/my/collection/copies/${encodeURIComponent(copyId)}/images/${side}?v=${version}`;
 }
 
 export function updateCopy(

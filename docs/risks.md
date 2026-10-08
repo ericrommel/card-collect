@@ -99,7 +99,7 @@ Areas to cover:
 - patch non-major dependency advisories in the lockfile. Vite, Vitest, and React Router still need major upgrades, so those advisories stay open. `trust proxy` stays off, which keeps the proxy-addr spoofing bug from choosing a rate-limit key even on an unpatched release;
 - use established authentication libraries/providers;
 - no secrets in source control;
-- validate and constrain all uploads;
+- private card photos are size-limited, restricted to JPEG and PNG by their bytes, stripped of metadata segments, and visible only to the owner;
 - add automated dependency/security checks to CI;
 - keep public APIs minimal.
 

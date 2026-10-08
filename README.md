@@ -14,7 +14,8 @@ faces are generated patterns, not publisher artwork. The domain model stays
 generic (see [docs/architecture.md](docs/architecture.md) and
 [docs/decisions.md](docs/decisions.md)). The web session stays in an httpOnly
 cookie. A cookie write is accepted only from the app, and sign-in and
-proposals are rate-limited.
+proposals are rate-limited. From a set, Add cards searches the catalog or
+attaches a private photo. The app does not identify the card by itself.
 
 ```text
 V0         — Collection tracking (owned/missing/duplicates/completion) + matching
@@ -22,6 +23,7 @@ V0.1       — Safe, revocable public collection sharing
 V0.2       — Smart Trade Score: deterministic, explainable ranking of matches
 Exchanges  — Propose, accept, and confirm a trade or donation
 Explorer   — Dashboard, visual collection browser, bulk copy changes, large sample catalog
+Photos     — Optional private photo on a copy. The app does not identify the card.
 ```
 
 Users track a collection, see what they own, miss, and have duplicated, mark

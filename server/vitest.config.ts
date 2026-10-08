@@ -1,4 +1,8 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+
+const serverRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
@@ -9,6 +13,7 @@ export default defineConfig({
       DATABASE_URL: "file:./test.db",
       JWT_SECRET: "test-secret",
       CORS_ORIGIN: "http://localhost:5173",
+      IMAGE_DIR: path.join(serverRoot, "test-images"),
     },
     fileParallelism: false,
   },

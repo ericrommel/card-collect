@@ -3,6 +3,8 @@ import { prisma } from "../../db.js";
 import { ApiError } from "../../middleware/apiError.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
 import { getUserCopies, toAvailabilityTagged, type CopyWithDetails } from "../collection/service.js";
+import { removeImageRows } from "../images/service.js";
+import { unlinkImages } from "../images/store.js";
 import {
   allowedActions,
   applyExchangeAction,
@@ -307,7 +309,7 @@ export async function proposeExchange(
 }
 
 export async function actOnExchange(userId: string, exchangeId: string, action: ExchangeAction): Promise<ExchangeView> {
-  return prisma.$transaction(async (tx) => {
+  const outcome = await prisma.$transaction(async (tx) => {
     const row = await tx.exchange.findUnique({ where: { id: exchangeId }, include: exchangeInclude });
     if (!row || !roleFor(row, userId)) {
       throw ApiError.notFound("Exchange not found");
@@ -321,11 +323,15 @@ export async function actOnExchange(userId: string, exchangeId: string, action: 
       result.state.proposerConfirmed === before.proposerConfirmed &&
       result.state.counterpartyConfirmed === before.counterpartyConfirmed
     ) {
-      return toExchangeView(row, userId);
+      return { view: toExchangeView(row, userId), removedImageIds: [] as string[] };
     }
 
     const now = new Date();
+    let removedImageIds: string[] = [];
     if (result.state.status === "COMPLETED") {
+      const copyIds = row.lines.map((line) => line.copyId).filter((id): id is string => id != null);
+      // Photos stay with the person who took them. They are not proof of the card, and they do not move.
+      removedImageIds = await removeImageRows(tx, copyIds);
       for (const line of row.lines) {
         if (!line.copyId) throw ApiError.conflict("A card in this exchange is no longer available");
         const moved = await tx.userCopy.updateMany({
@@ -351,6 +357,8 @@ export async function actOnExchange(userId: string, exchangeId: string, action: 
       },
       include: exchangeInclude,
     });
-    return toExchangeView(updated, userId);
+    return { view: toExchangeView(updated, userId), removedImageIds };
   });
+  await unlinkImages(outcome.removedImageIds);
+  return outcome.view;
 }
