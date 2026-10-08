@@ -237,6 +237,20 @@ export function logout() {
   return apiFetch<void>("/auth/logout", { method: "POST" });
 }
 
+export function changePassword(currentPassword: string, newPassword: string) {
+  return apiFetch<{ user: SelfUser }>("/auth/password", {
+    method: "POST",
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+export function updateDisplayName(displayName: string) {
+  return apiFetch<{ user: SelfUser }>("/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify({ display_name: displayName }),
+  });
+}
+
 /** Anonymous callers get `{ user: null }` with status 200, so a page load is not a failed request. */
 export function fetchMe() {
   return apiFetch<{ user: SelfUser | null }>("/auth/session");

@@ -175,6 +175,21 @@ a {
   margin-left: auto;
 }
 
+a.header-account {
+  color: var(--primary);
+  font-weight: 650;
+  text-decoration: none;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.2rem;
+  white-space: nowrap;
+}
+
+.account-panel {
+  max-width: 34rem;
+}
+
 .app-main {
   width: min(1180px, calc(100% - 2rem));
   margin: 0 auto;

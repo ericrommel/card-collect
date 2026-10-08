@@ -76,6 +76,14 @@ Sign in with any seeded demo user via the "quick sign in" buttons on the
 login page (`alice@example.com` / `bob@example.com` / `carol@example.com`,
 password `password123`), or register a new account.
 
+## Account
+
+**Account** in the header shows the email for this login and the display
+name other collectors see. The email cannot be changed. The display name
+can. Changing the password keeps this browser signed in and signs out the
+others. Sign out ends every session for the account. There is no email
+reset. Password guesses are limited to 10 a minute.
+
 ## Collection
 
 Home shows only numbers the API computed: owned, missing, extras, copies

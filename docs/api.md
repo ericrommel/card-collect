@@ -43,7 +43,35 @@ register.
 
 ### `POST /auth/logout` (auth required)
 
-Clears the session cookie. → `204`.
+Clears the session cookie and ends every session for the account, including
+other browsers and bearer tokens issued before the sign-out. → `204`.
+
+### `POST /auth/password` (auth required)
+
+```json
+{ "current_password": "password123", "new_password": "a-longer-secret" }
+```
+
+→ `200 { "user": {...} }` and a new session cookie. `X-Auth-Mode: bearer`
+also returns the new `"token"`. Tokens issued before this call, including
+on other browsers, stop working. The browser that changed the password
+stays signed in.
+
+`new_password` must be 8-200 characters and different from the current
+password (`400` "Choose a different password."). A wrong current password
+is `401` "That password is not the current one." and does not end the
+session. The account can try 10 times a minute (`429`, `Retry-After: 60`).
+A cookie call without the app origin is `403`.
+
+### `PATCH /auth/me` (auth required)
+
+```json
+{ "display_name": "Alice" }
+```
+
+→ `200 { "user": {...} }`. The name is trimmed, 1-60 characters. This does
+not end the session. Unknown fields, including `email` or a password, are
+`400`. The public collection page reads this name when it is opened.
 
 ### `GET /auth/session`
 
@@ -63,7 +91,8 @@ require an allowed `Origin` unless the request sends `X-Auth-Mode: bearer`.
 
 Register and login share a limit of 20 attempts per minute per socket
 address. The response is `429` with `Retry-After: 60`. Proposing an
-exchange is limited to 30 per minute per account, with the same status.
+exchange is limited to 30 per minute per account, and changing a password
+to 10 per minute per account, with the same status.
 
 ## Catalog (read-only, no auth required)
 

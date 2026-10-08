@@ -8,6 +8,7 @@ import { AddCardPage } from "./pages/AddCard";
 import { MatchesPage } from "./pages/Matches";
 import { ExchangesPage } from "./pages/Exchanges";
 import { PublicCollectionPage } from "./pages/PublicCollection";
+import { AccountPage } from "./pages/Account";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -39,6 +40,9 @@ function Shell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="header-user">
             <span className="user-name muted">{user.display_name}</span>
+            <NavLink to="/account" className="header-account">
+              Account
+            </NavLink>
             <button
               type="button"
               className="link"
@@ -118,6 +122,14 @@ export default function App() {
           element={
             <RequireAuth>
               <ExchangesPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/account"
+          element={
+            <RequireAuth>
+              <AccountPage />
             </RequireAuth>
           }
         />
