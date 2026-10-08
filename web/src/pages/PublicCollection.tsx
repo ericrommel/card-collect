@@ -93,7 +93,8 @@ function PublicBrowser({ view }: { view: PublicShareView }) {
         <span className="badge">{view.set.code}</span>
         <h1>{view.collector.display_name}'s collection</h1>
         <p className="muted">
-          {view.set.name} · {view.set.total_count} cards. Read-only.
+          {view.set.name} · {view.set.total_count} cards. Read-only. This page does not show an email, a location,
+          photos, or a card's condition.
         </p>
         {view.completion_percentage !== undefined && (
           <div className="public-progress">
