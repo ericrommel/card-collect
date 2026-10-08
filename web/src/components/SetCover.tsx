@@ -2,7 +2,15 @@ import { Link } from "react-router-dom";
 import type { DashboardSetSummary } from "../lib/api";
 import { focusHref, focusLabel, type CollectionView } from "../lib/collectionFocus";
 
-export function SetCover({ set }: { set: DashboardSetSummary }) {
+export function SetCover({
+  set,
+  openTo,
+  hideJump,
+}: {
+  set: DashboardSetSummary;
+  openTo?: string;
+  hideJump?: CollectionView;
+}) {
   const jumps = (
     [
       { view: "missing", count: set.missing_count },
@@ -11,11 +19,11 @@ export function SetCover({ set }: { set: DashboardSetSummary }) {
       { view: "donations", count: set.donation_copies },
       { view: "sale", count: set.sell_copies },
     ] as { view: CollectionView; count: number }[]
-  ).filter((jump) => jump.count > 0);
+  ).filter((jump) => jump.count > 0 && jump.view !== hideJump);
 
   return (
     <article className="set-cover">
-      <Link to={`/sets/${set.id}`} className="set-cover-open">
+      <Link to={openTo ?? `/sets/${set.id}`} className="set-cover-open">
         <div className="set-monogram" data-universe={set.universe_slug}>
           <span>{set.code}</span>
         </div>

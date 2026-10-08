@@ -487,47 +487,6 @@ select {
   background: var(--bg);
 }
 
-.focus-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.focus-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  grid-template-areas:
-    "code name count"
-    "code universe count";
-  gap: 0.1rem 0.75rem;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  min-height: 44px;
-}
-
-.focus-code {
-  grid-area: code;
-  font-family: var(--font-display);
-  color: var(--primary);
-}
-
-.focus-row strong {
-  grid-area: name;
-}
-
-.focus-row span:last-child {
-  grid-area: universe;
-}
-
-.focus-row > span:nth-child(3) {
-  grid-area: count;
-  font-variant-numeric: tabular-nums;
-}
-
 .set-cover h3 {
   margin: 0;
 }

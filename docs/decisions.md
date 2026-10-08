@@ -146,6 +146,10 @@ Matches, exchanges, and a shared collection show the name a person chose. Regist
 
 Choosing a rarity, a condition, a detail such as ink, or a sort used to live only on the page. A refresh, or a copied link, went back to every card in number order. Those choices now stay in the address with the search and the ownership and availability filters. An unknown value is ignored. Show all cards clears those filters and keeps the search and the sort. The owned, missing, extras, and set-size counts on the set do the same job: each one shows that list and clears a narrower filter. Choosing the count that is already on returns to every card.
 
+## 2026-10-08 — Home lists use the set covers
+
+The lists behind the home counts were plain rows of names. They now use the same covers as home and the catalog, so a set you have started still comes first and the progress stays visible. Opening the cover applies the filter for that count. The other shortcuts on the cover stay, without repeating the list you are already on.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
