@@ -15,6 +15,6 @@
     "sourceMap": true
   },
   "include": ["src", "prisma", "tests"],
-  // This test imports the web app's offer planner, which sits outside rootDir.
-  "exclude": ["tests/domain/duplicateOffers.test.ts"]
+  // These tests import web modules, which sit outside rootDir.
+  "exclude": ["tests/domain/duplicateOffers.test.ts", "tests/domain/explorerDetail.test.ts"]
 }

@@ -23,6 +23,8 @@ import {
   type OwnershipFilter,
 } from "../lib/explorerQuery";
 import { duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
+import { explorerDetail } from "../lib/explorerDetail";
+import { useNarrowViewport } from "../lib/useNarrowViewport";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS, rarityLabel, titleCaseKey } from "../lib/labels";
 
 const OWNERSHIP: { id: OwnershipFilter; label: string }[] = [
@@ -76,6 +78,8 @@ export function SetExplorerPage() {
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [focusId, setFocusId] = useState<string | null>(null);
+  const [inspect, setInspect] = useState(false);
+  const narrow = useNarrowViewport();
 
   const load = useCallback(
     async (mode: "initial" | "refresh" = "refresh") => {
@@ -109,6 +113,7 @@ export function SetExplorerPage() {
     setFilters(EMPTY_FILTERS);
     setSelected(new Set());
     setSelecting(false);
+    setInspect(false);
     setFocusId(null);
     setStatus(null);
     setActionError(null);
@@ -118,16 +123,25 @@ export function SetExplorerPage() {
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
+      if (selecting && narrow && inspect) {
+        setInspect(false);
+        return;
+      }
       if (selecting) {
         setSelecting(false);
         setSelected(new Set());
+        setInspect(false);
       } else {
         setFocusId(null);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selecting]);
+  }, [selecting, narrow, inspect]);
+
+  useEffect(() => {
+    if (selected.size !== 1 && selected.size !== 2) setInspect(false);
+  }, [selected.size]);
 
   const copiesByCollectible = useMemo(() => {
     const map = new Map<string, UserCopy[]>();
@@ -163,17 +177,26 @@ export function SetExplorerPage() {
   const selectedEntries = entries.filter((entry) => selected.has(entry.collectible.id));
   const focusEntry = focusId ? (entryById.get(focusId) ?? null) : null;
 
-  let detailMode: "single" | "compare" | "bulk" | null = null;
-  let detailEntries: ExplorerEntry[] = [];
-  if (selecting && selectedEntries.length === 2) {
-    detailMode = "compare";
-    detailEntries = selectedEntries;
-  } else if (selecting && selectedEntries.length === 1) {
-    detailMode = "single";
-    detailEntries = selectedEntries;
-  } else if (!selecting && focusEntry) {
-    detailMode = "single";
-    detailEntries = [focusEntry];
+  const detail = explorerDetail({
+    selecting,
+    narrow,
+    inspect,
+    selected: selectedEntries,
+    focus: focusEntry,
+  });
+
+  function closeDetail() {
+    if (!selecting) {
+      setFocusId(null);
+      return;
+    }
+    if (narrow) {
+      setInspect(false);
+      return;
+    }
+    setInspect(false);
+    setSelecting(false);
+    setSelected(new Set());
   }
 
   async function run(task: () => Promise<void>) {
@@ -361,7 +384,7 @@ export function SetExplorerPage() {
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
 
   return (
-    <div className={`explorer ${detailMode ? "has-detail" : ""} ${detailMode === "compare" ? "is-compare" : ""}`}>
+    <div className={`explorer ${detail ? "has-detail" : ""} ${detail?.mode === "compare" ? "is-compare" : ""}`}>
       <div className="explorer-main page-stack">
         <div className="explorer-heading">
           <div>
@@ -482,6 +505,7 @@ export function SetExplorerPage() {
             onClick={() => {
               setSelecting((current) => !current);
               setSelected(new Set());
+              setInspect(false);
               if (!selecting) setFocusId(null);
             }}
           >
@@ -750,6 +774,16 @@ export function SetExplorerPage() {
         {selecting && selected.size > 0 && (
           <div className="bulk-bar">
             <strong>{selected.size} selected</strong>
+            {narrow && selected.size === 1 && (
+              <button type="button" className="secondary small" onClick={() => setInspect(true)}>
+                Card details
+              </button>
+            )}
+            {narrow && selected.size === 2 && (
+              <button type="button" className="secondary small" onClick={() => setInspect(true)}>
+                Compare
+              </button>
+            )}
             <button type="button" className="primary small" disabled={busy} onClick={() => void markOwned()}>
               Mark owned
             </button>
@@ -811,30 +845,16 @@ export function SetExplorerPage() {
         )}
       </div>
 
-      {detailMode && (
+      {detail && (
         <>
-          <button
-            type="button"
-            className="detail-backdrop"
-            aria-label="Close card details"
-            onClick={() => {
-              if (selecting) {
-                setSelecting(false);
-                setSelected(new Set());
-              } else setFocusId(null);
-            }}
-          />
+          <button type="button" className="detail-backdrop" aria-label="Close card details" onClick={closeDetail} />
           <CardDetail
-            entries={detailEntries}
-            mode={detailMode}
+            entries={detail.entries}
+            mode={detail.mode}
+            modal={narrow}
             selectedCount={selected.size}
             busy={busy}
-            onClose={() => {
-              if (selecting) {
-                setSelecting(false);
-                setSelected(new Set());
-              } else setFocusId(null);
-            }}
+            onClose={closeDetail}
             onAdd={(variantId) =>
               void run(async () => {
                 await api.addCopy(variantId, "KEEP");

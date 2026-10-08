@@ -781,6 +781,10 @@ select {
   box-shadow: var(--shadow);
 }
 
+.detail-panel:focus {
+  outline: none;
+}
+
 .detail-panel .card-face {
   width: min(180px, 100%);
 }
@@ -1078,6 +1082,7 @@ select {
   }
 }
 
+/* Keep this breakpoint equal to NARROW_EXPLORER_QUERY in explorerDetail.ts. */
 @media (max-width: 959px) {
   .detail-backdrop {
     display: block;
