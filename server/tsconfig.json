@@ -23,6 +23,7 @@
     "tests/domain/conditionSummary.test.ts",
     "tests/domain/dashboardSets.test.ts",
     "tests/domain/publicShareBrowse.test.ts",
-    "tests/domain/exchangeQueue.test.ts"
+    "tests/domain/exchangeQueue.test.ts",
+    "tests/domain/explorerSelection.test.ts"
   ]
 }

@@ -121,14 +121,14 @@ own, so the cards stay on screen. The owned, missing, and extras counts on
 the set open that list. A card shows its condition when every copy
 agrees. Copies that differ say Mixed. A card with no condition note stays
 unmarked, and a public page still does not show condition. Sort, switch between grid and list, and
-select cards. **Mark owned** adds one Keep copy for each selected card you
+select cards. **Select these** chooses the cards on screen. **Mark owned** adds one Keep copy for each selected card you
 do not already own. **Add a copy** always adds another physical copy.
 **Offer duplicates** keeps one copy of each selected card — the one already
 marked Keep, or else the oldest — and marks the other free copies for trade.
 **All copies** changes every free copy, including the one you are keeping.
 A copy reserved for an open exchange cannot be changed. On a wide screen,
 one selected card opens beside the grid and two selected cards compare
-side by side. On a phone, the set title and progress sit closer together so the first card's name, number, and ownership stay above the navigation. Add sits on the card, and Share stays on the result line until it is opened. Selecting cards leaves the grid open. The bar stays on one row:
+side by side. On a phone, the set title and progress sit closer together, the sample notice is left to home and to a wide screen, and the card face is a little shorter, so the first card's name, number, and ownership stay above the navigation. Add sits on the card, and Share stays on the result line until it is opened. Selecting cards leaves the grid open. The bar stays on one row:
 how many are selected, Mark owned, and More for the other actions. The
 first selected card scrolls up so it sits above that bar. Use **Details**
 or **Compare** on the bar when you want that panel, and closing

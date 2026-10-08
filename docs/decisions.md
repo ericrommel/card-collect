@@ -152,7 +152,7 @@ The lists behind the home counts were plain rows of names. They now use the same
 
 ## 2026-10-08 — The phone filter list scrolls on its own
 
-Opening filters on a phone used to stack every choice down the page, so the cards moved under the navigation. The filter list now scrolls inside itself. While it is open, the sample notice and the progress summary step aside, and they come back when the list closes. The cards stay on screen. A wide screen is unchanged.
+Opening filters on a phone used to stack every choice down the page, so the cards moved under the navigation. The filter list now scrolls inside itself. While it is open, the progress summary steps aside, and it comes back when the list closes. The cards stay on screen. A wide screen is unchanged.
 
 ## 2026-10-08 — A JPEG photo ends at its end marker
 
@@ -161,6 +161,14 @@ A photo could carry extra bytes after the JPEG end marker, and those bytes were 
 ## 2026-10-08 — A match shows the condition of the copy it would use
 
 The condition note lived on the exchange, after someone had already proposed. A match now shows it first. The copy is the oldest free one a new proposal would reserve, unless this pair already has that card set aside, in which case the reserved copy is shown. A copy reserved for someone else is left out. The score does not change, and the response still does not include the copy id. A public page still does not show condition.
+
+## 2026-10-08 — The first phone card stays above the navigation
+
+A full-width card, with the sample notice and a filter sentence above it, put the first card's name under the navigation. On a phone the set page no longer repeats that sample notice, and the card face is a little shorter, so the name, number, and badges fit. Progress stays. The notice stays on home and on a wide screen. A wide screen still uses the full card face.
+
+## 2026-10-08 — Select these chooses the cards on screen
+
+Marking a group of cards meant turning Select on, then choosing Select visible, then Mark owned. Select these does the first two for the cards on screen. Mark owned is still its own step, so a long list is not added by one tap. Cards you already selected stay selected when you add another group. Unselect visible clears only the cards on screen.
 
 ## Not done, on purpose
 
