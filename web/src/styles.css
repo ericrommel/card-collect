@@ -675,6 +675,16 @@ select {
   align-items: center;
 }
 
+/* Stays under the header so a long set can be searched without returning to the top. */
+.explorer-toolbar {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 4;
+  padding-bottom: 0.35rem;
+  background: var(--bg);
+  box-shadow: 0 1px 0 var(--border);
+}
+
 .result-row .share-disclosure {
   flex: 1 0 100%;
   order: -1;
@@ -708,6 +718,7 @@ select {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
+  scroll-margin-top: calc(var(--header-h) + 4.25rem);
 }
 
 .filter-panel fieldset {
@@ -1543,6 +1554,8 @@ select {
     max-height: 6.5rem;
     overflow: auto;
     overscroll-behavior: contain;
+    scroll-margin-top: calc(var(--header-h) + 8rem);
+    scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
   }
 
   .explorer .progress-stats {
