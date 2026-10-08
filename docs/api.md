@@ -25,7 +25,10 @@ A body that is not JSON is `400` with `{ "error": "Invalid request" }` and no de
 Also sets an httpOnly `cards_collect_session` cookie (SameSite=Lax, 7
 days, `Secure` in production). The JSON does **not** include the JWT.
 
-`password` must be 8-200 characters. Returns `409` if the email is already
+`password` must be 8-200 characters. `displayName` is trimmed and must be
+1-60 characters. A name containing `@`, `http://`, `https://`, or `www.` is
+`400` with `{ "error": "Use a name that isn't an email address or a link." }`
+and does not create the account. Returns `409` if the email is already
 registered.
 
 Send `X-Auth-Mode: bearer` to also receive `"token"` in the JSON. That
@@ -69,9 +72,12 @@ A cookie call without the app origin is `403`.
 { "display_name": "Alice" }
 ```
 
-→ `200 { "user": {...} }`. The name is trimmed, 1-60 characters. This does
-not end the session. Unknown fields, including `email` or a password, are
-`400`. The public collection page reads this name when it is opened.
+→ `200 { "user": {...} }`. The name is trimmed, 1-60 characters. A name
+containing `@`, `http://`, `https://`, or `www.` is `400` with
+`{ "error": "Use a name that isn't an email address or a link." }`. The
+saved name and the session stay as they were. This does not end the
+session. Unknown fields, including `email` or a password, are `400`. The
+public collection page reads this name when it is opened.
 
 ### `GET /auth/session`
 

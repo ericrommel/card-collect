@@ -407,7 +407,11 @@ Matches and exchanges identify the other person by `collector.ref` /
 token (`lib/opaqueId.ts`). It is not the account id, it is not accepted as
 a login, and public share pages do not include it. Guessing one is not
 practical (144 bits). A ref that does not exist and a request for an
-exchange you are not part of are both **404**.
+exchange you are not part of are both **404**. The name beside that ref is
+the display name. Register and the account page refuse a name that contains
+`@`, `http://`, `https://`, or `www.`, because matches, exchanges, and a
+shared collection show it. A name saved before that check stays until the
+person changes it.
 
 ### Condition
 

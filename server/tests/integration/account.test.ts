@@ -216,4 +216,30 @@ describe("display name", () => {
       (await request(app).get("/api/auth/me").set("Authorization", `Bearer ${account.token}`)).body.user.email,
     ).toBe(account.email);
   });
+
+  it("refuses a name that is an email or a link and leaves the account unchanged", async () => {
+    const account = await registerBearer();
+    const message = "Use a name that isn't an email address or a link.";
+    for (const display_name of ["  a@b.com  ", "hello@there", "https://x.test", "www.cards.test"]) {
+      const rejected = await request(app)
+        .patch("/api/auth/me")
+        .set("Authorization", `Bearer ${account.token}`)
+        .send({ display_name });
+      expect(rejected.status).toBe(400);
+      expect(rejected.body.error).toBe(message);
+    }
+
+    const me = await request(app).get("/api/auth/me").set("Authorization", `Bearer ${account.token}`);
+    expect(me.status).toBe(200);
+    expect(me.body.user.display_name).toBe("Account Tester");
+
+    const email = `contact-name-${Date.now()}-${sequence}@example.com`;
+    const created = await request(app)
+      .post("/api/auth/register")
+      .set("X-Auth-Mode", "bearer")
+      .send({ email, password: "password123", displayName: email });
+    expect(created.status).toBe(400);
+    expect(created.body.error).toBe(message);
+    expect(await prisma.user.findUnique({ where: { email } })).toBeNull();
+  });
 });

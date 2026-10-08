@@ -85,10 +85,13 @@ export function LoginPage() {
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           {mode === "register" && (
-            <label>
-              Display name
-              <input required maxLength={60} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-            </label>
+            <>
+              <label>
+                Display name
+                <input required maxLength={60} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+              </label>
+              <p className="muted">Other collectors can see this name. Don't use an email address or a link.</p>
+            </>
           )}
           <label>
             Password

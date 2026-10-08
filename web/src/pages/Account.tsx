@@ -94,6 +94,7 @@ export function AccountPage() {
               required
             />
           </label>
+          <p className="muted">This name can appear on a shared page. Don't use an email address or a link.</p>
           {nameError && (
             <p className="error" role="alert">
               {nameError}
