@@ -182,6 +182,10 @@ The search box on a phone sits below the sets. A result then opened under the bo
 
 The phone set page puts the set code on the same line as the title. That rule also caught the Add a card instructions, so they continued on from the title. The code is now the only text that sits beside the title. The instructions stay a paragraph under it.
 
+## 2026-10-08 — Account fields clear the navigation on a phone
+
+The password fields sit at the bottom of the account page. On a phone the next field opened underneath the navigation, and focusing it left it there. Focusing a field or the save button now moves it above that bar. A wide screen has no bottom bar.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
