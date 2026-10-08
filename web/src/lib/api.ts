@@ -191,6 +191,8 @@ export interface ShareVisibility {
 export interface ShareSettings {
   enabled: boolean;
   share_id: string;
+  expires_at: string | null;
+  link_lifetime_days: number;
   visibility: ShareVisibility;
 }
 
@@ -485,6 +487,10 @@ export function updateShareSettings(
 
 export function regenerateShare(setId: string) {
   return apiFetch<{ share: ShareSettings }>(`/my/sets/${setId}/share/regenerate`, { method: "POST" });
+}
+
+export function renewShare(setId: string) {
+  return apiFetch<{ share: ShareSettings }>(`/my/sets/${setId}/share/renew`, { method: "POST" });
 }
 
 // ---- Public (no auth) ----

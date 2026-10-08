@@ -15,8 +15,8 @@ publicSharingRouter.get(
   "/:shareId",
   asyncHandler(async (req, res) => {
     const view = await getPublicShareView(req.params.shareId);
-    // A never-created, disabled, and revoked shareId are all indistinguishable
-    // 404s — a client can never learn which case it hit.
+    // A never-created, disabled, expired, and revoked shareId are all
+    // indistinguishable 404s — a client can never learn which case it hit.
     if (!view) throw ApiError.notFound("This collection isn't shared");
     res.json(view);
   }),

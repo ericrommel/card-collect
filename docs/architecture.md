@@ -423,11 +423,13 @@ for one Set — `modules/sharing/`. Design decisions:
   public link is just overwriting `shareId` on the same row, so the
   owner's visibility preferences survive a rotation. It also means the
   public URL never reveals or depends on an internal database id.
-- **`enabled` is the only thing a public request honors.** Disabling
-  ("revoke") just flips `enabled: false`; regenerating rotates `shareId`
-  without touching `enabled`. A disabled row's old `shareId` and a
-  `shareId` that was never created are **both** a 404 from
-  `GET /api/public/collections/:shareId` — the same "don't let a
+- **A public request honors `enabled` and `expiresAt`.** Turning sharing
+  on starts a 30-day window. Disabling clears that time and flips
+  `enabled: false`. Regenerating rotates `shareId` and, when sharing is
+  on, starts a new window. Renewing keeps `shareId` and starts a new
+  window from that moment. A disabled row, an expired row, an old
+  `shareId`, and a `shareId` that was never created are **all** a 404
+  from `GET /api/public/collections/:shareId` — the same "don't let a
   response distinguish revoked from never-existed" rule already used for
   `UserCopy` ownership checks (see Authentication / authorization below),
   now applied to a link an attacker might be guessing or replaying.
@@ -465,9 +467,9 @@ for one Set — `modules/sharing/`. Design decisions:
   A crawler that does not run JavaScript still receives that tag with the
   generic page, not a collection. The public page also sets the tag after
   it renders. Sharing means "anyone with the link," not "publicly listed."
-  See the risk in [risks.md](risks.md) about link possession being the
-  only access control (no expiry, no per-viewer restriction). A production
-  host should keep that header when it serves the built files.
+  See the risk in [risks.md](risks.md): during those 30 days, link
+  possession is still the only access control, and there is no view log.
+  A production host should keep that header when it serves the built files.
 
 ## How a future mobile client fits
 

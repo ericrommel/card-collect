@@ -449,38 +449,41 @@ is evidence it is needed — premature for V0's scale.
 
 ---
 
-## P2 — Public Share Links Have No Expiry or Access Log (V0.1)
+## P2 — Public Share Links Have No Access Log (V0.1)
 
 **Status:** OPEN
 
-Collection sharing (V0.1) grants access to anyone who has the link — there
-is no expiry, no per-viewer authentication, and no record of who has
-viewed a share. This is deliberate for V0.1 (matches the milestone's
-"normal shareable URL" scope, no social-platform integration), but it
-means:
+A public link works for 30 days after the owner turns it on, renews it,
+or regenerates it. Anyone who has the link during that window can read
+the fields the owner left visible. There is still no per-viewer
+authentication and no record of who viewed the share.
 
-- a link forwarded outside the intended audience keeps working until the
-  owner notices and hits "Regenerate";
-- there's no way for the owner to see whether/how many times a link has
-  been viewed, so a leaked link may go unnoticed indefinitely;
-- for a minor's account, a persistent, unexpiring, unlogged link is a
-  sharper version of the general "oversharing personal information" risk
-  in the P0 Child Safety register above, even though the shared fields
-  themselves (owned/missing/duplicate/trade/give-away card lists,
-  completion %) are not personal contact information.
+That means:
 
-### Initial mitigations already in place
+- a link forwarded outside the intended audience keeps working until it
+  expires, or until the owner disables or regenerates it;
+- there's no way for the owner to see whether a link has been viewed, so
+  a leak during the window may go unnoticed;
+- for a minor's account, an unlogged link is still a sharper version of
+  the general "oversharing personal information" risk in the P0 Child
+  Safety register above, even though the shared fields themselves
+  (owned/missing/duplicate/trade/give-away card lists, completion %) are
+  not personal contact information.
 
+### Mitigations already in place
+
+- the link stops working after 30 days. Renewing keeps the same address
+  and starts another 30 days from that moment. Regenerating invalidates
+  the old address immediately and starts a new window. Disabling clears
+  the end time. An expired link is the same 404 as one that never existed;
 - shared fields are strictly limited to non-identifying collection data —
   no email, no internal id, no location, no age (see
   [architecture.md](architecture.md#collection-sharing-v01));
 - the HTML shell is `noindex, nofollow`, including for a crawler that does
-  not run JavaScript, and the public page sets the same tag after it renders;
-- regeneration is one click and immediately invalidates the old link.
+  not run JavaScript, and the public page sets the same tag after it renders.
 
 ### Future investigation
 
-- optional link expiry (time-based or view-count-based);
 - a lightweight access log visible to the owner ("last viewed 2 days ago")
   without identifying the viewer;
 - guardian-mediated sharing controls for accounts flagged as minors, once

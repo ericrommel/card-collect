@@ -458,6 +458,8 @@ for the design rationale.
   "share": {
     "enabled": true,
     "share_id": "H1aiHFVjz0XYZ0zVZw95xZG0",
+    "expires_at": "2026-11-07T08:00:00.000Z",
+    "link_lifetime_days": 30,
     "visibility": {
       "completion": true,
       "owned": true,
@@ -472,7 +474,9 @@ for the design rationale.
 
 `share_id` is always returned once a row exists, even while `enabled` is
 `false` — this is the owner's own view of their settings, not the public
-endpoint, so there's nothing to hide from them here.
+endpoint, so there's nothing to hide from them here. `expires_at` is an
+ISO time while sharing is on, and `null` while it is off. The public
+response never includes either field.
 
 ### `PUT /my/sets/:id/share`
 
@@ -484,14 +488,24 @@ Both fields optional; `visibility` only needs the keys you're changing.
 First call for a given set creates the row (with a fresh `share_id` and all
 visibility flags defaulting to `true`); later calls update it in place —
 toggling `enabled` off and back on **keeps the same `share_id`** (a
-"disable" is a pause, not a reset). → `200 { "share": {...} }` (same shape
-as `GET`), or `404` if the set doesn't exist.
+"disable" is a pause, not a reset). Turning sharing on starts a 30-day
+window when the link is not already open. Turning it off sets
+`expires_at` to `null`. A visibility change does not move the end time.
+→ `200 { "share": {...} }` (same shape as `GET`), or `404` if the set
+doesn't exist.
 
 ### `POST /my/sets/:id/share/regenerate`
 
 No body. Rotates `share_id` to a new random token, invalidating the
 previous public link immediately. Preserves `enabled` and all visibility
-flags. → `200 { "share": {...} }`.
+flags. When sharing is on, the new link gets a new 30-day window.
+→ `200 { "share": {...} }`.
+
+### `POST /my/sets/:id/share/renew`
+
+No body. Keeps `share_id` and sets `expires_at` to 30 days from now.
+Sharing must already be on, including when the previous window has
+passed. → `200 { "share": {...} }`, or `409` if sharing is off.
 
 ## Public collections (no auth)
 
@@ -518,9 +532,9 @@ Every field except `collector` and `set` is **omitted entirely** (not
 treat an absent key as "the owner chose not to show this," not as an
 empty list.
 
-→ `404` if `shareId` was never issued, belongs to a disabled/revoked share,
-or doesn't exist — these three cases are indistinguishable by design (see
-architecture.md). No email, internal user id, location, or any field
+→ `404` if `shareId` was never issued, belongs to a disabled, expired, or
+revoked share, or doesn't exist — these cases are indistinguishable by
+design (see architecture.md). No email, internal user id, location, or any field
 outside the shape above is ever present.
 
 Only `GET` is defined on this path; `PUT`/`POST`/`DELETE` all 404.

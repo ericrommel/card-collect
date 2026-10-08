@@ -2,7 +2,14 @@ import { Router } from "express";
 import { z } from "zod";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
-import { getOwnShareSettings, regenerateShareId, updateShareSettings, type OwnShareSettings } from "./service.js";
+import {
+  SHARE_LINK_LIFETIME_DAYS,
+  getOwnShareSettings,
+  regenerateShareId,
+  renewShareLink,
+  updateShareSettings,
+  type OwnShareSettings,
+} from "./service.js";
 
 /**
  * Authenticated "my share settings" routes, mounted at /api/my/sets so
@@ -54,6 +61,8 @@ function toJson(settings: OwnShareSettings) {
   return {
     enabled: settings.enabled,
     share_id: settings.shareId,
+    expires_at: settings.expiresAt ? settings.expiresAt.toISOString() : null,
+    link_lifetime_days: SHARE_LINK_LIFETIME_DAYS,
     visibility: {
       completion: settings.visibility.showCompletion,
       owned: settings.visibility.showOwned,
@@ -89,6 +98,14 @@ mySharingRouter.post(
   "/:id/share/regenerate",
   asyncHandler(async (req, res) => {
     const settings = await regenerateShareId(userId(req), req.params.id);
+    res.json({ share: toJson(settings) });
+  }),
+);
+
+mySharingRouter.post(
+  "/:id/share/renew",
+  asyncHandler(async (req, res) => {
+    const settings = await renewShareLink(userId(req), req.params.id);
     res.json({ share: toJson(settings) });
   }),
 );
