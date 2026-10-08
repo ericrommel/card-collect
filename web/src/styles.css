@@ -1079,6 +1079,13 @@ select {
   min-width: 0;
 }
 
+.offer-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
 .offer-grid .card-face {
   width: 100%;
   max-width: 104px;
@@ -1763,6 +1770,21 @@ a.primary {
 
   .public-grid .card-face-sm {
     width: 84px;
+  }
+
+  .offer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .offer-grid li {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .offer-grid .card-face {
+    width: 72px;
+    max-width: 72px;
   }
 
   .add-confirm-inline:not(.is-idle) {

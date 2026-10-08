@@ -349,7 +349,9 @@ A match is a suggestion. An exchange is the agreement. `modules/exchanges/`
 lets the signed-in user turn one match into a proposal the other collector
 can accept, decline, or later confirm. There is no message field, no
 email, and no location: the product does not become a way for two people
-to contact each other.
+to contact each other. The open list in the web app puts exchanges that
+need you first. That uses the same rule as the home count. The API list
+stays in `updatedAt` order.
 
 ### Why this lifecycle
 

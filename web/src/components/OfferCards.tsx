@@ -28,12 +28,14 @@ export function OfferCards({
         {visible.map((item, index) => (
           <li key={item.id ?? `${item.number}-${item.name}-${index}`}>
             <CardFace number={item.number} name={item.name} rarity={item.rarity} />
-            <span className="tile-name">{item.name}</span>
-            <span className="tile-sub">
-              {item.number}
-              {item.rarity ? ` · ${rarityLabel(item.rarity)}` : ""}
+            <span className="offer-copy">
+              <span className="tile-name">{item.name}</span>
+              <span className="tile-sub">
+                {item.number}
+                {item.rarity ? ` · ${rarityLabel(item.rarity)}` : ""}
+              </span>
+              {showCondition && <span className="badge small">{item.condition ?? "Not set"}</span>}
             </span>
-            {showCondition && <span className="badge small">{item.condition ?? "Not set"}</span>}
           </li>
         ))}
       </ul>
