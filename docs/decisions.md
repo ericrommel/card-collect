@@ -120,6 +120,10 @@ Selecting cards on a phone used to pin every bulk action to the bottom, and that
 
 On a phone, the set title, progress, and filters were tall enough that the first card's name started under the bottom navigation. Those blocks sit closer together. Share stays on the result line until it is opened, and Add sits on the card art instead of under the name. The card's name, number, and ownership stay above the navigation. A wide screen keeps Add under the card, the roomier spacing, and Share as a full-width control above the card count.
 
+## 2026-10-08 — Home leads with the sets you have started
+
+On a phone, home showed the search box and every count before any set, so the collections started under the navigation. Home now puts the sets under the greeting. A set you have started comes before one you have not, and the one with more owned cards comes first. On a phone each set is a row, and its shortcuts wrap instead of being cut off. A wide screen keeps the larger covers and the same order. Search and the counts stay on the page. The dashboard API list is still in release order.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
