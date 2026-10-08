@@ -125,7 +125,7 @@ select cards. **Select these** chooses the cards on screen. **Mark owned** adds 
 do not already own. **Add a copy** always adds another physical copy.
 **Offer duplicates** asks first, then keeps one copy of each selected card — the one already
 marked Keep, or else the oldest — and marks the other free copies for trade. Cancel leaves the cards as they are.
-**All copies** changes every free copy, including the one you are keeping.
+**All copies** asks first, then changes every free copy, including the one you are keeping. The condition list asks the same way. Cancel leaves the cards as they are.
 A copy reserved for an open exchange cannot be changed. On a wide screen,
 one selected card opens beside the grid and two selected cards compare
 side by side. On a phone, the set title and progress sit closer together, the sample notice is left to home and to a wide screen, and the card face is a little shorter, so the first card's name, number, and ownership stay above the navigation. Add sits on the card, and Share stays on the result line until it is opened. Selecting cards leaves the grid open. The bar stays on one row:

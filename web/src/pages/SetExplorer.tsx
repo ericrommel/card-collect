@@ -28,6 +28,7 @@ import {
   type OwnershipFilter,
 } from "../lib/explorerQuery";
 import { conditionSummary } from "../lib/conditionSummary";
+import { bulkAvailabilityConfirm, bulkConditionConfirm } from "../lib/bulkConfirm";
 import { duplicateOfferConfirm, duplicateOfferStatus, planDuplicateOffers } from "../lib/duplicateOffers";
 import { explorerDetail } from "../lib/explorerDetail";
 import { toggleVisibleSelection } from "../lib/explorerSelection";
@@ -416,6 +417,7 @@ export function SetExplorerPage() {
       setActionError("Those copies are in an exchange, or you don't own them yet.");
       return;
     }
+    if (!window.confirm(bulkAvailabilityConfirm(ids.length, AVAILABILITY_LABEL[availability]))) return;
     await run(async () => {
       let updated = 0;
       for (let index = 0; index < ids.length; index += BULK_CHUNK) {
@@ -435,6 +437,7 @@ export function SetExplorerPage() {
       setActionError("Those copies are in an exchange, or you don't own them yet.");
       return;
     }
+    if (!window.confirm(bulkConditionConfirm(ids.length, condition))) return;
     await run(async () => {
       let updated = 0;
       for (let index = 0; index < ids.length; index += BULK_CHUNK) {
