@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { verifyToken } from "../modules/auth/jwt.js";
-import { isAllowedBrowserOrigin, readSessionCookie } from "../modules/auth/sessionCookie.js";
+import { isAllowedBrowserOrigin, isAllowedMutationOrigin, readSessionCookie } from "../modules/auth/sessionCookie.js";
 import { ApiError } from "./apiError.js";
 
 export interface AuthenticatedRequest extends Request {
@@ -30,12 +30,22 @@ export function optionalUserId(req: Request): string | null {
   return verifyToken(token)?.sub ?? null;
 }
 
+function isUnsafe(method: string): boolean {
+  return method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
+}
+
 export function requireAuth(req: Request, _res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   const viaCookie = header === undefined && readSessionCookie(req) !== undefined;
+  const origin = originOf(req);
 
-  if (viaCookie && !isAllowedBrowserOrigin(originOf(req))) {
+  if (viaCookie && !isAllowedBrowserOrigin(origin)) {
     throw ApiError.forbidden("This session cannot be used from that origin");
+  }
+  // Browsers send Origin on POST. A cookie write with no Origin is rejected
+  // so the missing-Origin exception used for safe reads cannot change state.
+  if (viaCookie && isUnsafe(req.method) && !isAllowedMutationOrigin(origin)) {
+    throw ApiError.forbidden("Open Cards Collect and try that again.");
   }
 
   const userId = optionalUserId(req);

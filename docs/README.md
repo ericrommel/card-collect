@@ -2,7 +2,7 @@
 
 ## Where the product is
 
-Implemented: accounts and httpOnly sessions, a collection dashboard, a visual set explorer with bulk edits, manual condition, Trade Score matches, trades and donations with reservation and dual confirmation, and revocable public sharing.
+Implemented: accounts and httpOnly sessions (cookie writes require the app origin; sign-in and proposals are rate-limited), a collection dashboard, a visual set explorer with bulk edits, manual condition, Trade Score matches, trades and donations with reservation and dual confirmation, and revocable public sharing.
 
 Sample data only: Starter Voyage (synthetic, 24 cards) and Harbor Atlas (original, 396 cards). These are not official sets. Card faces are generated patterns.
 

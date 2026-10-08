@@ -4,6 +4,8 @@ import { prisma } from "../../db.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { ApiError } from "../../middleware/apiError.js";
 import { optionalUserId, requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
+import { requireAppOrigin } from "../../middleware/requireAppOrigin.js";
+import { createHitWindow } from "../../lib/hitWindow.js";
 import { generateOpaqueId } from "../../lib/opaqueId.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { signToken } from "./jwt.js";
@@ -49,10 +51,35 @@ function issueSession(
   });
 }
 
+/** Shared by register and login so guessing either one spends the same budget. */
+export const authHitWindow = createHitWindow(60_000);
+
+export function authAttemptLimit(): number {
+  if (process.env.AUTH_RATE_LIMIT) {
+    const parsed = Number(process.env.AUTH_RATE_LIMIT);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  }
+  return process.env.VITEST ? 10_000 : 20;
+}
+
+function limitAuthAttempts(
+  req: import("express").Request,
+  res: import("express").Response,
+  next: import("express").NextFunction,
+) {
+  if (authHitWindow.tooMany(`auth:${req.ip ?? "unknown"}`, authAttemptLimit())) {
+    res.setHeader("Retry-After", "60");
+    throw ApiError.tooManyRequests("Too many attempts. Wait a minute and try again.");
+  }
+  next();
+}
+
 export const authRouter = Router();
 
 authRouter.post(
   "/register",
+  requireAppOrigin,
+  limitAuthAttempts,
   asyncHandler(async (req, res) => {
     const body = registerSchema.parse(req.body);
 
@@ -77,6 +104,8 @@ authRouter.post(
 
 authRouter.post(
   "/login",
+  requireAppOrigin,
+  limitAuthAttempts,
   asyncHandler(async (req, res) => {
     const body = loginSchema.parse(req.body);
 

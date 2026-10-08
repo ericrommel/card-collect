@@ -55,6 +55,42 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
+describe("exchange reservation races", () => {
+  it("keeps one physical copy out of two proposals at the same time", async () => {
+    const { setId, variantIds } = await createTestSet(2);
+    const stamp = Date.now();
+    const alice = await registerUser(`alice-race-${stamp}@example.com`, "Alice Race");
+    const bob = await registerUser(`bob-race-${stamp}@example.com`, "Bob Race");
+    // Alice offers c1 and is missing c2. Bob offers c2 and is missing c1.
+    // Each side has a single eligible copy, so both proposals fight for the same rows.
+    await addCopy(alice.token, variantIds.c1, "TRADE", "Near Mint");
+    await addCopy(bob.token, variantIds.c2, "TRADE", "Good");
+
+    const matches = await request(app).get(`/api/my/matches?setId=${setId}`).set(auth(alice.token));
+    expect(matches.status).toBe(200);
+    const trade = (matches.body.matches as Array<{ type: string; collector: { ref: string } }>).find(
+      (match) => match.type === "MUTUAL_TRADE",
+    );
+    expect(trade?.collector.ref).toBeTruthy();
+
+    const body = { set_id: setId, collector_ref: trade!.collector.ref, type: "MUTUAL_TRADE" };
+    const [first, second] = await Promise.all([
+      request(app).post("/api/my/exchanges").set(auth(alice.token)).send(body),
+      request(app).post("/api/my/exchanges").set(auth(alice.token)).send(body),
+    ]);
+    const statuses = [first.status, second.status].sort((a, b) => a - b);
+    expect(statuses).toEqual([201, 409]);
+
+    const open = await prisma.exchange.findMany({ where: { setId, status: "PROPOSED" } });
+    expect(open).toHaveLength(1);
+    const reserved = await prisma.userCopy.findMany({
+      where: { reservedByExchangeId: { not: null }, variant: { collectible: { setId } } },
+    });
+    expect(reserved.length).toBeGreaterThan(0);
+    expect(new Set(reserved.map((copy) => copy.reservedByExchangeId))).toEqual(new Set([open[0].id]));
+  });
+});
+
 describe("exchanges", () => {
   it("requires authentication", async () => {
     expect((await request(app).get("/api/my/exchanges")).status).toBe(401);

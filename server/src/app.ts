@@ -13,8 +13,19 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 export function createApp() {
   const app = express();
+  app.disable("x-powered-by");
 
   app.use(cors({ origin: env.corsOrigin, credentials: true }));
+  // The API does not serve the web app. These headers apply to JSON responses.
+  // trust proxy stays off so req.ip is the socket address, not X-Forwarded-For.
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
+    res.setHeader("Cache-Control", "no-store");
+    next();
+  });
   app.use(express.json({ limit: "100kb" }));
 
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));

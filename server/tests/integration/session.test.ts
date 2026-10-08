@@ -4,6 +4,7 @@ import { createApp } from "../../src/app.js";
 import { prisma } from "../../src/db.js";
 
 const app = createApp();
+const APP_ORIGIN = "http://localhost:5173";
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -14,8 +15,20 @@ describe("web session cookie", () => {
     const email = `cookie-${Date.now()}@example.com`;
     const agent = request.agent(app);
 
+    const missingOrigin = await request(app)
+      .post("/api/auth/register")
+      .send({ email, password: "password123", displayName: "Cookie User" });
+    expect(missingOrigin.status).toBe(403);
+
+    const foreignOrigin = await request(app)
+      .post("/api/auth/register")
+      .set("Origin", "https://evil.example")
+      .send({ email, password: "password123", displayName: "Cookie User" });
+    expect(foreignOrigin.status).toBe(403);
+
     const registered = await agent
       .post("/api/auth/register")
+      .set("Origin", APP_ORIGIN)
       .send({ email, password: "password123", displayName: "Cookie User" });
     expect(registered.status).toBe(201);
     expect(registered.body.token).toBeUndefined();
@@ -44,7 +57,11 @@ describe("web session cookie", () => {
     const foreign = await agent.get("/api/auth/me").set("Origin", "https://evil.example");
     expect(foreign.status).toBe(403);
 
-    const loggedOut = await agent.post("/api/auth/logout");
+    const blockedLogout = await agent.post("/api/auth/logout");
+    expect(blockedLogout.status).toBe(403);
+    expect((await agent.get("/api/auth/me")).status).toBe(200);
+
+    const loggedOut = await agent.post("/api/auth/logout").set("Origin", APP_ORIGIN);
     expect(loggedOut.status).toBe(204);
     expect((await agent.get("/api/auth/me")).status).toBe(401);
   });
