@@ -226,6 +226,10 @@ Recently added cards and the short exchange list on home were text. Each recent 
 
 The set list used a colored block and a code. Each set now shows one card from that set: the one you own with the lowest number, or the first card in the set when you have not started it. The drawing is the same sample mark as the rest of the app, not a photo. The set code stays in the text.
 
+## 2026-10-08 — A match keeps the completion change with its label
+
+On a wide screen the before and after percentages sat at the far edge of the match, away from "Your collection" and "Their collection". They now sit on the same line as that label. A phone still shows the change before the card faces.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
