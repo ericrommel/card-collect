@@ -319,6 +319,7 @@ button:disabled {
 }
 
 .form label,
+.card-search label,
 .condition-field,
 .sort-field,
 .set-switcher,
@@ -772,6 +773,41 @@ select {
 .card-face-sm {
   width: 54px;
   flex: none;
+}
+
+.card-search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.card-search input {
+  width: 100%;
+}
+
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.search-hit {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  padding: 0.35rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.search-hit:hover,
+.search-hit:focus-visible {
+  background: var(--bg);
 }
 
 .tile-name,

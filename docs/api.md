@@ -111,6 +111,19 @@ derived from the slug, not stored on the universe row.
 
 → `200 { "set": {...} }` or `404`.
 
+### `GET /catalog/search?q=<text>`
+
+`q` is optional, trimmed, and at most 80 characters. Fewer than 2
+characters returns an empty list rather than an error. A longer value is
+`400 { "error": "Invalid request" }`.
+
+→ `200 { "results": [{ "id", "number", "name", "rarity", "universeName", "set": { "id", "name", "code" } }], "truncated": false }`
+
+Matches the card name, the card number, or the set name and code. The
+closest matches come first. At most 24 rows are returned; `truncated` is
+true when more cards matched. The response does not say whether the
+caller owns a card.
+
 ### `GET /catalog/sets/:id/collectibles`
 
 → `200 { "collectibles": [{ "id", "providerId", "setId", "number", "name", "rarity", "metadata", "variants": [{ "id", "name", "isDefault" }] }] }`

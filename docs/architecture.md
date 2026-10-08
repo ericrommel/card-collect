@@ -101,7 +101,7 @@ things those modules already expose.
 
 External catalog licensing is an [open risk](risks.md#p1--catalog-data-licensing).
 `modules/catalog/catalogProvider.ts` defines a `CatalogProvider` interface
-(`listUniverses`, `listSets`, `getSet`, `listCollectibles`). Catalog routes
+(`listUniverses`, `listSets`, `getSet`, `listCollectibles`, `searchCollectibles`). Catalog routes
 read only through that interface. The dashboard also counts set membership
 directly, because it needs ids and not full card bodies. V0 ships one
 implementation, `LocalDbCatalogProvider`, backed by the seeded SQLite

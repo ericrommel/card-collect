@@ -36,6 +36,22 @@ catalogRouter.get(
   }),
 );
 
+const searchQuerySchema = z.object({
+  q: z.string().trim().max(80).optional(),
+});
+
+/** Enough to choose a card. A broader query says there are more, instead of returning the whole catalog. */
+const SEARCH_LIMIT = 24;
+
+catalogRouter.get(
+  "/search",
+  asyncHandler(async (req, res) => {
+    const { q = "" } = searchQuerySchema.parse(req.query);
+    const { hits, truncated } = await catalogProvider.searchCollectibles(q, SEARCH_LIMIT);
+    res.json({ results: hits, truncated });
+  }),
+);
+
 catalogRouter.get(
   "/sets/:id/collectibles",
   asyncHandler(async (req, res) => {

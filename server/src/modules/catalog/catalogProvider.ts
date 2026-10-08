@@ -42,9 +42,20 @@ export interface CatalogCollectible {
   variants: CatalogVariant[];
 }
 
+export interface CatalogSearchHit {
+  id: string;
+  number: string;
+  name: string;
+  rarity: string | null;
+  set: { id: string; name: string; code: string };
+  universeName: string;
+}
+
 export interface CatalogProvider {
   listUniverses(): Promise<CatalogUniverse[]>;
   listSets(universeId?: string): Promise<CatalogSet[]>;
   getSet(setId: string): Promise<CatalogSet | null>;
   listCollectibles(setId: string): Promise<CatalogCollectible[]>;
+  /** Name, number, and set text. Not ownership, price, or artwork. */
+  searchCollectibles(query: string, limit: number): Promise<{ hits: CatalogSearchHit[]; truncated: boolean }>;
 }
