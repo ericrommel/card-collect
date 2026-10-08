@@ -152,6 +152,43 @@ export function applyExplorerQuery(entries: ExplorerEntry[], filters: ExplorerFi
   return sortEntries(filterEntries(entries, filters), filters.sort);
 }
 
+const OWNERSHIP_PARAMS: OwnershipFilter[] = ["all", "owned", "missing", "duplicates"];
+const AVAILABILITY_PARAMS: AvailabilityFilter[] = ["any", "keep", "trade", "sell", "donation"];
+
+export function filtersFromSearchParams(params: URLSearchParams): ExplorerFilters {
+  const ownership = params.get("ownership");
+  const availability = params.get("availability");
+  return {
+    ...EMPTY_FILTERS,
+    search: params.get("q") ?? "",
+    ownership: OWNERSHIP_PARAMS.includes(ownership as OwnershipFilter) ? (ownership as OwnershipFilter) : "all",
+    availability: AVAILABILITY_PARAMS.includes(availability as AvailabilityFilter)
+      ? (availability as AvailabilityFilter)
+      : "any",
+  };
+}
+
+/** Only the fields a link needs. Sort and the other filters stay on the page. */
+export function searchParamsFromFilters(filters: ExplorerFilters): URLSearchParams {
+  const params = new URLSearchParams();
+  if (filters.search.trim()) params.set("q", filters.search);
+  if (filters.ownership !== "all") params.set("ownership", filters.ownership);
+  if (filters.availability !== "any") params.set("availability", filters.availability);
+  return params;
+}
+
+export function explorerLead(filters: ExplorerFilters): string | null {
+  const parts: string[] = [];
+  if (filters.ownership === "missing") parts.push("cards you don't have");
+  if (filters.ownership === "owned") parts.push("cards you have");
+  if (filters.ownership === "duplicates") parts.push("cards you have more than one of");
+  if (filters.availability === "keep") parts.push("copies you are keeping");
+  if (filters.availability === "trade") parts.push("copies for trade");
+  if (filters.availability === "sell") parts.push("copies for sale");
+  if (filters.availability === "donation") parts.push("copies you would give away");
+  return parts.length === 0 ? null : `Showing ${parts.join(" and ")}.`;
+}
+
 export function activeFilterCount(filters: ExplorerFilters): number {
   let count = 0;
   if (filters.ownership !== "all") count += 1;

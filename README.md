@@ -92,6 +92,11 @@ Match highlights are limited to sets you have already started. Overall
 completion counts every catalogued card, including sets you have not
 opened, and the page says so.
 
+The numbers on home open a list of the sets that match: missing cards,
+extras, cards you have, and copies for trade, sale, or donation. Each set
+then opens with that filter already on. A link can also search one card
+by its number.
+
 Inside a set, filter by owned, missing, duplicates, rarity, availability,
 condition, and sample metadata. Sort, switch between grid and list, and
 select cards. **Mark owned** adds one Keep copy for each selected card you

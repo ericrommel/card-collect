@@ -9,6 +9,7 @@ import { MatchesPage } from "./pages/Matches";
 import { ExchangesPage } from "./pages/Exchanges";
 import { PublicCollectionPage } from "./pages/PublicCollection";
 import { AccountPage } from "./pages/Account";
+import { CollectionFocusPage } from "./pages/CollectionFocus";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -82,6 +83,14 @@ export default function App() {
           element={
             <RequireAuth>
               <DashboardPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/collection/:view"
+          element={
+            <RequireAuth>
+              <CollectionFocusPage />
             </RequireAuth>
           }
         />

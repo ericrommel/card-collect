@@ -16,5 +16,9 @@
   },
   "include": ["src", "prisma", "tests"],
   // These tests import web modules, which sit outside rootDir.
-  "exclude": ["tests/domain/duplicateOffers.test.ts", "tests/domain/explorerDetail.test.ts"]
+  "exclude": [
+    "tests/domain/duplicateOffers.test.ts",
+    "tests/domain/explorerDetail.test.ts",
+    "tests/domain/collectionFocus.test.ts"
+  ]
 }
