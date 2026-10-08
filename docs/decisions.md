@@ -266,6 +266,10 @@ Offer duplicates used to mark copies for trade as soon as it was chosen. It now 
 
 All copies and the condition list used to change every free copy as soon as a choice was picked. They now ask first. Cancel leaves the collection as it is. Copies in an open exchange are still left out.
 
+## 2026-10-08 — Phone bulk actions are easier to tap
+
+The phone selection bar already asked for a 44px target, but the smaller button style won, so Mark owned and the other actions stayed at 36px. Those actions are now 44px tall. The bar still stays on one row until More is opened. A wide screen keeps the shorter buttons.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
