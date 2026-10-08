@@ -138,7 +138,7 @@ export function MatchesPage() {
       </p>
 
       {matches.length === 0 && (
-        <p className="muted">No matches yet. Add more copies or mark duplicates as TRADE / GIVE_AWAY.</p>
+        <p className="muted">No matches yet. Add cards you own, or mark a duplicate for trade or as a donation.</p>
       )}
 
       <div className="matches">

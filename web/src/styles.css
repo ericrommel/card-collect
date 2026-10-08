@@ -1317,6 +1317,17 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .match-card > .match-columns,
+  .exchange-card > .match-columns {
+    order: 8;
+  }
+
+  .match-card > .match-actions,
+  .exchange-card > .match-actions,
+  .exchange-card > .confirm-panel {
+    order: 6;
+  }
+
   .auth-page {
     min-height: 0;
   }

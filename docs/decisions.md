@@ -124,6 +124,10 @@ On a phone, the set title, progress, and filters were tall enough that the first
 
 On a phone, home showed the search box and every count before any set, so the collections started under the navigation. Home now puts the sets under the greeting. A set you have started comes before one you have not, and the one with more owned cards comes first. On a phone each set is a row, and its shortcuts wrap instead of being cut off. A wide screen keeps the larger covers and the same order. Search and the counts stay on the page. The dashboard API list is still in release order.
 
+## 2026-10-08 — The next exchange action stays above the cards on a phone
+
+A match or an open exchange listed every card before the button that moves it forward. On a phone that button was below the fold. The completion change and the next action now come first. The cards follow. A wide screen keeps the cards beside the summary, with the action after them.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

@@ -141,12 +141,15 @@ only — it is not a price or fairness estimate; see
 [docs/architecture.md](docs/architecture.md#trade-score-formula) for the
 formula and [docs/risks.md](docs/risks.md) for the residual risk of it
 being misread as one. The home page shows the top few of these for sets
-you have started.
+you have started. On a phone, the completion change and the next action
+sit above the card faces, so proposing does not require scrolling through
+every card.
 
 ## Exchanges
 
 From a match, "Propose this trade" or "Ask for these cards" opens an
-exchange. An open exchange says how each set would change if it finishes,
+exchange. On a phone, that button and the actions on an open exchange sit
+above the card faces. An open exchange says how each set would change if it finishes,
 using the copies people have now. The other collector accepts or declines. Cards stay where they
 are until **both** people confirm that the cards have actually changed
 hands — then those copies move and are marked `KEEP`. Either person can
