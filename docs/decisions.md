@@ -174,6 +174,10 @@ Marking a group of cards meant turning Select on, then choosing Select visible, 
 
 Catalog search is public and reads the whole sample catalog, so a script could ask as fast as the server answers. Each socket address can search 120 times a minute. The page already waits a quarter second after typing stops, so refining a name stays inside that. People on the same network share the limit. A search that is too short or too long still counts, and a search shorter than two characters does not read the catalog. The response is 429 and asks them to wait a minute. Opening a set uses the checklist route, which is not part of this limit. The process still does not trust `X-Forwarded-For`. The test suite raises the limit unless a test sets it.
 
+## 2026-10-08 — A phone search result stays above the navigation
+
+The search box on a phone sits below the sets. A result then opened under the bottom navigation, so the add button was covered even though the browser treated it as on screen. The result now moves up until it clears that bar. The search field does the same when it is focused. A wide screen has no bottom bar, so it does not move.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

@@ -1465,6 +1465,13 @@ select {
     padding-bottom: calc(var(--nav-h) + 1.5rem);
   }
 
+  .card-search input,
+  .card-search .search-hit,
+  .card-search .search-feedback {
+    scroll-margin-top: calc(var(--header-h) + 0.5rem);
+    scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
+  }
+
   .explorer {
     margin-top: -0.65rem;
   }

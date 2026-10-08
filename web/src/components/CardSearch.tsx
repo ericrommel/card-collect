@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, addCopy, searchCatalog, type CatalogSearchHit } from "../lib/api";
 import { rarityLabel } from "../lib/labels";
@@ -17,6 +17,17 @@ export function CardSearch({ onAdded }: { onAdded?: () => void | Promise<void> }
   const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
+  const resultsRef = useRef<HTMLUListElement>(null);
+  const feedbackRef = useRef<HTMLParagraphElement>(null);
+  const resultKey = results?.map((hit) => hit.id).join("|") ?? "";
+  const feedback = error ?? (results && results.length === 0 && !searching ? "empty" : "");
+
+  useEffect(() => {
+    const hit = resultsRef.current?.querySelector(".search-hit");
+    const target = feedbackRef.current ?? hit;
+    // The bottom nav covers the page, so a result can be in the viewport and still be hidden.
+    if (target instanceof HTMLElement) target.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [resultKey, feedback]);
 
   useEffect(() => {
     const q = query.trim();
@@ -86,10 +97,18 @@ export function CardSearch({ onAdded }: { onAdded?: () => void | Promise<void> }
         Search the sample catalog. A result says whether you have that card. Add a copy without opening the set.
       </p>
       {searching && <p className="muted small">Searching…</p>}
-      {error && <p className="error small">{error}</p>}
-      {results && results.length === 0 && !searching && <p className="muted">No cards match.</p>}
+      {error && (
+        <p ref={feedbackRef} className="error small search-feedback">
+          {error}
+        </p>
+      )}
+      {results && results.length === 0 && !searching && (
+        <p ref={feedbackRef} className="muted search-feedback">
+          No cards match.
+        </p>
+      )}
       {results && results.length > 0 && (
-        <ul className="search-results">
+        <ul ref={resultsRef} className="search-results">
           {results.map((hit) => (
             <li key={hit.id} className="search-hit">
               <Link className="search-hit-open" to={`/sets/${hit.set.id}?q=${encodeURIComponent(hit.number)}`}>
