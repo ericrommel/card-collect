@@ -237,6 +237,20 @@ describe("collector dashboard", () => {
     );
     expect(recent).toMatchObject({ kind: "Place", ink: "Sea", rarity: "Common" });
     expect(recent).not.toHaveProperty("metadata");
+    expect(mineSet.preview).toMatchObject({ number: "B-001", name: "Bulk B-001", kind: "Place", ink: "Sea" });
+    expect(mineSet.preview).not.toHaveProperty("metadata");
+
+    const later = await register(`dash-later-${Date.now()}@example.com`);
+    await request(app)
+      .post(`/api/my/sets/${setId}/copies`)
+      .set({ Authorization: `Bearer ${later.token}` })
+      .send({ collectible_ids: [collectibleIds[2]], mode: "ensure_one", availability: "KEEP" });
+    const laterDash = await request(app)
+      .get("/api/my/dashboard")
+      .set({ Authorization: `Bearer ${later.token}` });
+    const laterSet = laterDash.body.sets.find((set: { id: string }) => set.id === setId);
+    expect(laterSet.preview).toMatchObject({ number: "B-003", kind: "Place", ink: "Sea" });
+    expect(laterSet.preview).not.toHaveProperty("metadata");
     expect(JSON.stringify(mine.body)).not.toContain(other.email);
     expect(JSON.stringify(mine.body)).not.toContain(owner.email);
 
@@ -246,6 +260,8 @@ describe("collector dashboard", () => {
     const theirSet = theirs.body.sets.find((set: { id: string }) => set.id === setId);
     expect(theirSet.owned_count).toBe(0);
     expect(theirSet.missing_count).toBe(3);
+    expect(theirSet.preview).toMatchObject({ number: "B-001", kind: "Place", ink: "Sea" });
+    expect(theirSet.preview).not.toHaveProperty("metadata");
     expect(theirs.body.recent_copies).toEqual([]);
     expect(theirs.body.highlights.trades).toEqual([]);
     expect(theirs.body.highlights.donations).toEqual([]);

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CardFace } from "./CardFace";
 import type { DashboardSetSummary } from "../lib/api";
 import { focusHref, focusLabel, type CollectionView } from "../lib/collectionFocus";
 
@@ -24,12 +25,26 @@ export function SetCover({
   return (
     <article className="set-cover">
       <Link to={openTo ?? `/sets/${set.id}`} className="set-cover-open">
-        <div className="set-monogram" data-universe={set.universe_slug}>
-          <span>{set.code}</span>
+        <div className="set-preview">
+          {set.preview ? (
+            <CardFace
+              number={set.preview.number}
+              name={set.preview.name}
+              rarity={set.preview.rarity}
+              kind={set.preview.kind}
+              ink={set.preview.ink}
+            />
+          ) : (
+            <div className="set-monogram" data-universe={set.universe_slug}>
+              <span>{set.code}</span>
+            </div>
+          )}
         </div>
         <div className="set-cover-body">
           <h3>{set.name}</h3>
-          <p className="muted small">{set.universe_name}</p>
+          <p className="muted small">
+            {set.code} · {set.universe_name}
+          </p>
           <div
             className="progress-bar-track"
             role="progressbar"

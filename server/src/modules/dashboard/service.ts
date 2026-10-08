@@ -5,6 +5,14 @@ import { calculateProgress, completionPercentageOf } from "../../domain/progress
 import { listExchangesForUser, type ExchangeView } from "../exchanges/service.js";
 import { computeMatchesForUser, type PublicMatch } from "../matching/service.js";
 
+export interface SetPreviewCard {
+  number: string;
+  name: string;
+  rarity: string | null;
+  kind: string | null;
+  ink: string | null;
+}
+
 export interface DashboardSetSummary {
   id: string;
   code: string;
@@ -14,6 +22,8 @@ export interface DashboardSetSummary {
   universe_name: string;
   universe_slug: string;
   notice: string | null;
+  /** One card from this set. A card you own, or the first card if you own none. */
+  preview: SetPreviewCard | null;
   total_count: number;
   owned_count: number;
   missing_count: number;
@@ -142,6 +152,25 @@ export function pickHighlights(
   };
 }
 
+/**
+ * The card shown on a set cover. Prefer one you own. Among those, the
+ * lowest number wins, so the cover does not jump around. An untouched
+ * set uses the first card in the catalog.
+ */
+export function previewCollectible<T extends { id: string; number: string }>(
+  cards: readonly T[],
+  ownedIds: ReadonlySet<string>,
+): T | null {
+  if (cards.length === 0) return null;
+  const owned = cards.filter((card) => ownedIds.has(card.id));
+  const pool = owned.length > 0 ? owned : cards;
+  let best = pool[0];
+  for (const card of pool) {
+    if (card.number < best.number) best = card;
+  }
+  return best;
+}
+
 function needsAction(exchange: ExchangeView): boolean {
   if (exchange.status === "PROPOSED" && exchange.role === "counterparty") return true;
   if (exchange.status === "ACCEPTED" && !exchange.you_confirmed) return true;
@@ -158,7 +187,10 @@ function needsAction(exchange: ExchangeView): boolean {
 export async function buildDashboard(userId: string): Promise<Dashboard> {
   const [setRows, copyRows, exchanges] = await Promise.all([
     prisma.set.findMany({
-      include: { universe: true, collectibles: { select: { id: true } } },
+      include: {
+        universe: true,
+        collectibles: { select: { id: true, number: true, name: true, rarity: true, metadata: true } },
+      },
       orderBy: [{ releaseDate: "asc" }, { code: "asc" }],
     }),
     prisma.userCopy.findMany({
@@ -203,6 +235,11 @@ export async function buildDashboard(userId: string): Promise<Dashboard> {
       set.collectibles,
       copies.map((copy) => ({ collectibleId: copy.variant.collectible.id })),
     );
+    const ownedIds = new Set(copies.map((copy) => copy.variant.collectible.id));
+    const card = previewCollectible(set.collectibles, ownedIds);
+    const preview = card
+      ? { number: card.number, name: card.name, rarity: card.rarity, ...catalogFace(card.metadata) }
+      : null;
     return {
       id: set.id,
       code: set.code,
@@ -212,6 +249,7 @@ export async function buildDashboard(userId: string): Promise<Dashboard> {
       universe_name: set.universe.name,
       universe_slug: set.universe.slug,
       notice: sampleNoticeForSlug(set.universe.slug),
+      preview,
       total_count: progress.totalCount,
       owned_count: progress.ownedCount,
       missing_count: progress.missingCount,

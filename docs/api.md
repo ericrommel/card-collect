@@ -348,7 +348,11 @@ Real aggregates only. The response is the object itself, not wrapped.
   `donation_copies`, `reserved_copies`. Completion is owned/total across
   the whole catalog, not an average of set percentages.
 - `sets[]` — the same counts per set, plus `universe_id`, `universe_name`,
-  `universe_slug`, `notice`, `release_date`, `code`, `name`.
+  `universe_slug`, `notice`, `release_date`, `code`, `name`, and `preview`.
+  `preview` is one card from the set: the card you own with the lowest
+  number, or the first card when you own none. It has `number`, `name`,
+  `rarity`, `kind`, and `ink`. Raw catalog metadata stays off. It is null
+  when the set has no cards.
 - `highlights.trades` and `highlights.donations` — up to three each, only
   from sets the caller has started, ranked by score. Each row includes
   `you_receive_count`, `you_give_count`, previews of at most three cards
