@@ -361,7 +361,8 @@ Real aggregates only. The response is the object itself, not wrapped.
   when they are the counterparty on a proposal, or when the exchange is
   accepted and they have not confirmed.
 - `recent_copies` — up to eight of the caller's copies, newest first.
-  Includes the copy id. This route is owner-only.
+  Includes the copy id, `rarity`, and the catalog `kind` and `ink` when
+  they are known. Raw catalog metadata stays off. This route is owner-only.
 
 The payload does not include email addresses.
 

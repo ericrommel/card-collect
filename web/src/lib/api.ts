@@ -494,6 +494,9 @@ export interface Dashboard {
     collectible_name: string;
     set_id: string;
     set_code: string;
+    rarity: string | null;
+    kind: string | null;
+    ink: string | null;
     availability: Availability;
     condition: string | null;
     created_at: string;

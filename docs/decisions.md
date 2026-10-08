@@ -218,6 +218,10 @@ Cards in a large set were hard to tell apart because every face used a different
 
 The set page could tell a place from a person, but a search result, a match, an exchange, and a public page still drew a different pattern for every card. Those lists now use the same mark, and the kind is written under the name. The ink color follows the catalog too. A card without a known kind keeps the pattern. The public page still leaves out condition, photos, and any other catalog metadata. Number, name, rarity, and condition on an exchange stay the snapshot from when it was proposed. The kind is read from the current catalog, and it does not change the match score or which copy would be used.
 
+## 2026-10-08 — Home shows the card, not only its name
+
+Recently added cards and the short exchange list on home were text. Each recent card now uses the same sample drawing as the rest of the app, and an exchange row shows up to three of the cards you would receive. When you would receive nothing, it shows the cards you would give. These are the catalog drawings, not a photo of your copy. A photo still stays on your own set.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

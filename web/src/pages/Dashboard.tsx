@@ -1,14 +1,22 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { CardFace } from "../components/CardFace";
 import { CardSearch } from "../components/CardSearch";
 import { OfferCards } from "../components/OfferCards";
 import { SetCover } from "../components/SetCover";
-import type { DashboardHighlight, DashboardSetSummary } from "../lib/api";
+import type { DashboardHighlight, DashboardSetSummary, Exchange } from "../lib/api";
 import { proposeExchange } from "../lib/api";
+import { cardMotif } from "../lib/cardMotif";
 import { AVAILABILITY_LABEL, EXCHANGE_STATUS_LABEL } from "../lib/labels";
 import { useAuth } from "../state/AuthContext";
 import { orderDashboardSets } from "../lib/dashboardSets";
 import { useDashboard } from "../lib/useDashboard";
+
+/** Faces for the short home row. Prefer cards you would receive. */
+function exchangeRowFaces(exchange: Exchange) {
+  const cards = exchange.you_receive.length > 0 ? exchange.you_receive : exchange.you_give;
+  return cards.slice(0, 3);
+}
 
 function groupSets(sets: DashboardSetSummary[]) {
   const groups: { id: string; name: string; notice: string | null; sets: DashboardSetSummary[] }[] = [];
@@ -269,18 +277,36 @@ export function DashboardPage() {
             </div>
           ) : (
             <div className="stack">
-              {data.exchanges.recent.map((exchange) => (
-                <Link key={exchange.id} to={`/exchanges#${exchange.id}`} className="card exchange-row">
-                  <span className={`status-badge status-${exchange.status.toLowerCase()}`}>
-                    {EXCHANGE_STATUS_LABEL[exchange.status]}
-                  </span>
-                  <strong>{exchange.type === "DONATION" ? "Donation" : "Trade"}</strong>
-                  <span>{exchange.other_collector.display_name}</span>
-                  <span className="muted small">
-                    Give {exchange.you_give.length} · Receive {exchange.you_receive.length} · {exchange.set.code}
-                  </span>
-                </Link>
-              ))}
+              {data.exchanges.recent.map((exchange) => {
+                const faces = exchangeRowFaces(exchange);
+                return (
+                  <Link key={exchange.id} to={`/exchanges#${exchange.id}`} className="card exchange-row">
+                    <span className={`status-badge status-${exchange.status.toLowerCase()}`}>
+                      {EXCHANGE_STATUS_LABEL[exchange.status]}
+                    </span>
+                    <strong>{exchange.type === "DONATION" ? "Donation" : "Trade"}</strong>
+                    <span>{exchange.other_collector.display_name}</span>
+                    <span className="muted small">
+                      Give {exchange.you_give.length} · Receive {exchange.you_receive.length} · {exchange.set.code}
+                    </span>
+                    {faces.length > 0 && (
+                      <span className="exchange-faces">
+                        {faces.map((card, index) => (
+                          <CardFace
+                            key={`${card.number}-${index}`}
+                            number={card.number}
+                            name={card.name}
+                            rarity={card.rarity}
+                            kind={card.kind}
+                            ink={card.ink}
+                            size="sm"
+                          />
+                        ))}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
             </div>
           )}
 
@@ -290,17 +316,38 @@ export function DashboardPage() {
                 <h2>Recently added</h2>
               </div>
               <ul className="recent-list">
-                {data.recent_copies.map((copy) => (
-                  <li key={copy.id}>
-                    <Link to={`/sets/${copy.set_id}?q=${encodeURIComponent(copy.collectible_number)}`}>
-                      <span className="card-number">{copy.collectible_number}</span> {copy.collectible_name}
-                    </Link>
-                    <span className="muted small">
-                      {copy.set_code} · {AVAILABILITY_LABEL[copy.availability]}
-                      {copy.condition ? ` · ${copy.condition}` : ""}
-                    </span>
-                  </li>
-                ))}
+                {data.recent_copies.map((copy) => {
+                  const kind = cardMotif(copy.kind);
+                  const detail = [
+                    `${copy.set_code} ${copy.collectible_number}`,
+                    kind,
+                    AVAILABILITY_LABEL[copy.availability],
+                    copy.condition,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <li key={copy.id}>
+                      <Link
+                        className="recent-card"
+                        to={`/sets/${copy.set_id}?q=${encodeURIComponent(copy.collectible_number)}`}
+                      >
+                        <CardFace
+                          number={copy.collectible_number}
+                          name={copy.collectible_name}
+                          rarity={copy.rarity}
+                          kind={copy.kind}
+                          ink={copy.ink}
+                          size="sm"
+                        />
+                        <span className="recent-card-text">
+                          <span>{copy.collectible_name}</span>
+                          <span className="muted small">{detail}</span>
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           )}
