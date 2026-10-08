@@ -234,6 +234,10 @@ On a wide screen the before and after percentages sat at the far edge of the mat
 
 Adding a card could save a front photo only. You can also add a photo of the back before the copy is saved. It stays optional. Choosing another front photo clears a back that has not been saved yet. The app does not check that the two photos are the same card, and neither photo proves that you hold it. Recognition still looks at the front only.
 
+## 2026-10-08 — A shortened match is reviewed before it is proposed
+
+Home shows at most three cards on each side of a match. When there are more, the button opens the match instead of proposing it. An open exchange uses the same completion lines as that match, and says whether each person has confirmed.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

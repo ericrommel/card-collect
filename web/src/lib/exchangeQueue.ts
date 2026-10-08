@@ -18,6 +18,13 @@ export function orderOpenExchanges<T extends { status: string; role: string; you
   return [...needsYou, ...waiting];
 }
 
+/** Plain progress for an accepted exchange. Both people have to confirm. */
+export function confirmationProgress(you: boolean, them: boolean): string {
+  const youText = you ? "You have confirmed." : "You have not confirmed yet.";
+  const themText = them ? "They have confirmed." : "They have not confirmed yet.";
+  return `${youText} ${themText}`;
+}
+
 export function openExchangeSummary(needsYou: number, waiting: number): string | null {
   const parts: string[] = [];
   if (needsYou === 1) parts.push("1 exchange needs you");
