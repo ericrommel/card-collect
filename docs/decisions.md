@@ -286,6 +286,10 @@ Below 389px the set switcher uses another row, so the first card's number and ow
 
 On a narrow phone the exchange header and the count line wrapped, so the first card's number sat under the navigation. The header and the count stay on one line. The name and the number each stay on their own line, and the kind sits beside the condition. A wider phone and a wide screen are unchanged.
 
+## 2026-10-08 — Catalog shortcuts stay above the navigation
+
+On a narrow phone the first set in the catalog wrapped its shortcuts, and the trade and donation ones sat under the navigation. The catalog page sits a little closer together there, so those shortcuts stay on the first screen. Search still moves a result up so Add a copy stays above the navigation.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

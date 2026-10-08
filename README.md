@@ -101,7 +101,7 @@ Home and the catalog can search the sample catalog by card name, number,
 or set. Each result says whether you have that card. You can add a Keep
 copy from the result. It has no condition until you set one, and the
 counts on that page update. You can also open the set already searched.
-A search without a working session does not include that count.
+A search without a working session does not include that count. On a narrow phone the first set's shortcuts, including cards for trade and to give away, stay above the navigation.
 
 Add, in the navigation, is the step for one card. Search the whole
 catalog, choose availability and condition, and attach a photo if you

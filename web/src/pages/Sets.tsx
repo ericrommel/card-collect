@@ -21,7 +21,7 @@ export function SetsPage() {
   const groups = groupSets(data.sets);
 
   return (
-    <div className="page-stack">
+    <div className="page-stack catalog-page">
       <div>
         <p className="eyebrow">Catalog</p>
         <h1>Sets</h1>
