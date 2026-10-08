@@ -99,8 +99,11 @@ do not already own. **Add a copy** always adds another physical copy.
 **Offer duplicates** keeps one copy of each selected card — the one already
 marked Keep, or else the oldest — and marks the other free copies for trade.
 **All copies** changes every free copy, including the one you are keeping.
-A copy reserved for an open exchange cannot be changed. Select one card to
-edit it, or two cards to compare them.
+A copy reserved for an open exchange cannot be changed. On a wide screen,
+one selected card opens beside the grid and two selected cards compare
+side by side. On a phone, selecting cards leaves the grid open. Use
+**Card details** or **Compare** on the bar when you want that panel, and
+closing it keeps the cards you selected.
 
 ## Matches
 

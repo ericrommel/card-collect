@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { Availability, ConditionGrade } from "../lib/api";
 import { CONDITION_GRADES } from "../lib/api";
@@ -160,6 +161,7 @@ function CardColumn({
 export function CardDetail({
   entries,
   mode,
+  modal = false,
   selectedCount,
   busy,
   onClose,
@@ -170,6 +172,7 @@ export function CardDetail({
 }: {
   entries: ExplorerEntry[];
   mode: "single" | "compare" | "bulk";
+  modal?: boolean;
   selectedCount: number;
   busy: boolean;
   onClose: () => void;
@@ -178,8 +181,20 @@ export function CardDetail({
   onCondition: (copyId: string, condition: ConditionGrade | null) => void;
   onRemove: (copyId: string) => void;
 }) {
+  const panelRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (modal) panelRef.current?.focus({ preventScroll: true });
+  }, [modal]);
+
   return (
-    <aside className={`detail-panel detail-${mode}`} aria-label={mode === "compare" ? "Compare cards" : "Card details"}>
+    <aside
+      ref={panelRef}
+      className={`detail-panel detail-${mode}`}
+      tabIndex={modal ? -1 : undefined}
+      role={modal ? "dialog" : undefined}
+      aria-modal={modal ? true : undefined}
+      aria-label={mode === "compare" ? "Compare cards" : "Card details"}
+    >
       <div className="detail-toolbar">
         <h2>{mode === "compare" ? "Compare" : mode === "bulk" ? "Selected cards" : "Card"}</h2>
         <button type="button" className="secondary small" onClick={onClose}>

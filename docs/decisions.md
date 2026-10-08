@@ -6,7 +6,7 @@ Autonomous product decisions, with the reason they were taken. This is not a roa
 
 The old set page was one form per card. That does not work once a set has hundreds of cards.
 
-The set page is now a grid, with an optional compact list. Search, filters, and sort run in the browser after one load of the checklist and the caller's copies. People select many cards and mark them owned, add copies, or change availability and condition together. One selected card opens an editor. Two selected cards open a side-by-side comparison. A larger selection stays on the bulk bar, because a sheet over the grid made it easy to lose the selection.
+The set page is now a grid, with an optional compact list. Search, filters, and sort run in the browser after one load of the checklist and the caller's copies. People select many cards and mark them owned, add copies, or change availability and condition together. On a wide screen, one selected card opens an editor and two open a side-by-side comparison. A larger selection stays on the bulk bar, because a sheet over the grid made it easy to lose the selection. A phone does the same for one and two cards — see the later decision.
 
 **Mark owned** uses `ensure_one`, so it does not create a second copy of a card the person already has. **Add a copy** always creates one.
 
@@ -81,6 +81,12 @@ The owner of a shared collection can see how many times the public page loaded a
 A disabled, expired, or unknown link is not counted. Regenerating the address starts the count over, because the old address is no longer the one being watched. Renewing and turning sharing off keep the count. Opening the page yourself counts. A second load of the same link within one second counts once, so a double load does not look like two people. More than 60 loads of one link in a minute are not all written down; the page still loads.
 
 The public response does not include the count.
+
+## 2026-10-08 — Phone selection does not cover the grid
+
+On a wide screen, one selected card still opens beside the grid and two still compare there. On a phone, that same panel is a sheet over the set. Opening it for the first tap meant a person could not select a second card, and closing the sheet threw away the selection.
+
+While select mode is on and the layout is narrow, the sheet stays closed until the person chooses **Card details** (one card) or **Compare** (two). Closing that sheet, or pressing Escape, returns to the selection. Escape with the sheet already closed still leaves select mode. A card opened by an ordinary tap, outside select mode, still uses the sheet.
 
 ## Not done, on purpose
 
