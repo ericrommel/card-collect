@@ -47,14 +47,28 @@ const AVAILABILITY_FILTERS: { id: AvailabilityFilter; label: string }[] = [
   { id: "donation", label: "Donation" },
 ];
 
+/** Put the result count just under the tools when a search moved it off screen. */
+function revealResults(root: HTMLElement) {
+  const toolbar = root.querySelector(".explorer-toolbar");
+  const target = root.querySelector<HTMLElement>(".result-row");
+  if (!toolbar || !target) return;
+  const topLimit = toolbar.getBoundingClientRect().bottom + 8;
+  const navTop = document.querySelector(".bottom-nav")?.getBoundingClientRect().top ?? window.innerHeight;
+  const rect = target.getBoundingClientRect();
+  if (rect.top >= topLimit && rect.bottom <= navTop - 8) return;
+  window.scrollBy({ top: rect.top - topLimit, behavior: "auto" });
+}
+
 /** Bring one selected card fully above the phone bar the first time that bar appears. */
 function revealSelectedCard(root: HTMLElement, collectibleId: string) {
   const card = root.querySelector<HTMLElement>(`[data-collectible-id="${CSS.escape(collectibleId)}"]`);
   if (!card) return;
   const barTop = root.querySelector(".bulk-bar")?.getBoundingClientRect().top ?? window.innerHeight;
   const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+  const toolsBottom = root.querySelector(".explorer-toolbar")?.getBoundingClientRect().bottom ?? headerBottom;
   const rect = card.getBoundingClientRect();
-  if (rect.top >= headerBottom + 4 && rect.bottom <= barTop - 8 && rect.bottom > rect.top) return;
+  if (rect.top >= Math.max(headerBottom, toolsBottom) + 4 && rect.bottom <= barTop - 8 && rect.bottom > rect.top)
+    return;
   card.scrollIntoView({ block: "center", inline: "nearest" });
 }
 
@@ -108,7 +122,24 @@ export function SetExplorerPage() {
   const [bulkMore, setBulkMore] = useState(false);
   const narrow = useNarrowViewport();
   const resultsRef = useRef<HTMLDivElement>(null);
+  const filterPanelRef = useRef<HTMLDivElement>(null);
   const pinnedSelection = useRef(false);
+  const skipSearchReveal = useRef(true);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    filterPanelRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [filtersOpen]);
+
+  useEffect(() => {
+    if (skipSearchReveal.current) {
+      skipSearchReveal.current = false;
+      return;
+    }
+    const root = resultsRef.current;
+    if (!root) return;
+    revealResults(root);
+  }, [filters.search]);
 
   useEffect(() => {
     if (selected.size === 0) setBulkMore(false);
@@ -590,7 +621,7 @@ export function SetExplorerPage() {
         </div>
 
         {filtersOpen && (
-          <div className="filter-panel">
+          <div className="filter-panel" ref={filterPanelRef}>
             <fieldset>
               <legend>Ownership</legend>
               <div className="chip-row">

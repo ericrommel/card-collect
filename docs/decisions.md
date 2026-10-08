@@ -194,6 +194,10 @@ On a phone the next action sits above the cards. The cards you would receive wer
 
 The public checklist returns every card in a set, with no sign-in. It was the catalog read that search's limit did not cover. Each socket address can load it 120 times a minute. That counter is not the search counter: looking up a name does not spend it, and opening a checklist does not spend the search budget. The set list and one set's name stay unlimited, so the catalog page still loads. A missing set still says it was not found, and that attempt still counts. People on the same network share the budget. The signed-in set page reads progress for that account, which is a different request and is not this limit. The process still does not trust `X-Forwarded-For`. The test suite raises the limit unless a test sets it.
 
+## 2026-10-08 — Set search stays on screen
+
+A large set is longer than one screen. Search scrolled away with the title, so finding a card meant returning to the top. Search, filter, sort, and the layout controls now stay under the header while the cards move. Typing a search brings the matches up under those tools, instead of leaving them where the old list was. The title and the progress bar still scroll away. Opening filters brings that list back into view if it has moved off. A public collection already kept its own search on screen.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
