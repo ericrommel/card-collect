@@ -1,3 +1,4 @@
+import { catalogFace } from "../../catalog/faceMetadata.js";
 import { prisma } from "../../db.js";
 import { sampleNoticeForSlug } from "../../catalog/sampleCatalog.js";
 import type {
@@ -65,19 +66,25 @@ export class LocalDbCatalogProvider implements CatalogProvider {
         number: true,
         name: true,
         rarity: true,
+        metadata: true,
         set: { select: { id: true, name: true, code: true, universe: { select: { name: true } } } },
         variants: { where: { isDefault: true }, select: { id: true }, take: 1 },
       },
     });
-    const cards: CatalogSearchHit[] = rows.map((row) => ({
-      id: row.id,
-      number: row.number,
-      name: row.name,
-      rarity: row.rarity,
-      set: { id: row.set.id, name: row.set.name, code: row.set.code },
-      universeName: row.set.universe.name,
-      defaultVariantId: row.variants[0]?.id ?? null,
-    }));
+    const cards: CatalogSearchHit[] = rows.map((row) => {
+      const face = catalogFace(row.metadata);
+      return {
+        id: row.id,
+        number: row.number,
+        name: row.name,
+        rarity: row.rarity,
+        kind: face.kind,
+        ink: face.ink,
+        set: { id: row.set.id, name: row.set.name, code: row.set.code },
+        universeName: row.set.universe.name,
+        defaultVariantId: row.variants[0]?.id ?? null,
+      };
+    });
     const found = searchCatalogCards(cards, query, limit);
     return { hits: found.results, truncated: found.truncated };
   }

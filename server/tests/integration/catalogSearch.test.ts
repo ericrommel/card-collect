@@ -15,10 +15,22 @@ describe("catalog search", () => {
       data: { universeId: universe.id, name: "Zephyr Market", code: `ZQ-${stamp}` },
     });
     await prisma.collectible.create({
-      data: { setId: set.id, number: "ZQ-001", name: "Zephyr Compass", rarity: "Rare" },
+      data: {
+        setId: set.id,
+        number: "ZQ-001",
+        name: "Zephyr Compass",
+        rarity: "Rare",
+        metadata: JSON.stringify({ kind: "Object", ink: "Ember", note: "hidden-note" }),
+      },
     });
     await prisma.collectible.create({
-      data: { setId: set.id, number: "ZQ-002", name: "Old Zephyr", rarity: "Common" },
+      data: {
+        setId: set.id,
+        number: "ZQ-002",
+        name: "Old Zephyr",
+        rarity: "Common",
+        metadata: JSON.stringify({ kind: "place", ink: "Blue" }),
+      },
     });
 
     const byName = await request(app).get("/api/catalog/search").query({ q: "zephyr compass" });
@@ -33,6 +45,9 @@ describe("catalog search", () => {
     ]);
     expect(JSON.stringify(byName.body)).not.toContain("email");
     expect(byName.body.results[0]).not.toHaveProperty("owned_quantity");
+    expect(byName.body.results[0]).not.toHaveProperty("metadata");
+    expect(byName.body.results[0]).toMatchObject({ kind: "Object", ink: "Ember" });
+    expect(JSON.stringify(byName.body)).not.toContain("hidden-note");
     expect(byName.body.results[0].defaultVariantId).toBeNull();
 
     const rejected = await request(app)
@@ -46,6 +61,8 @@ describe("catalog search", () => {
       .get("/api/catalog/search")
       .query({ q: `zq-${stamp}` });
     expect(bySet.body.results.map((item: { name: string }) => item.name)).toEqual(["Zephyr Compass", "Old Zephyr"]);
+    const oldZephyr = bySet.body.results.find((item: { name: string }) => item.name === "Old Zephyr");
+    expect(oldZephyr).toMatchObject({ kind: null, ink: null });
     expect(bySet.body.truncated).toBe(false);
 
     const short = await request(app).get("/api/catalog/search").query({ q: "z" });

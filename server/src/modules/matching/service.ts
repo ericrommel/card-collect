@@ -1,3 +1,4 @@
+import { catalogFace } from "../../catalog/faceMetadata.js";
 import { prisma } from "../../db.js";
 import { catalogProvider } from "../catalog/localDbCatalogProvider.js";
 import { getUserCopies, toAvailabilityTagged, type CopyWithDetails } from "../collection/service.js";
@@ -56,6 +57,13 @@ export interface PublicMatch {
  */
 export interface MatchCardRef extends CollectibleRef {
   condition?: string | null;
+  /**
+   * Catalog kind for the face. Always set by computeMatchesForUser.
+   * Null when the catalog has no known kind.
+   */
+  kind?: string | null;
+  /** Catalog ink for the face color. Always set by computeMatchesForUser. */
+  ink?: string | null;
 }
 
 /**
@@ -81,11 +89,14 @@ function copiesForPreview(copies: CopyWithDetails[], allowedReservationIds: Read
  * When that copy cannot be named, the cards stay unlabeled rather than
  * claiming the condition was never set. Copy ids are not copied onto the card.
  */
+/** A match card before the catalog face is attached. Condition follows the copy rules below. */
+type LabeledCard = CollectibleRef & { condition?: string | null };
+
 function withConditions(
   refs: CollectibleRef[],
   copies: PreviewCopy[],
   availability: "TRADE" | "GIVE_AWAY",
-): MatchCardRef[] {
+): LabeledCard[] {
   if (refs.length === 0) return refs;
   const preview = previewOfferedCopies(
     copies,
@@ -94,6 +105,16 @@ function withConditions(
   );
   if (!preview) return refs;
   return refs.map((ref, index) => ({ ...ref, condition: preview[index].condition }));
+}
+
+function paintMatchCards(
+  cards: LabeledCard[],
+  faces: Map<string, { kind: string | null; ink: string | null }>,
+): MatchCardRef[] {
+  return cards.map((card) => {
+    const face = faces.get(card.id) ?? { kind: null, ink: null };
+    return { ...card, kind: face.kind, ink: face.ink };
+  });
 }
 
 function toPublicSide(side: SideProgress): PublicSideProgress {
@@ -144,6 +165,7 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
   const collectiblesById = new Map<string, CollectibleRef>(
     collectibles.map((c) => [c.id, { id: c.id, number: c.number, name: c.name, rarity: c.rarity }]),
   );
+  const facesById = new Map(collectibles.map((c) => [c.id, catalogFace(c.metadata)]));
 
   const myCopies = await getUserCopies(userId, setId);
   const myProgress = calculateProgress(
@@ -204,8 +226,14 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       const breakdown = scoreMutualTrade(mySnapshot, otherSnapshot, tradeCandidate, collectiblesById);
       ranked.push({
         scored: { ...breakdown, collectorDisplayName: other.displayName, collectorRef: other.publicId },
-        youReceive: withConditions(breakdown.proposedExchange.currentUserReceives, theirPreviewCopies, "TRADE"),
-        theyReceive: withConditions(breakdown.proposedExchange.otherCollectorReceives, myPreviewCopies, "TRADE"),
+        youReceive: paintMatchCards(
+          withConditions(breakdown.proposedExchange.currentUserReceives, theirPreviewCopies, "TRADE"),
+          facesById,
+        ),
+        theyReceive: paintMatchCards(
+          withConditions(breakdown.proposedExchange.otherCollectorReceives, myPreviewCopies, "TRADE"),
+          facesById,
+        ),
         openExchangeId: openExchangeByKey.get(`${other.id}:MUTUAL_TRADE`),
       });
     }
@@ -215,8 +243,11 @@ export async function computeMatchesForUser(userId: string, setId: string): Prom
       const breakdown = scoreDonation(mySnapshot, donationIds, collectiblesById);
       ranked.push({
         scored: { ...breakdown, collectorDisplayName: other.displayName, collectorRef: other.publicId },
-        youReceive: withConditions(breakdown.proposedExchange.currentUserReceives, theirPreviewCopies, "GIVE_AWAY"),
-        theyReceive: breakdown.proposedExchange.otherCollectorReceives,
+        youReceive: paintMatchCards(
+          withConditions(breakdown.proposedExchange.currentUserReceives, theirPreviewCopies, "GIVE_AWAY"),
+          facesById,
+        ),
+        theyReceive: paintMatchCards(breakdown.proposedExchange.otherCollectorReceives, facesById),
         openExchangeId: openExchangeByKey.get(`${other.id}:DONATION`),
       });
     }

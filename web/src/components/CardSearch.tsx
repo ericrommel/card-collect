@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, addCopy, searchCatalog, type CatalogSearchHit } from "../lib/api";
+import { cardMotif } from "../lib/cardMotif";
 import { rarityLabel } from "../lib/labels";
 import { CardFace } from "./CardFace";
 
@@ -112,7 +113,14 @@ export function CardSearch({ onAdded }: { onAdded?: () => void | Promise<void> }
           {results.map((hit) => (
             <li key={hit.id} className="search-hit">
               <Link className="search-hit-open" to={`/sets/${hit.set.id}?q=${encodeURIComponent(hit.number)}`}>
-                <CardFace size="sm" number={hit.number} name={hit.name} rarity={hit.rarity} />
+                <CardFace
+                  size="sm"
+                  number={hit.number}
+                  name={hit.name}
+                  rarity={hit.rarity}
+                  kind={hit.kind}
+                  ink={hit.ink}
+                />
                 <span className="row-copy">
                   <span className="search-hit-title">
                     <strong>{hit.name}</strong>
@@ -124,7 +132,8 @@ export function CardSearch({ onAdded }: { onAdded?: () => void | Promise<void> }
                   </span>
                   <span className="muted small">
                     {hit.set.code} {hit.number}
-                    {hit.rarity ? ` · ${rarityLabel(hit.rarity)}` : ""} · {hit.set.name}
+                    {hit.rarity ? ` · ${rarityLabel(hit.rarity)}` : ""}
+                    {cardMotif(hit.kind) ? ` · ${cardMotif(hit.kind)}` : ""} · {hit.set.name}
                   </span>
                 </span>
               </Link>

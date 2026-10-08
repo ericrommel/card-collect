@@ -214,6 +214,10 @@ The cards you would give were listed first. On a phone the whole give list sat a
 
 Cards in a large set were hard to tell apart because every face used a different pattern. A place, person, object, or event now uses one mark, and the kind is written under the name. A card without a kind keeps the pattern. A match and a public page still use the pattern, because those lists do not include the kind.
 
+## 2026-10-08 — The kind mark follows the card
+
+The set page could tell a place from a person, but a search result, a match, an exchange, and a public page still drew a different pattern for every card. Those lists now use the same mark, and the kind is written under the name. The ink color follows the catalog too. A card without a known kind keeps the pattern. The public page still leaves out condition, photos, and any other catalog metadata. Number, name, rarity, and condition on an exchange stay the snapshot from when it was proposed. The kind is read from the current catalog, and it does not change the match score or which copy would be used.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

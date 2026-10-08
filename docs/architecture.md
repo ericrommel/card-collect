@@ -491,6 +491,9 @@ for one Set — `modules/sharing/`. Design decisions:
   because there is no code that forwards a Prisma object into the
   response; every field has to be deliberately threaded through
   `PublicShareInput` first. Condition is intentionally not threaded.
+  `kind` and `ink` are threaded, and only when the value is one of the
+  known catalog labels. Any other metadata key on the catalog card stays
+  off the response.
 - **Public offers skip a reserved copy.** The public trade and donation
   lists use the same filter as matching: a copy with
   `reservedByExchangeId` set is left out. Another free copy of that card

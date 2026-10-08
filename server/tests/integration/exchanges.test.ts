@@ -99,6 +99,10 @@ describe("exchanges", () => {
 
   it("proposes a mutual trade, reserves the oldest offered copy, and transfers it only after both confirm", async () => {
     const { setId, variantIds } = await createTestSet(3);
+    await prisma.collectible.updateMany({
+      where: { setId, number: "c3" },
+      data: { metadata: JSON.stringify({ kind: "Event", ink: "Leaf", note: "not-on-the-exchange" }) },
+    });
     const alice = await registerUser(`alice-x-${Date.now()}@example.com`, "Alice Trader");
     const bob = await registerUser(`bob-x-${Date.now()}@example.com`, "Bob Trader");
     const carol = await registerUser(`carol-x-${Date.now()}@example.com`, "Carol");
@@ -152,7 +156,10 @@ describe("exchanges", () => {
         card.condition,
       ]),
     ).toEqual([["c2", "Played"]]);
-    expect(proposed.body.exchange.you_receive).toMatchObject([{ number: "c3", condition: "Good" }]);
+    expect(proposed.body.exchange.you_receive).toMatchObject([
+      { number: "c3", condition: "Good", kind: "Event", ink: "Leaf" },
+    ]);
+    expect(proposed.body.exchange.you_give).toMatchObject([{ number: "c2", kind: null, ink: null }]);
     expect(proposed.body.exchange.other_collector).toEqual({ display_name: "Bob Trader", ref: trade!.collector.ref });
     expect(proposed.body.exchange.projected_completion).toEqual({
       yours: { before: 33.3, after: 66.7 },
@@ -160,6 +167,7 @@ describe("exchanges", () => {
     });
 
     const raw = JSON.stringify(proposed.body);
+    expect(raw).not.toContain("not-on-the-exchange");
     expect(raw).not.toContain(alice.email);
     expect(raw).not.toContain(bob.email);
     expect(raw).not.toContain(alice.userId);

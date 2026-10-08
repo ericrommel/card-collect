@@ -126,7 +126,12 @@ derived from the slug, not stored on the universe row.
 characters returns an empty list rather than an error, and does not read
 the catalog. A longer value is `400 { "error": "Invalid request" }`.
 
-→ `200 { "results": [{ "id", "number", "name", "rarity", "universeName", "defaultVariantId", "set": { "id", "name", "code" } }], "truncated": false }`
+→ `200 { "results": [{ "id", "number", "name", "rarity", "kind", "ink", "universeName", "defaultVariantId", "set": { "id", "name", "code" } }], "truncated": false }`
+
+`kind` is `Person`, `Place`, `Object`, or `Event`, or `null`. `ink` is
+`Sea`, `Ember`, `Leaf`, or `Stone`, or `null`. Any other catalog
+metadata is left out. These two fields are labels for the drawing, not
+a condition and not a photo.
 
 The same socket address can search 120 times a minute. A query that is
 too short or too long still counts. Past that, the response is `429`
@@ -346,7 +351,8 @@ Real aggregates only. The response is the object itself, not wrapped.
   `universe_slug`, `notice`, `release_date`, `code`, `name`.
 - `highlights.trades` and `highlights.donations` — up to three each, only
   from sets the caller has started, ranked by score. Each row includes
-  `you_receive_count`, `you_give_count`, previews of at most three cards,
+  `you_receive_count`, `you_give_count`, previews of at most three cards
+  (the same card shape as a match, including `kind` and `ink`),
   and completion before/after. Donations omit the other collector's
   completion. `open_exchange_id` is present when that match is already
   proposed.
@@ -389,8 +395,8 @@ the full tie-break order); the client does not need to sort. → `200`:
       },
       "balance": { "difference": 1 },
       "proposed_exchange": {
-        "you_receive": [{ "id", "number", "name", "rarity", "condition" }],
-        "they_receive": [{ "id", "number", "name", "rarity", "condition" }]
+        "you_receive": [{ "id", "number", "name", "rarity", "kind", "ink", "condition" }],
+        "they_receive": [{ "id", "number", "name", "rarity", "kind", "ink", "condition" }]
       },
       "open_exchange_id": "present only when this pair already has an open exchange of this type"
     },
@@ -405,7 +411,7 @@ the full tie-break order); the client does not need to sort. → `200`:
         "completion_gain": 4.1
       },
       "proposed_exchange": {
-        "you_receive": [{ "id", "number", "name", "rarity", "condition" }],
+        "you_receive": [{ "id", "number", "name", "rarity", "kind", "ink", "condition" }],
         "they_receive": []
       }
     }
@@ -433,7 +439,10 @@ the full tie-break order); the client does not need to sort. → `200`:
   copy already reserved for an open exchange with this person. It is
   `null` when that note was never set. The field is omitted only when no
   eligible copy could be named. It does not change the score. A copy
-  reserved for someone else is not used.
+  reserved for someone else is not used. `kind` and `ink` are the catalog
+  labels used to draw the face. They are `null` when the catalog has no
+  known value. Other metadata on the catalog card is not copied onto the
+  match, and neither field changes which copy would be used.
 - Only collectors with at least one candidate (a possible trade or
   donation) are included — no zero-signal noise.
 - `collector.ref` is an unguessable token for proposing an exchange. It
@@ -453,8 +462,12 @@ A structured trade or donation. No message body. See
 `ACCEPTED`, `DECLINED`, `CANCELLED`, or `COMPLETED`. `role` is
 `proposer` or `counterparty` from the caller's point of view. `actions`
 is the list the caller may take right now (`accept`, `decline`, `cancel`,
-`confirm`). Card objects are `{ "number", "name", "rarity", "condition" }`
-snapshotted at proposal time — not `UserCopy` ids.
+`confirm`). Card objects are `{ "number", "name", "rarity", "condition", "kind", "ink" }`.
+Number, name, rarity, and condition are snapshotted at proposal time.
+`kind` and `ink` are read from the current catalog for that set and
+number, so the face matches the set. They are `null` when the catalog
+has no known value, or when that number is no longer in the set. They
+are not stored on the exchange. Card objects are not `UserCopy` ids.
 
 ```json
 {
@@ -464,8 +477,26 @@ snapshotted at proposal time — not `UserCopy` ids.
   "role": "counterparty",
   "set": { "id": "...", "name": "Starter Voyage", "code": "SV-01" },
   "other_collector": { "display_name": "Alice (Luffy Fan)", "ref": "opaque-token" },
-  "you_give": [{ "number": "SV01-019", "name": "King of the Pirates' Ambition", "rarity": "SR", "condition": "Good" }],
-  "you_receive": [{ "number": "SV01-010", "name": "Helmsman's Steady Hand", "rarity": "C", "condition": null }],
+  "you_give": [
+    {
+      "number": "SV01-019",
+      "name": "King of the Pirates' Ambition",
+      "rarity": "SR",
+      "condition": "Good",
+      "kind": null,
+      "ink": null
+    }
+  ],
+  "you_receive": [
+    {
+      "number": "SV01-010",
+      "name": "Helmsman's Steady Hand",
+      "rarity": "C",
+      "condition": null,
+      "kind": null,
+      "ink": null
+    }
+  ],
   "you_confirmed": false,
   "they_confirmed": false,
   "actions": ["accept", "decline"],
@@ -618,11 +649,20 @@ visibility settings permit:
   "collector": { "display_name": "Alice (Luffy Fan)" },
   "set": { "name": "Starter Voyage", "code": "SV-01", "total_count": 24 },
   "completion_percentage": 66.7,
-  "owned": [{ "number": "SV01-001", "name": "Straw Hat Captain", "rarity": "L" }],
-  "missing": [{ "number": "SV01-020", "name": "Voyage's End Treasure", "rarity": "SEC" }],
-  "duplicates": [{ "number": "SV01-003", "name": "Sniper's Steady Aim", "rarity": "C", "duplicate_quantity": 1 }],
-  "trade_offers": [{ "number": "SV01-003", "name": "Sniper's Steady Aim", "rarity": "C" }],
-  "give_away_offers": [{ "number": "SV01-012", "name": "Grand Line Current", "rarity": "C" }]
+  "owned": [{ "number": "SV01-001", "name": "Straw Hat Captain", "rarity": "L", "kind": null, "ink": null }],
+  "missing": [{ "number": "SV01-020", "name": "Voyage's End Treasure", "rarity": "SEC", "kind": null, "ink": null }],
+  "duplicates": [
+    {
+      "number": "SV01-003",
+      "name": "Sniper's Steady Aim",
+      "rarity": "C",
+      "kind": null,
+      "ink": null,
+      "duplicate_quantity": 1
+    }
+  ],
+  "trade_offers": [{ "number": "SV01-003", "name": "Sniper's Steady Aim", "rarity": "C", "kind": null, "ink": null }],
+  "give_away_offers": [{ "number": "SV01-012", "name": "Grand Line Current", "rarity": "C", "kind": null, "ink": null }]
 }
 ```
 
@@ -636,7 +676,9 @@ no cards.
 one copy with that availability is not reserved for an open exchange. A
 reserved copy still counts in `owned`, `missing`, `duplicates`, and
 `completion_percentage`. The response has no reserved flag and no
-exchange id.
+exchange id. Each card also has `kind` and `ink` from the catalog.
+They are `null` when the catalog has no known value. A condition, a
+photo, and any other catalog metadata stay off this response.
 
 → `404` if `shareId` was never issued, belongs to a disabled, expired, or
 revoked share, or doesn't exist — these cases are indistinguishable by

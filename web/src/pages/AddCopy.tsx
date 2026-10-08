@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CardFace } from "../components/CardFace";
+import { cardMotif } from "../lib/cardMotif";
 import {
   ApiError,
   addCopy,
@@ -292,12 +293,20 @@ export function AddCopyPage() {
                     aria-pressed={active}
                     onClick={() => choose(hit)}
                   >
-                    <CardFace size="sm" number={hit.number} name={hit.name} rarity={hit.rarity} />
+                    <CardFace
+                      size="sm"
+                      number={hit.number}
+                      name={hit.name}
+                      rarity={hit.rarity}
+                      kind={hit.kind}
+                      ink={hit.ink}
+                    />
                     <span className="row-copy">
                       <strong>{hit.name}</strong>
                       <span className="muted small">
                         {hit.set.code} {hit.number}
                         {hit.rarity ? ` · ${rarityLabel(hit.rarity)}` : ""}
+                        {cardMotif(hit.kind) ? ` · ${cardMotif(hit.kind)}` : ""}
                         {ownedLine(hit.owned_quantity)}
                       </span>
                     </span>
@@ -317,7 +326,13 @@ export function AddCopyPage() {
           {!selected && <p className="muted">Select a card, then add one physical copy.</p>}
           {selected && (
             <>
-              <CardFace number={selected.number} name={selected.name} rarity={selected.rarity} />
+              <CardFace
+                number={selected.number}
+                name={selected.name}
+                rarity={selected.rarity}
+                kind={selected.kind}
+                ink={selected.ink}
+              />
               <h2>{selected.name}</h2>
               <p className="muted small">
                 {selected.set.code} {selected.number} · {selected.set.name}

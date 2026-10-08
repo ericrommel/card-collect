@@ -417,6 +417,51 @@ describe("collection sharing", () => {
     expect(raw).not.toContain("reserved");
     expect(raw).not.toContain(proposed.body.exchange.id as string);
   });
+
+  it("publishes a catalog kind and leaves other metadata off the public page", async () => {
+    const stamp = `${Date.now()}-${Math.random()}`;
+    const universe = await prisma.collectibleUniverse.create({
+      data: { name: "Kind Share Universe", slug: `kind-share-${stamp}` },
+    });
+    const set = await prisma.set.create({
+      data: { universeId: universe.id, name: "Kind Share Set", code: `KS-${stamp}` },
+    });
+    const place = await prisma.collectible.create({
+      data: {
+        setId: set.id,
+        number: "KS-001",
+        name: "Lantern Test",
+        rarity: "Common",
+        metadata: JSON.stringify({ kind: "Place", ink: "Sea", note: "hidden-share-note" }),
+      },
+    });
+    const plain = await prisma.collectible.create({
+      data: { setId: set.id, number: "KS-002", name: "Plain Test" },
+    });
+    const placeVariant = await prisma.variant.create({
+      data: { collectibleId: place.id, name: "Base", isDefault: true },
+    });
+    await prisma.variant.create({ data: { collectibleId: plain.id, name: "Base", isDefault: true } });
+
+    const token = await registerUser(`kind-share-${stamp}@example.com`);
+    await addCopy(token, placeVariant.id, "KEEP");
+    const enableRes = await request(app)
+      .put(`/api/my/sets/${set.id}/share`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ enabled: true });
+    expect(enableRes.status).toBe(200);
+
+    const publicRes = await request(app).get(`/api/public/collections/${enableRes.body.share.share_id}`);
+    expect(publicRes.status).toBe(200);
+    expect(publicRes.body.owned).toEqual([
+      expect.objectContaining({ number: "KS-001", name: "Lantern Test", kind: "Place", ink: "Sea" }),
+    ]);
+    expect(publicRes.body.missing).toEqual([expect.objectContaining({ number: "KS-002", kind: null, ink: null })]);
+    expect(publicRes.body.owned[0]).not.toHaveProperty("condition");
+    const raw = JSON.stringify(publicRes.body);
+    expect(raw).not.toContain("hidden-share-note");
+    expect(raw).not.toContain("metadata");
+  });
 });
 
 function expectedExpiry(): number {

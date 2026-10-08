@@ -128,6 +128,10 @@ export interface MatchCollectibleRef {
   rarity: string | null;
   /** Present when the copy this match would use could be named. Null means the note was never set. */
   condition?: string | null;
+  /** Catalog kind for the face. Null when the catalog has no known kind. */
+  kind: string | null;
+  /** Catalog ink for the face color. Null when the catalog has no known ink. */
+  ink: string | null;
 }
 
 export interface MatchSideProgress {
@@ -163,6 +167,10 @@ export interface ExchangeCard {
   name: string;
   rarity: string | null;
   condition: string | null;
+  /** Current catalog kind. Null when the catalog has no known kind. Not stored on the exchange. */
+  kind: string | null;
+  /** Current catalog ink. Null when the catalog has no known ink. */
+  ink: string | null;
 }
 
 export interface Exchange {
@@ -209,6 +217,10 @@ export interface PublicCollectibleRef {
   number: string;
   name: string;
   rarity: string | null;
+  /** Catalog kind. Null when the catalog has no known kind. Not a copy's condition. */
+  kind: string | null;
+  /** Catalog ink. Null when the catalog has no known ink. */
+  ink: string | null;
 }
 
 export interface PublicDuplicateRef extends PublicCollectibleRef {
@@ -285,6 +297,10 @@ export interface CatalogSearchHit {
   number: string;
   name: string;
   rarity: string | null;
+  /** Known catalog kind, or null. The rest of the catalog metadata is not included. */
+  kind: string | null;
+  /** Known catalog ink, or null. */
+  ink: string | null;
   set: { id: string; name: string; code: string };
   universeName: string;
   /** Default printing. Null when the catalog has no default variant. Not a physical copy. */

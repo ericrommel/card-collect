@@ -1,3 +1,4 @@
+import { catalogFace } from "../../catalog/faceMetadata.js";
 import { prisma } from "../../db.js";
 import { createHitWindow } from "../../lib/hitWindow.js";
 import { ApiError } from "../../middleware/apiError.js";
@@ -167,11 +168,17 @@ export async function renewShareLink(ownerId: string, setId: string): Promise<Ow
 
 function toRefs(
   collectibleIds: string[],
-  byId: Map<string, { number: string; name: string; rarity: string | null }>,
+  byId: Map<string, { number: string; name: string; rarity: string | null; kind: string | null; ink: string | null }>,
 ): ShareCollectibleRef[] {
   return collectibleIds.map((id) => {
     const c = byId.get(id);
-    return { number: c?.number ?? "", name: c?.name ?? "Unknown", rarity: c?.rarity ?? null };
+    return {
+      number: c?.number ?? "",
+      name: c?.name ?? "Unknown",
+      rarity: c?.rarity ?? null,
+      kind: c?.kind ?? null,
+      ink: c?.ink ?? null,
+    };
   });
 }
 
@@ -224,7 +231,10 @@ export async function getPublicShareView(shareId: string): Promise<PublicShareVi
 
   const collectibles = await catalogProvider.listCollectibles(share.setId);
   const collectiblesById = new Map(
-    collectibles.map((c) => [c.id, { number: c.number, name: c.name, rarity: c.rarity }]),
+    collectibles.map((c) => {
+      const face = catalogFace(c.metadata);
+      return [c.id, { number: c.number, name: c.name, rarity: c.rarity, kind: face.kind, ink: face.ink }];
+    }),
   );
 
   const copies = await getUserCopies(share.ownerId, share.setId);
@@ -241,6 +251,8 @@ export async function getPublicShareView(shareId: string): Promise<PublicShareVi
         number: c?.number ?? "",
         name: c?.name ?? "Unknown",
         rarity: c?.rarity ?? null,
+        kind: c?.kind ?? null,
+        ink: c?.ink ?? null,
         duplicate_quantity: e.duplicateQuantity,
       };
     });

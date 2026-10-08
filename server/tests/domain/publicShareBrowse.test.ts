@@ -63,6 +63,9 @@ describe("publicCardsMatching", () => {
     expect(publicCardsMatching(cards, "rare").map((card) => card.number)).toEqual(["HA01-005"]);
     expect(publicCardsMatching(cards, "secret").map((card) => card.number)).toEqual(["HA01-006"]);
     expect(publicCardsMatching(cards, "leader").map((card) => card.number)).toEqual(["HA01-001"]);
+    const withKind: PublicCardRef[] = [{ name: "Lantern Keeper", number: "HA01-001", rarity: "C", kind: "Place" }];
+    expect(publicCardsMatching(withKind, "place").map((card) => card.number)).toEqual(["HA01-001"]);
+    expect(publicCardsMatching(cards, "place")).toEqual([]);
   });
 
   it("returns no cards when nothing matches", () => {
