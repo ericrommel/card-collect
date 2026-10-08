@@ -1504,6 +1504,17 @@ select {
     padding: 0.5rem 0.75rem;
   }
 
+  .explorer:has(.filter-panel) .explorer-heading + .notice-line,
+  .explorer:has(.filter-panel) .progress-summary {
+    display: none;
+  }
+
+  .filter-panel {
+    max-height: 6.5rem;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
   .explorer .progress-stats {
     margin-top: 0.35rem;
     gap: 0.15rem 0.65rem;
