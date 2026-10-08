@@ -272,7 +272,7 @@ The phone selection bar already asked for a 44px target, but the smaller button 
 
 ## 2026-10-08 — Opening More keeps the card in view
 
-On a phone, More makes the selection bar taller, and that bar was covering the card. Opening More now moves the card up until the name and number clear the bar, or until the name meets the search. Choosing another card after that does not jump the page.
+On a phone, More makes the selection bar taller, and that bar was covering the card. Opening More now moves the card up until the name and number clear the bar, or until the name meets the search. Choosing another card after that does not jump the page. On a wide screen the same bar sits over the grid, so the first selected card moves up in the same way. The card beside it stays open.
 
 ## Not done, on purpose
 
