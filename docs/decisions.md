@@ -262,6 +262,10 @@ A shared collection shows the name the person chose and the lists they turned on
 
 Offer duplicates used to mark copies for trade as soon as it was chosen. It now asks first. One copy stays, and the extras would be marked for trade. Cancel leaves the collection as it is. A card with only one free copy is named in that question and is not changed.
 
+## 2026-10-08 — Bulk changes ask first
+
+All copies and the condition list used to change every free copy as soon as a choice was picked. They now ask first. Cancel leaves the collection as it is. Copies in an open exchange are still left out.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
