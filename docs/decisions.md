@@ -60,6 +60,12 @@ A public link works for 30 days from the moment sharing is turned on. Renewing k
 
 An expired link is the same 404 as a link that never existed. The public response does not say that the collection exists. There is still no record of who opened the link.
 
+## 2026-10-08 — Offer duplicates keeps one copy
+
+Selecting cards and setting availability used to change every free copy, including the copy that makes the card owned. A collector who wanted to trade extras could accidentally offer the copy they meant to keep.
+
+**Offer duplicates** keeps one free copy of each selected card. It prefers a copy already marked Keep, and otherwise the oldest free copy. The other free copies are marked for trade. A card with only one free copy is left alone. **All copies** still changes every free copy when that is what the person wants. Copies reserved for an exchange are not changed.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

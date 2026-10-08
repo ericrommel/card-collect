@@ -88,9 +88,11 @@ Inside a set, filter by owned, missing, duplicates, rarity, availability,
 condition, and sample metadata. Sort, switch between grid and list, and
 select cards. **Mark owned** adds one Keep copy for each selected card you
 do not already own. **Add a copy** always adds another physical copy.
-Availability and condition apply to the copies you already have. A copy
-reserved for an open exchange cannot be changed. Select one card to edit
-it, or two cards to compare them.
+**Offer duplicates** keeps one copy of each selected card — the one already
+marked Keep, or else the oldest — and marks the other free copies for trade.
+**All copies** changes every free copy, including the one you are keeping.
+A copy reserved for an open exchange cannot be changed. Select one card to
+edit it, or two cards to compare them.
 
 ## Matches
 
