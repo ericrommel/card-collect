@@ -232,6 +232,11 @@ describe("collector dashboard", () => {
     expect(mine.body.recent_copies.map((copy: { collectible_number: string }) => copy.collectible_number)).toContain(
       "B-001",
     );
+    const recent = mine.body.recent_copies.find(
+      (copy: { collectible_number: string }) => copy.collectible_number === "B-001",
+    );
+    expect(recent).toMatchObject({ kind: "Place", ink: "Sea", rarity: "Common" });
+    expect(recent).not.toHaveProperty("metadata");
     expect(JSON.stringify(mine.body)).not.toContain(other.email);
     expect(JSON.stringify(mine.body)).not.toContain(owner.email);
 

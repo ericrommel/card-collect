@@ -1,4 +1,5 @@
 import { prisma } from "../../db.js";
+import { catalogFace } from "../../catalog/faceMetadata.js";
 import { sampleNoticeForSlug } from "../../catalog/sampleCatalog.js";
 import { calculateProgress, completionPercentageOf } from "../../domain/progress.js";
 import { listExchangesForUser, type ExchangeView } from "../exchanges/service.js";
@@ -47,6 +48,11 @@ export interface DashboardRecentCopy {
   collectible_name: string;
   set_id: string;
   set_code: string;
+  rarity: string | null;
+  /** Known catalog kind. Null when the catalog does not name one. */
+  kind: string | null;
+  /** Known catalog ink. Null when the catalog does not name one. */
+  ink: string | null;
   availability: string;
   condition: string | null;
   created_at: string;
@@ -170,6 +176,8 @@ export async function buildDashboard(userId: string): Promise<Dashboard> {
                 id: true,
                 number: true,
                 name: true,
+                rarity: true,
+                metadata: true,
                 setId: true,
                 set: { select: { code: true } },
               },
@@ -260,16 +268,22 @@ export async function buildDashboard(userId: string): Promise<Dashboard> {
   const recentCopies = [...copyRows]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, RECENT_COPY_LIMIT)
-    .map((copy) => ({
-      id: copy.id,
-      collectible_number: copy.variant.collectible.number,
-      collectible_name: copy.variant.collectible.name,
-      set_id: copy.variant.collectible.setId,
-      set_code: copy.variant.collectible.set.code,
-      availability: copy.availability,
-      condition: copy.condition,
-      created_at: copy.createdAt.toISOString(),
-    }));
+    .map((copy) => {
+      const face = catalogFace(copy.variant.collectible.metadata);
+      return {
+        id: copy.id,
+        collectible_number: copy.variant.collectible.number,
+        collectible_name: copy.variant.collectible.name,
+        set_id: copy.variant.collectible.setId,
+        set_code: copy.variant.collectible.set.code,
+        rarity: copy.variant.collectible.rarity,
+        kind: face.kind,
+        ink: face.ink,
+        availability: copy.availability,
+        condition: copy.condition,
+        created_at: copy.createdAt.toISOString(),
+      };
+    });
 
   return {
     totals,

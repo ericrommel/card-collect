@@ -544,6 +544,29 @@ select {
   color: inherit;
 }
 
+.exchange-faces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.recent-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 44px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.recent-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
 .recent-list {
   list-style: none;
   padding: 0;
@@ -1536,7 +1559,9 @@ select {
   .card-search .search-hit,
   .card-search .search-feedback,
   .account-panel input,
-  .account-panel button {
+  .account-panel button,
+  .recent-card,
+  .exchange-row {
     scroll-margin-top: calc(var(--header-h) + 0.5rem);
     scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
   }
