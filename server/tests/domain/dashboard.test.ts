@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickHighlights, toHighlight } from "../../src/modules/dashboard/service.js";
+import { pickHighlights, previewCollectible, toHighlight } from "../../src/modules/dashboard/service.js";
 import type { PublicMatch } from "../../src/modules/matching/service.js";
 
 function match(overrides: Partial<PublicMatch> & Pick<PublicMatch, "type" | "score">): PublicMatch {
@@ -67,5 +67,25 @@ describe("dashboard highlights", () => {
     expect(highlight.you_give_count).toBe(0);
     expect(highlight.you_give_preview).toEqual([]);
     expect(highlight.their_completion_before).toBeUndefined();
+  });
+});
+
+describe("set cover preview", () => {
+  const cards = [
+    { id: "a", number: "B-002" },
+    { id: "b", number: "B-001" },
+    { id: "c", number: "B-010" },
+  ];
+
+  it("uses the lowest number you own", () => {
+    expect(previewCollectible(cards, new Set(["a", "c"]))?.number).toBe("B-002");
+  });
+
+  it("uses the first card when you own none", () => {
+    expect(previewCollectible(cards, new Set())?.number).toBe("B-001");
+  });
+
+  it("returns null for an empty set", () => {
+    expect(previewCollectible([], new Set(["a"]))).toBeNull();
   });
 });

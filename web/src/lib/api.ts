@@ -426,6 +426,14 @@ export function bulkDeleteCopies(copyIds: string[]) {
   });
 }
 
+export interface SetPreviewCard {
+  number: string;
+  name: string;
+  rarity: string | null;
+  kind: string | null;
+  ink: string | null;
+}
+
 export interface DashboardSetSummary {
   id: string;
   code: string;
@@ -435,6 +443,7 @@ export interface DashboardSetSummary {
   universe_name: string;
   universe_slug: string;
   notice: string | null;
+  preview: SetPreviewCard | null;
   total_count: number;
   owned_count: number;
   missing_count: number;

@@ -222,6 +222,10 @@ The set page could tell a place from a person, but a search result, a match, an 
 
 Recently added cards and the short exchange list on home were text. Each recent card now uses the same sample drawing as the rest of the app, and an exchange row shows up to three of the cards you would receive. When you would receive nothing, it shows the cards you would give. These are the catalog drawings, not a photo of your copy. A photo still stays on your own set.
 
+## 2026-10-08 — A set opens with one of its cards
+
+The set list used a colored block and a code. Each set now shows one card from that set: the one you own with the lowest number, or the first card in the set when you have not started it. The drawing is the same sample mark as the rest of the app, not a photo. The set code stays in the text.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
