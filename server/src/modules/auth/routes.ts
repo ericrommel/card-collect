@@ -10,6 +10,7 @@ import { generateOpaqueId } from "../../lib/opaqueId.js";
 import { hashPassword, verifyPassword } from "./password.js";
 import { signToken } from "./jwt.js";
 import { clearSessionCookie, setSessionCookie } from "./sessionCookie.js";
+import { displayNameProblem } from "./displayName.js";
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
@@ -119,6 +120,8 @@ authRouter.post(
   limitAuthAttempts,
   asyncHandler(async (req, res) => {
     const body = registerSchema.parse(req.body);
+    const nameProblem = displayNameProblem(body.displayName);
+    if (nameProblem) throw ApiError.badRequest(nameProblem);
 
     const existing = await prisma.user.findUnique({ where: { email: body.email } });
     if (existing) {
@@ -197,6 +200,8 @@ authRouter.patch(
   requireAuth,
   asyncHandler(async (req, res) => {
     const body = profileSchema.parse(req.body);
+    const nameProblem = displayNameProblem(body.display_name);
+    if (nameProblem) throw ApiError.badRequest(nameProblem);
     const userId = (req as AuthenticatedRequest).userId;
     const user = await prisma.user.update({
       where: { id: userId },

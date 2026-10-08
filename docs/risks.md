@@ -47,6 +47,7 @@ Key risks include:
 - avoid public personal information by default;
 - do not implement unrestricted chat in V0;
 - keep matching possible without revealing contact details;
+- refuse a public display name that contains an email address or a web link;
 - design account age/guardian concepts so they can be introduced cleanly later;
 - use privacy-safe defaults for shared collection pages;
 - design reporting, blocking, and moderation hooks before social features launch.

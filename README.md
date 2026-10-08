@@ -80,9 +80,11 @@ password `password123`), or register a new account.
 
 **Account** in the header shows the email for this login and the display
 name other collectors see. The email cannot be changed. The display name
-can. Changing the password keeps this browser signed in and signs out the
-others. Sign out ends every session for the account. There is no email
-reset. Password guesses are limited to 10 a minute.
+can, and it cannot be an email address or a link, because matches,
+exchanges, and a shared collection show it. Changing the password keeps
+this browser signed in and signs out the others. Sign out ends every
+session for the account. There is no email reset. Password guesses are
+limited to 10 a minute.
 
 ## Collection
 

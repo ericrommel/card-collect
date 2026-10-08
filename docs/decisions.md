@@ -138,6 +138,10 @@ A copy already reserved for an open exchange stays in the owned count, and it is
 
 The exchanges page listed everything by the last update, so a proposal you received could sit under one you are only waiting on. Open exchanges that need you now come first. The page says how many need you and how many are waiting on the other person. That is the same split as the home count. The API list is unchanged. On a phone, the cards in that list are rows, so each name sits beside its face and stays above the navigation. A wide screen keeps the card grid.
 
+## 2026-10-08 — A display name cannot be an email or a link
+
+Matches, exchanges, and a shared collection show the name a person chose. Register and the account page only checked the length, so that name could be an email address or a web address. Those names are refused. The message is "Use a name that isn't an email address or a link." The check looks for `@`, `http://`, `https://`, and `www.`. It does not try to guess a phone number. A name already saved stays until that person edits it.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
