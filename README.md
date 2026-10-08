@@ -130,7 +130,7 @@ A copy reserved for an open exchange cannot be changed. On a wide screen,
 one selected card opens beside the grid and two selected cards compare
 side by side. On a phone, the set title and progress sit closer together, the sample notice is left to home and to a wide screen, and the card face is a little shorter, so the first card's name, number, and ownership stay above the navigation. Add sits on the card, and Share stays on the result line until it is opened. Selecting cards leaves the grid open. The bar stays on one row:
 how many are selected, Mark owned, and More for the other actions. The
-first selected card scrolls up so it sits above that bar. Use **Details**
+first selected card scrolls up so it sits above that bar. Opening More moves it up again, so the taller bar does not cover the name or number. Use **Details**
 or **Compare** on the bar when you want that panel, and closing
 it keeps the cards you selected.
 

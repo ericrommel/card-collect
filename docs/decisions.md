@@ -270,6 +270,10 @@ All copies and the condition list used to change every free copy as soon as a ch
 
 The phone selection bar already asked for a 44px target, but the smaller button style won, so Mark owned and the other actions stayed at 36px. Those actions are now 44px tall. The bar still stays on one row until More is opened. A wide screen keeps the shorter buttons.
 
+## 2026-10-08 — Opening More keeps the card in view
+
+On a phone, More makes the selection bar taller, and that bar was covering the card. Opening More now moves the card up until the name and number clear the bar, or until the name meets the search. Choosing another card after that does not jump the page.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
