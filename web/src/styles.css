@@ -1850,6 +1850,14 @@ select {
   }
 }
 
+/* A second shortcut row on the first catalog set sat under the navigation. */
+@media (max-width: 470px) {
+  .catalog-page.page-stack,
+  .catalog-page .page-stack {
+    gap: 0.5rem;
+  }
+}
+
 /* The exchange header and the count line wrap here, which puts the first card's number under the navigation. */
 @media (max-width: 359px) {
   .exchange-card .match-header {
