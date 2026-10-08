@@ -250,6 +250,10 @@ The detail panel was titled "Card", and the availability choices wrapped so one 
 
 The condition on a card you already own was a dropdown, and each copy was marked with a bullet. Condition is now Not set, Mint, Near Mint, Excellent, Good, Played, or Poor, in two columns, the same kind of choice as Keep or For trade. Tapping the condition that is already chosen does nothing. A copy held for an exchange stays locked. Adding a card still uses a short list, so the phone add panel can keep the save button on screen. Comparing two cards keeps the title above both of them, so those choices stay on one line. Condition is still your note, not a grade.
 
+## 2026-10-08 — Spare copies are called extras
+
+Home and the counts on a set already said extras, while the filter, the sort, and a public list said duplicates. Those now say extras too. The address still uses ownership=duplicates. Offer duplicates still keeps one copy and marks the rest for trade.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

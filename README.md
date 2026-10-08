@@ -2,7 +2,7 @@
 
 A safety-first collectible-card collection and exchange platform.
 
-Signed-in collectors land on a dashboard of their sets, completion, duplicates,
+Signed-in collectors land on a dashboard of their sets, completion, extras,
 matches, and exchanges. Each set opens as a card grid: search, filter, select
 many cards, and add or update copies in one action. A list view is available
 when a grid is the wrong shape.
@@ -114,7 +114,7 @@ you have, and copies for trade, sale, or donation. A set you have started
 comes first. Opening the cover applies that filter. A link can also search
 one card by its number.
 
-Inside a set, filter by owned, missing, duplicates, rarity, availability,
+Inside a set, filter by owned, missing, extras, rarity, availability,
 condition, and sample metadata. The address keeps that list, including the
 sort, so a refresh stays on it. On a phone the filter list scrolls on its
 own, so the cards stay on screen. The owned, missing, and extras counts on

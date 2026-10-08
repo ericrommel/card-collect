@@ -23,6 +23,7 @@ describe("publicSections", () => {
     });
     expect(sections.map((section) => section.id)).toEqual(["trade", "missing", "owned"]);
     expect(sections.map((section) => section.title)).toEqual(["For trade", "Missing", "Owned"]);
+    expect(publicSections({ duplicates: owned }).map((section) => section.title)).toEqual(["Extras"]);
     expect(sections[2]?.items).toBe(owned);
   });
 

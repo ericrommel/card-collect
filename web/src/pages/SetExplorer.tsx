@@ -38,7 +38,7 @@ const OWNERSHIP: { id: OwnershipFilter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "owned", label: "Owned" },
   { id: "missing", label: "Missing" },
-  { id: "duplicates", label: "Duplicates" },
+  { id: "duplicates", label: "Extras" },
 ];
 
 const AVAILABILITY_FILTERS: { id: AvailabilityFilter; label: string }[] = [
@@ -618,7 +618,7 @@ export function SetExplorerPage() {
               <option value="rarity">Rarity</option>
               <option value="missing">Missing first</option>
               <option value="owned">Most copies</option>
-              <option value="duplicates">Duplicates</option>
+              <option value="duplicates">Extras</option>
             </select>
           </label>
           <div className="segmented view-toggle" role="group" aria-label="Layout">
