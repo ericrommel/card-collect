@@ -599,7 +599,14 @@ visibility settings permit:
 Every field except `collector` and `set` is **omitted entirely** (not
 `null`) when the owner has that visibility flag off — a client should
 treat an absent key as "the owner chose not to show this," not as an
-empty list.
+empty list. An empty array means the owner shared that list and it has
+no cards.
+
+`trade_offers` and `give_away_offers` include a card only when at least
+one copy with that availability is not reserved for an open exchange. A
+reserved copy still counts in `owned`, `missing`, `duplicates`, and
+`completion_percentage`. The response has no reserved flag and no
+exchange id.
 
 → `404` if `shareId` was never issued, belongs to a disabled, expired, or
 revoked share, or doesn't exist — these cases are indistinguishable by

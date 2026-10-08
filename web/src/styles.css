@@ -1185,6 +1185,54 @@ select {
   gap: 0.9rem;
 }
 
+.public-progress {
+  margin-top: 0.85rem;
+}
+
+.has-session .public-page .eyebrow {
+  display: none;
+}
+
+.public-tools {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.35rem 0 0.55rem;
+  background: var(--bg);
+}
+
+.has-session .public-tools {
+  top: var(--header-h);
+}
+
+.public-tools .search-field {
+  flex: none;
+  width: 100%;
+}
+
+.public-tools .chip {
+  min-height: 44px;
+}
+
+.public-section {
+  scroll-margin-top: 9rem;
+}
+
+.has-session .public-section {
+  scroll-margin-top: calc(var(--header-h) + 9rem);
+}
+
+.public-also {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.45rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
 .public-grid {
   list-style: none;
   padding: 0;
@@ -1198,6 +1246,13 @@ select {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
+}
+
+.public-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
   min-width: 0;
 }
 
@@ -1672,6 +1727,42 @@ a.primary {
   .add-confirm-inline {
     scroll-margin-top: calc(var(--header-h) + 0.5rem);
     scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
+  }
+
+  .public-page {
+    gap: 0.55rem;
+  }
+
+  .public-page h1 {
+    font-size: 1.55rem;
+  }
+
+  .public-header,
+  .public-page .progress-summary,
+  .public-section {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .public-page .progress-stats {
+    margin-top: 0.35rem;
+  }
+
+  .public-section h2 {
+    margin-bottom: 0.15rem;
+  }
+
+  .public-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-grid li {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .public-grid .card-face-sm {
+    width: 84px;
   }
 
   .add-confirm-inline:not(.is-idle) {
