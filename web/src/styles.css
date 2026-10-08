@@ -1473,7 +1473,9 @@ select {
 
   .card-search input,
   .card-search .search-hit,
-  .card-search .search-feedback {
+  .card-search .search-feedback,
+  .account-panel input,
+  .account-panel button {
     scroll-margin-top: calc(var(--header-h) + 0.5rem);
     scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
   }
