@@ -106,6 +106,10 @@ Catalog search stays a public read. A working session adds `owned_quantity` for 
 
 A match used to add every card someone would receive and ignore a card they would give away. Trading away your only copy then looked like the set grew. The score and an open exchange now keep a spare and drop a card when none would remain. A declined, cancelled, or completed exchange leaves that projection empty instead of inventing the earlier percentages.
 
+## 2026-10-08 — Add a card is its own step
+
+Home search can save a Keep copy immediately. The Add page is the slower path: search the whole catalog, choose availability and condition, attach an optional photo, then confirm. A phone reaches it from the bottom navigation, and the installed site can offer the same shortcut. Recognition still does not choose the card. The set page remains the place to mark many cards at once.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

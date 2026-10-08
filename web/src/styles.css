@@ -1291,6 +1291,9 @@ select {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
+    white-space: nowrap;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
   }
 
   .has-session .app-main {
@@ -1392,6 +1395,11 @@ select {
   margin: 0;
 }
 
+.add-confirm .segmented button,
+.add-confirm .condition-field select {
+  min-height: 44px;
+}
+
 .guess-row {
   display: flex;
   justify-content: space-between;
@@ -1436,6 +1444,28 @@ a.primary {
   .add-confirm.is-idle {
     position: static;
     max-height: none;
+  }
+
+  .add-confirm-inline {
+    scroll-margin-top: calc(var(--header-h) + 0.5rem);
+    scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
+  }
+
+  .add-confirm-inline:not(.is-idle) {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    max-height: none;
+    z-index: auto;
+  }
+
+  .add-confirm-inline:not(.is-idle) .card-face {
+    display: block;
+  }
+
+  .add-card-page:has(.add-confirm-inline:not(.is-idle)) {
+    padding-bottom: 0;
   }
 }
 

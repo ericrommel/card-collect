@@ -95,8 +95,15 @@ opened, and the page says so.
 Home and the catalog can search the sample catalog by card name, number,
 or set. Each result says whether you have that card. You can add a Keep
 copy from the result. It has no condition until you set one, and the
-counts on that page update. You can also open the set already searched. A search without a working session does not include
-that count.
+counts on that page update. You can also open the set already searched.
+A search without a working session does not include that count.
+
+Add, in the navigation, is the step for one card. Search the whole
+catalog, choose availability and condition, and attach a photo if you
+want. The copy is saved only after you confirm. The photo stays on your
+account. Recognition does not pick the card unless a provider is
+configured, and a guess still has to be confirmed. Marking many cards at
+once stays on the set page.
 
 The numbers on home open a list of the sets that match: missing cards,
 extras, cards you have, and copies for trade, sale, or donation. Each set

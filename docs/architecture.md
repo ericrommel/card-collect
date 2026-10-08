@@ -151,8 +151,11 @@ server applies one batch in a single transaction and rejects the whole
 batch when any copy is not the caller's or is reserved, so a partial
 update cannot stick. See [api.md](api.md).
 
-`/sets/:setId/add` is the one-card flow: search, optional photo, then an
-explicit add. `modules/identification/cardIdentifier.ts` is the replaceable
+`/add` searches the whole catalog, then saves one copy only after the
+person picks availability and condition. An optional photo stays private.
+`/sets/:setId/add` is that same one-card flow for someone already in a
+set. Marking many cards at once stays a bulk action on the set page.
+`modules/identification/cardIdentifier.ts` is the replaceable
 recognition provider. The default reports that recognition is unavailable
 and does not invent a card. `modules/images/` checks JPEG and PNG bytes,
 strips metadata segments, and stores the file under `server/data/copy-images/`
