@@ -246,6 +246,10 @@ Each open exchange repeated that the app does not message anyone or arrange a me
 
 The detail panel was titled "Card", and the availability choices wrapped so one sat on a line by itself. The title is now the card's name. Keep, For trade, For sale, and Donation sit in two columns. Comparing two cards still titles the panel Compare and names each card underneath.
 
+## 2026-10-08 — A copy's condition is a set of choices
+
+The condition on a card you already own was a dropdown, and each copy was marked with a bullet. Condition is now Not set, Mint, Near Mint, Excellent, Good, Played, or Poor, in two columns, the same kind of choice as Keep or For trade. Tapping the condition that is already chosen does nothing. A copy held for an exchange stays locked. Adding a card still uses a short list, so the phone add panel can keep the save button on screen. Comparing two cards keeps the title above both of them, so those choices stay on one line. Condition is still your note, not a grade.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

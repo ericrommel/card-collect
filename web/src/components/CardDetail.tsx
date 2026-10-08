@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { Availability, ConditionGrade } from "../lib/api";
-import { CONDITION_GRADES } from "../lib/api";
 import type { ExplorerEntry } from "../lib/explorerQuery";
 import { defaultVariant } from "../lib/explorerQuery";
 import { kindFromMetadata } from "../lib/cardMotif";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS, rarityLabel, titleCaseKey } from "../lib/labels";
 import { CardFace, inkFromMetadata } from "./CardFace";
+import { ConditionChoices } from "./ConditionChoices";
 import { CopyPhotos } from "./CopyPhotos";
 
 function CopyEditor({
@@ -54,24 +54,12 @@ function CopyEditor({
               </button>
             ))}
           </div>
-          <label className="condition-field">
-            Condition
-            <select
-              aria-label={`Condition for ${collectible.name}, copy ${index + 1}`}
-              value={copy.condition ?? ""}
-              disabled={busy || copy.reserved}
-              onChange={(event) =>
-                onCondition(copy.id, event.target.value === "" ? null : (event.target.value as ConditionGrade))
-              }
-            >
-              <option value="">Not set</option>
-              {CONDITION_GRADES.map((grade) => (
-                <option key={grade} value={grade}>
-                  {grade}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ConditionChoices
+            value={copy.condition}
+            disabled={busy || copy.reserved}
+            label={`Condition for ${collectible.name}, copy ${index + 1}`}
+            onChange={(condition) => onCondition(copy.id, condition)}
+          />
           <CopyPhotos copy={copy} onChange={onPhotosChange} />
           {copy.reserved && copy.exchange_id ? (
             <Link to={`/exchanges#${copy.exchange_id}`} className="reserved-note">
@@ -200,7 +188,7 @@ export function CardDetail({
   return (
     <aside
       ref={panelRef}
-      className={`detail-panel detail-${mode}`}
+      className="detail-panel"
       tabIndex={modal ? -1 : undefined}
       role={modal ? "dialog" : undefined}
       aria-modal={modal ? true : undefined}

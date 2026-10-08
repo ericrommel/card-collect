@@ -267,6 +267,7 @@ button.primary.small {
 button.secondary.is-on,
 .chip[aria-pressed="true"],
 .segmented button[aria-pressed="true"],
+.condition-choices-grid button[aria-pressed="true"],
 .tab.active {
   background: #e7f3f0;
   color: var(--primary);
@@ -317,6 +318,12 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.copy-editor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .form label,
@@ -1069,6 +1076,34 @@ select {
 
 .copy-editor .segmented button {
   min-height: 44px;
+}
+
+.condition-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.condition-choices-label {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.condition-choices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+}
+
+.condition-choices-grid button {
+  min-height: 44px;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 .segmented button {
