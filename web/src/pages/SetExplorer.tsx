@@ -80,34 +80,10 @@ export function SetExplorerPage() {
   const { setId } = useParams<{ setId: string }>();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const linked = filtersFromSearchParams(params);
-  const [rest, setRest] = useState<Pick<ExplorerFilters, "rarities" | "condition" | "metadata" | "sort">>({
-    rarities: [],
-    condition: "any",
-    metadata: {},
-    sort: "number",
-  });
-  const filters = useMemo<ExplorerFilters>(
-    () => ({
-      search: linked.search,
-      ownership: linked.ownership,
-      availability: linked.availability,
-      rarities: rest.rarities,
-      condition: rest.condition,
-      metadata: rest.metadata,
-      sort: rest.sort,
-    }),
-    [linked.search, linked.ownership, linked.availability, rest],
-  );
+  const filters = useMemo(() => filtersFromSearchParams(params), [params]);
 
   function setFilters(update: ExplorerFilters | ((current: ExplorerFilters) => ExplorerFilters)) {
     const next = typeof update === "function" ? update(filters) : update;
-    setRest({
-      rarities: next.rarities,
-      condition: next.condition,
-      metadata: next.metadata,
-      sort: next.sort,
-    });
     const query = searchParamsFromFilters(next);
     if (query.toString() !== params.toString()) setParams(query, { replace: true });
   }
@@ -179,7 +155,6 @@ export function SetExplorerPage() {
   );
 
   useEffect(() => {
-    setRest({ rarities: [], condition: "any", metadata: {}, sort: "number" });
     setSelected(new Set());
     setSelecting(false);
     setInspect(false);
@@ -449,6 +424,23 @@ export function SetExplorerPage() {
 
   const notice = universes.find((universe) => universe.id === setInfo?.universeId)?.notice;
   const filterCount = activeFilterCount(filters);
+  const progressNarrowed =
+    filters.availability !== "any" ||
+    filters.rarities.length > 0 ||
+    filters.condition !== "any" ||
+    Object.values(filters.metadata).some((values) => values.length > 0);
+  const progressList = progressNarrowed ? null : filters.ownership;
+
+  function showProgressList(next: OwnershipFilter) {
+    setFilters((current) => ({
+      ...current,
+      ownership: progressList === next ? "all" : next,
+      availability: "any",
+      rarities: [],
+      condition: "any",
+      metadata: {},
+    }));
+  }
   const lead = explorerLead(filters);
   const visibleIds = visible.map((entry) => entry.collectible.id);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
@@ -516,10 +508,22 @@ export function SetExplorerPage() {
             <span>
               <strong>{progress.completion_percentage}%</strong> complete
             </span>
-            <span>{progress.owned_count} owned</span>
-            <span>{progress.missing_count} missing</span>
-            <span>{progress.duplicate_count} extras</span>
-            <span>{progress.total_count} in the set</span>
+            <button type="button" aria-pressed={progressList === "owned"} onClick={() => showProgressList("owned")}>
+              {progress.owned_count} owned
+            </button>
+            <button type="button" aria-pressed={progressList === "missing"} onClick={() => showProgressList("missing")}>
+              {progress.missing_count} missing
+            </button>
+            <button
+              type="button"
+              aria-pressed={progressList === "duplicates"}
+              onClick={() => showProgressList("duplicates")}
+            >
+              {progress.duplicate_count} extras
+            </button>
+            <button type="button" aria-pressed={progressList === "all"} onClick={() => showProgressList("all")}>
+              {progress.total_count} in the set
+            </button>
           </div>
           {progress.owned_count === 0 && (
             <p className="small">
@@ -727,7 +731,9 @@ export function SetExplorerPage() {
             <button
               type="button"
               className="link"
-              onClick={() => setFilters((current) => ({ ...current, ownership: "all", availability: "any" }))}
+              onClick={() =>
+                setFilters((current) => ({ ...EMPTY_FILTERS, search: current.search, sort: current.sort }))
+              }
             >
               Show all cards
             </button>
