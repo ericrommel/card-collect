@@ -24,7 +24,13 @@ Match highlights run only for sets the person has started, then keep the top thr
 
 ## 2026-10-08 — One web client
 
-The product surface is the responsive web app. It is not a native Android or iOS application. A later installable PWA must be described as a web app. Mobile-only abilities (camera, for example) stay behind a replaceable interface. Bearer tokens remain available for a future non-browser client.
+The product surface is the responsive web app. It is not a native Android or iOS application. It can be installed from the browser; that install is still this website, described below. Mobile-only abilities (camera, for example) stay behind a replaceable interface. Bearer tokens remain available for a future non-browser client.
+
+## 2026-10-08 — Installable website
+
+A browser can install Cards Collect from the manifest. The installed icon opens this website. It does not add an Android or iOS application, and it does not keep a copy of the collection on the device.
+
+The service worker does not store `/api` responses. Photos and collection data still come from the network with the session cookie. On activate, the worker deletes any cache an older copy may have left.
 
 ## 2026-10-08 — Request guards, not a new auth system
 
@@ -57,4 +63,4 @@ Each photo is limited to 5 MB. An account can keep 200 photos. HEIC is rejected.
 | AI condition estimate                  | Not built. Manual condition remains. An estimate would not be a professional grade, and two photos would not prove they are the same card.                                                                  |
 | Guided capture                         | Not built. A photo is optional and private. It is not proof of ownership, and the front and back are not checked to be the same card.                                                                       |
 | Content-Security-Policy on the web app | The API sends a strict policy. The dev server does not, so its scripts keep working. A production host for the built web app still needs framing and nosniff.                                               |
-| Native apps                            | Not built.                                                                                                                                                                                                  |
+| Native apps                            | Not built. A phone can install the website from the browser. That is still the website.                                                                                                                     |

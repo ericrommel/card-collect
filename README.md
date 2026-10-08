@@ -24,6 +24,7 @@ V0.2       — Smart Trade Score: deterministic, explainable ranking of matches
 Exchanges  — Propose, accept, and confirm a trade or donation
 Explorer   — Dashboard, visual collection browser, bulk copy changes, large sample catalog
 Photos     — Optional private photo on a copy. The app does not identify the card.
+Install    — The website can be added to a home screen. It is not a native app.
 ```
 
 Users track a collection, see what they own, miss, and have duplicated, mark
