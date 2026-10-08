@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { OfferCards } from "../components/OfferCards";
 import { SetCover } from "../components/SetCover";
 import type { DashboardHighlight, DashboardSetSummary } from "../lib/api";
 import { proposeExchange } from "../lib/api";
@@ -27,8 +28,6 @@ function HighlightCard({
   onPropose: (item: DashboardHighlight) => void;
 }) {
   const donation = item.type === "DONATION";
-  const receive = item.you_receive_preview.map((card) => card.name).join(", ");
-  const give = item.you_give_preview.map((card) => card.name).join(", ");
   return (
     <article className="card highlight-card">
       <div className="match-header">
@@ -42,17 +41,19 @@ function HighlightCard({
       </p>
       <p>
         You receive <strong>{item.you_receive_count}</strong>
-        {receive ? `: ${receive}` : ""}
-        {item.you_receive_count > item.you_receive_preview.length ? "…" : ""}
+        {item.you_receive_count > item.you_receive_preview.length ? `, showing ${item.you_receive_preview.length}` : ""}
       </p>
+      <OfferCards items={item.you_receive_preview} limit={3} />
       {donation ? (
         <p className="muted small">No cards go back. A donation is not a trade.</p>
       ) : (
-        <p>
-          You give <strong>{item.you_give_count}</strong>
-          {give ? `: ${give}` : ""}
-          {item.you_give_count > item.you_give_preview.length ? "…" : ""}
-        </p>
+        <>
+          <p>
+            You give <strong>{item.you_give_count}</strong>
+            {item.you_give_count > item.you_give_preview.length ? `, showing ${item.you_give_preview.length}` : ""}
+          </p>
+          <OfferCards items={item.you_give_preview} limit={3} />
+        </>
       )}
       <p className="small">
         Your set {item.your_completion_before}% → <strong>{item.your_completion_after}%</strong>
