@@ -202,6 +202,10 @@ A large set is longer than one screen. Search scrolled away with the title, so f
 
 A front photo lived only inside the card editor, so the grid kept the sample drawing after you attached one. On your own set, the grid and the list now show that photo. The sample drawing stays when there is no photo, or when the photo cannot be loaded. The editor still shows the sample drawing above the copy, next to the photo. A public page, a match, and a search result still use the sample drawing. The photo is still not proof that you hold the card.
 
+## 2026-10-08 — Add sits on the card
+
+A missing card on a wide screen put a full Add button under the name. That card was taller than the ones beside it. Add now sits on the corner of the picture, as it already did on a phone. The list still keeps Add in the row. Mark owned is still a separate step.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
