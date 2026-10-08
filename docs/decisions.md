@@ -66,6 +66,14 @@ Selecting cards and setting availability used to change every free copy, includi
 
 **Offer duplicates** keeps one free copy of each selected card. It prefers a copy already marked Keep, and otherwise the oldest free copy. The other free copies are marked for trade. A card with only one free copy is left alone. **All copies** still changes every free copy when that is what the person wants. Copies reserved for an exchange are not changed.
 
+## 2026-10-08 — Password change and sign-out end every session
+
+The session is a signed token. The server does not keep a separate row for each browser.
+
+The token carries a session version stored on the account. Sign-out increments it and clears this browser's cookie, so every older token stops working, including a copy on another browser. Password change increments it and sets a new cookie on the browser that proved the current password. A wrong current password does not end the session. Guessing is limited to 10 tries a minute for that account.
+
+The account page can also change the display name other collectors see. That does not end the session, and it does not change the email. There is no reset-by-email flow, because the app does not send mail.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
@@ -77,3 +85,4 @@ Selecting cards and setting availability used to change every free copy, includi
 | Content-Security-Policy on the web app | The API sends a strict policy. The dev server does not, so its scripts keep working. A production host for the built web app still needs framing, nosniff, and `X-Robots-Tag: noindex, nofollow`.           |
 | Native apps                            | Not built. A phone can install the website from the browser. That is still the website.                                                                                                                     |
 | Share-link social previews             | Not built. A crawler that does not run JavaScript sees the site description, not one collection. The HTML shell is noindex, so that page is not a public listing.                                           |
+| Email password reset                   | Not built. A signed-in person who knows the current password can change it. That signs out other browsers. There is no reset email.                                                                         |

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../db.js";
 import { asyncHandler } from "../../middleware/asyncHandler.js";
 import { ApiError } from "../../middleware/apiError.js";
-import { optionalUserId, requireAuth, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
+import { requireAuth, resolveSessionUserId, type AuthenticatedRequest } from "../../middleware/requireAuth.js";
 import { requireAppOrigin } from "../../middleware/requireAppOrigin.js";
 import { createHitWindow } from "../../lib/hitWindow.js";
 import { generateOpaqueId } from "../../lib/opaqueId.js";
@@ -21,6 +21,19 @@ const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
 });
+
+const passwordChangeSchema = z
+  .object({
+    current_password: z.string().min(1).max(200),
+    new_password: z.string().min(8).max(200),
+  })
+  .strict();
+
+const profileSchema = z
+  .object({
+    display_name: z.string().trim().min(1).max(60),
+  })
+  .strict();
 
 /** Never return email, password hash, or internal metadata to anyone but the account owner's own /me. */
 function toSelfProfile(user: { id: string; email: string; displayName: string; createdAt: Date }) {
@@ -40,10 +53,10 @@ function wantsBearerToken(req: import("express").Request): boolean {
 function issueSession(
   req: import("express").Request,
   res: import("express").Response,
-  user: Parameters<typeof toSelfProfile>[0],
+  user: Parameters<typeof toSelfProfile>[0] & { sessionVersion: number },
   status: number,
 ) {
-  const token = signToken(user.id);
+  const token = signToken(user.id, user.sessionVersion);
   setSessionCookie(res, token);
   res.status(status).json({
     ...(wantsBearerToken(req) ? { token } : {}),
@@ -70,6 +83,30 @@ function limitAuthAttempts(
   if (authHitWindow.tooMany(`auth:${req.ip ?? "unknown"}`, authAttemptLimit())) {
     res.setHeader("Retry-After", "60");
     throw ApiError.tooManyRequests("Too many attempts. Wait a minute and try again.");
+  }
+  next();
+}
+
+const passwordHitWindow = createHitWindow(60_000);
+
+function passwordAttemptLimit(): number {
+  const raw = process.env.PASSWORD_RATE_LIMIT;
+  if (raw) {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed >= 1) return parsed;
+  }
+  return 10;
+}
+
+function limitPasswordAttempts(
+  req: import("express").Request,
+  res: import("express").Response,
+  next: import("express").NextFunction,
+) {
+  const userId = (req as AuthenticatedRequest).userId;
+  if (passwordHitWindow.tooMany(`password:${userId}`, passwordAttemptLimit())) {
+    res.setHeader("Retry-After", "60");
+    throw ApiError.tooManyRequests("Too many password attempts. Wait a minute and try again.");
   }
   next();
 }
@@ -121,16 +158,58 @@ authRouter.post(
 authRouter.post(
   "/logout",
   requireAuth,
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
+    const userId = (req as AuthenticatedRequest).userId;
+    await prisma.user.update({
+      where: { id: userId },
+      data: { sessionVersion: { increment: 1 } },
+    });
     clearSessionCookie(res);
     res.status(204).send();
+  }),
+);
+
+authRouter.post(
+  "/password",
+  requireAuth,
+  limitPasswordAttempts,
+  asyncHandler(async (req, res) => {
+    const body = passwordChangeSchema.parse(req.body);
+    const userId = (req as AuthenticatedRequest).userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !(await verifyPassword(body.current_password, user.passwordHash))) {
+      throw ApiError.unauthorized("That password is not the current one.");
+    }
+    if (body.current_password === body.new_password) {
+      throw ApiError.badRequest("Choose a different password.");
+    }
+    const passwordHash = await hashPassword(body.new_password);
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, sessionVersion: { increment: 1 } },
+    });
+    issueSession(req, res, updated, 200);
+  }),
+);
+
+authRouter.patch(
+  "/me",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const body = profileSchema.parse(req.body);
+    const userId = (req as AuthenticatedRequest).userId;
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { displayName: body.display_name },
+    });
+    res.json({ user: toSelfProfile(user) });
   }),
 );
 
 authRouter.get(
   "/session",
   asyncHandler(async (req, res) => {
-    const userId = optionalUserId(req);
+    const userId = await resolveSessionUserId(req);
     if (!userId) {
       res.json({ user: null });
       return;

@@ -19,6 +19,9 @@ model User {
   /// Unguessable token used to address this collector in matches and
   /// exchanges. Not the auth subject, not shown on public share pages.
   publicId     String   @unique
+  /// Bumped when the password changes or the account signs out.
+  /// Tokens carry this value and stop working when it no longer matches.
+  sessionVersion Int    @default(0)
   createdAt    DateTime @default(now())
 
   copies             UserCopy[]

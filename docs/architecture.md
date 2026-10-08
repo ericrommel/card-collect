@@ -301,9 +301,18 @@ order (`orderBy: { id: "asc" }`) only matters as a starting point —
   origin-checked; they are the explicit non-browser credential.
 - Sign-in and registration share a limit of 20 attempts per minute per
   socket address. Proposing an exchange is limited to 30 per minute per
+  account. Changing a password is limited to 10 attempts per minute per
   account. The process does not trust `X-Forwarded-For` (`trust proxy` is
   off), so a client cannot pick its own rate-limit key. The suite raises
   the sign-in limit while `VITEST` is set.
+- Each token carries the account's session version (`sv`). Signing out, or
+  changing the password, increments that version. Older cookies and bearer
+  tokens then fail as an invalid session. Password change issues a new
+  session for the browser that sent the current password, so that browser
+  stays signed in. There is no per-device session list and no email reset.
+  A token that omits `sv` is rejected, including tokens issued before this
+  check existed. The profile JSON never includes the version or the
+  password hash.
 - API responses send `nosniff`, `no-referrer`, `DENY` framing, `no-store`,
   and `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`.
   They do not send `X-Powered-By`.
