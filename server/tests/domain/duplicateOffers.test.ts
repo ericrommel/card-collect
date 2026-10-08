@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { duplicateOfferStatus, planDuplicateOffers, type DuplicateCopyRef } from "../../../web/src/lib/duplicateOffers";
+import {
+  duplicateOfferStatus,
+  planDuplicateOffers,
+  type DuplicateCopyRef,
+} from "../../../web/src/lib/duplicateOffers.ts";
 
 function copy(partial: Partial<DuplicateCopyRef> & Pick<DuplicateCopyRef, "id">): DuplicateCopyRef {
   return {
