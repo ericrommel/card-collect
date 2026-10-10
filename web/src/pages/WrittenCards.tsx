@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { CardFace } from "../components/CardFace";
 import {
@@ -6,6 +6,7 @@ import {
   WrittenIdentityFields,
   draftFromCard,
   identityBody,
+  writtenMatchLine,
   type WrittenDraft,
 } from "../components/WriteCardForm";
 import {
@@ -20,6 +21,7 @@ import {
   type Availability,
   type ConditionGrade,
   type WrittenCard,
+  type WrittenConflict,
   type WrittenCopy,
   type WrittenList,
 } from "../lib/api";
@@ -110,7 +112,7 @@ function CorrectNote({
   card: WrittenCard;
   busy: boolean;
   error: string | null;
-  clash: { cardId: string; message: string } | null;
+  clash: WrittenConflict | null;
   onCancel: () => void;
   onSave: (draft: WrittenDraft) => void;
   onAddCopyOf: (cardId: string) => void;
@@ -126,17 +128,34 @@ function CorrectNote({
         onSave(draft);
       }}
     >
-      <WrittenIdentityFields draft={draft} onChange={setDraft} includePrinting={false} />
+      <WrittenIdentityFields draft={draft} onChange={setDraft} includePrinting={false} locked={clash !== null} />
       <p className="muted small">This changes your note only. It does not change anyone else's cards.</p>
       {error && <p className="error">{error}</p>}
       {clash && (
         <div className="written-conflict" role="status">
           <p>{clash.message}</p>
           <p className="muted small">This note was not changed.</p>
+          {clash.code === "confirm_same" ? (
+            <ul className="written-matches">
+              {clash.matches.map((match) => (
+                <li key={match.id}>
+                  <p>
+                    <strong>{match.name}</strong> <span className="muted">{writtenMatchLine(match)}</span>
+                  </p>
+                  <button type="button" className="primary" disabled={busy} onClick={() => onAddCopyOf(match.id)}>
+                    Add a copy
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="written-actions">
+              <button type="button" className="primary" disabled={busy} onClick={() => onAddCopyOf(clash.card_id)}>
+                Add a copy
+              </button>
+            </div>
+          )}
           <div className="written-actions">
-            <button type="button" className="primary" disabled={busy} onClick={() => onAddCopyOf(clash.cardId)}>
-              Add a copy
-            </button>
             <button type="button" className="secondary" disabled={busy} onClick={onCancel}>
               Cancel
             </button>
@@ -166,7 +185,8 @@ export function WrittenCardsPage() {
   const [busy, setBusy] = useState(false);
   const [correctingId, setCorrectingId] = useState<string | null>(null);
   const [correctError, setCorrectError] = useState<string | null>(null);
-  const [correctClash, setCorrectClash] = useState<{ cardId: string; message: string } | null>(null);
+  const [correctClash, setCorrectClash] = useState<WrittenConflict | null>(null);
+  const scrolledHash = useRef<string | null>(null);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [editingCopyId, setEditingCopyId] = useState<string | null>(null);
 
@@ -192,8 +212,11 @@ export function WrittenCardsPage() {
   }, []);
 
   useEffect(() => {
-    if (!list || !hash) return;
-    document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start" });
+    if (!list || !hash || scrolledHash.current === hash) return;
+    const node = document.getElementById(hash.slice(1));
+    if (!node) return;
+    node.scrollIntoView({ block: "start" });
+    scrolledHash.current = hash;
   }, [list, hash]);
 
   function closeEditors() {
@@ -230,8 +253,8 @@ export function WrittenCardsPage() {
       setNotice("Saved. This changes your note only. It does not change anyone else's cards.");
     } catch (err) {
       const clash = writtenConflict(err);
-      if (clash?.code === "already_written") {
-        setCorrectClash({ cardId: clash.card_id, message: clash.message });
+      if (clash) {
+        setCorrectClash(clash);
         setCorrectError(null);
       } else {
         setCorrectClash(null);

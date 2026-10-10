@@ -621,6 +621,10 @@ export interface WrittenSameMatch {
   name: string;
   game: string;
   set_name: string;
+  set_code?: string | null;
+  rarity?: string | null;
+  language?: string | null;
+  copy_count?: number;
 }
 
 export interface WrittenIdentityBody {
@@ -652,13 +656,21 @@ function isWrittenCard(value: unknown): value is WrittenCard {
   return typeof value.id === "string" && typeof value.name === "string" && Array.isArray(value.copies);
 }
 
+function isOptionalText(value: unknown): boolean {
+  return value === undefined || value === null || typeof value === "string";
+}
+
 function isWrittenSameMatch(value: unknown): value is WrittenSameMatch {
   if (!isRecord(value)) return false;
   return (
     typeof value.id === "string" &&
     typeof value.name === "string" &&
     typeof value.game === "string" &&
-    typeof value.set_name === "string"
+    typeof value.set_name === "string" &&
+    isOptionalText(value.set_code) &&
+    isOptionalText(value.rarity) &&
+    isOptionalText(value.language) &&
+    (value.copy_count === undefined || typeof value.copy_count === "number")
   );
 }
 

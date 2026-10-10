@@ -68,7 +68,7 @@ export function writtenSummary(cards: CardWithCopies[]) {
   };
 }
 
-function alreadyWritten(card: CardWithCopies) {
+function alreadyWritten(card: CardWithCopies): never {
   throw new ApiError(409, "You already wrote this down. Add another physical copy?", {
     code: "already_written",
     card_id: card.id,
@@ -76,16 +76,85 @@ function alreadyWritten(card: CardWithCopies) {
   });
 }
 
-function confirmSame(cards: CardWithCopies[]) {
+function matchSummary(card: CardWithCopies) {
+  return {
+    id: card.id,
+    name: card.name,
+    game: card.game,
+    set_name: card.setName,
+    set_code: card.setCode,
+    rarity: card.rarity,
+    language: card.language,
+    copy_count: card.copies.length,
+  };
+}
+
+function confirmSame(cards: CardWithCopies[]): never {
+  const ordered = [...cards].sort(
+    (a, b) => a.disambiguator - b.disambiguator || a.createdAt.getTime() - b.createdAt.getTime(),
+  );
   throw new ApiError(409, "You already wrote down a card with this name and no number.", {
     code: "confirm_same",
-    matches: cards.map((card) => ({
-      id: card.id,
-      name: card.name,
-      game: card.game,
-      set_name: card.setName,
-    })),
+    matches: ordered.map(matchSummary),
   });
+}
+
+function isUniqueConflict(error: unknown): error is Prisma.PrismaClientKnownRequestError {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+}
+
+type CardDb = Prisma.TransactionClient | typeof prisma;
+
+function notesWithKey(db: CardDb, ownerId: string, key: string, exceptId?: string) {
+  return db.personalCard.findMany({
+    where: {
+      ownerId,
+      normalizedKey: key,
+      ...(exceptId ? { id: { not: exceptId } } : {}),
+    },
+    include: cardInclude,
+    orderBy: [{ disambiguator: "asc" }, { createdAt: "asc" }],
+  });
+}
+
+function newCardData(
+  ownerId: string,
+  identity: PersonalIdentity,
+  key: string,
+  disambiguator: number,
+  availability: Availability,
+  condition: string | null,
+  printing: string | null,
+): Prisma.PersonalCardUncheckedCreateInput {
+  return {
+    ownerId,
+    rawName: identity.name,
+    rawGame: identity.game,
+    rawSetName: identity.setName,
+    rawNumber: identity.number,
+    noNumber: identity.noNumber,
+    name: identity.name,
+    game: identity.game,
+    setName: identity.setName,
+    number: identity.number,
+    rawSetCode: identity.setCode,
+    setCode: identity.setCode,
+    rawRarity: identity.rarity,
+    rarity: identity.rarity,
+    rawLanguage: identity.language,
+    language: identity.language,
+    normalizedKey: key,
+    disambiguator,
+    copies: {
+      create: {
+        ownerId,
+        availability,
+        condition,
+        printing,
+        rawPrinting: printing,
+      },
+    },
+  };
 }
 
 function requireIdentity(input: WrittenCardInput): PersonalIdentity {
@@ -188,50 +257,58 @@ export async function createWrittenCard(ownerId: string, input: WrittenCardInput
         return tx.personalCard.findUniqueOrThrow({ where: { id: found.id }, include: cardInclude });
       }
 
-      const created = await tx.personalCard.create({
-        data: {
+      return tx.personalCard.create({
+        data: newCardData(
           ownerId,
-          rawName: identity.name,
-          rawGame: identity.game,
-          rawSetName: identity.setName,
-          rawNumber: identity.number,
-          noNumber: identity.noNumber,
-          name: identity.name,
-          game: identity.game,
-          setName: identity.setName,
-          number: identity.number,
-          rawSetCode: identity.setCode,
-          setCode: identity.setCode,
-          rawRarity: identity.rarity,
-          rarity: identity.rarity,
-          rawLanguage: identity.language,
-          language: identity.language,
-          normalizedKey: key,
-          disambiguator: identity.noNumber ? nextDisambiguator(existing) : 0,
-          copies: {
-            create: {
-              ownerId,
-              availability: input.availability,
-              condition,
-              printing,
-              rawPrinting: printing,
-            },
-          },
-        },
+          identity,
+          key,
+          identity.noNumber ? nextDisambiguator(existing) : 0,
+          input.availability,
+          condition,
+          printing,
+        ),
         include: cardInclude,
       });
-      return created;
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      const found = await prisma.personalCard.findFirst({
-        where: { ownerId, normalizedKey: key },
-        include: cardInclude,
-      });
-      if (found) alreadyWritten(found);
+    if (error instanceof ApiError) throw error;
+    if (!isUniqueConflict(error)) throw error;
+    // Two no-number saves can pick the same disambiguator. Ask again, or retry one
+    // "different card" insert. A numbered collision is the one note for that key.
+    if (identity.noNumber && input.differentCard) {
+      try {
+        return await insertDifferentNote(ownerId, identity, key, input.availability, condition, printing);
+      } catch (retryError) {
+        if (retryError instanceof ApiError) throw retryError;
+        if (!isUniqueConflict(retryError)) throw retryError;
+      }
     }
-    throw error;
+    const matches = await notesWithKey(prisma, ownerId, key);
+    const found = matches[0];
+    if (!found) throw error;
+    if (identity.noNumber) confirmSame(matches);
+    alreadyWritten(found);
   }
+}
+
+async function insertDifferentNote(
+  ownerId: string,
+  identity: PersonalIdentity,
+  key: string,
+  availability: Availability,
+  condition: string | null,
+  printing: string | null,
+) {
+  return prisma.$transaction(async (tx) => {
+    const existing = await tx.personalCard.findMany({
+      where: { ownerId, normalizedKey: key },
+      select: { disambiguator: true },
+    });
+    return tx.personalCard.create({
+      data: newCardData(ownerId, identity, key, nextDisambiguator(existing), availability, condition, printing),
+      include: cardInclude,
+    });
+  });
 }
 
 export async function correctWrittenCard(
@@ -242,28 +319,45 @@ export async function correctWrittenCard(
   const current = await loadOwnedCard(ownerId, cardId);
   const identity = requireIdentity({ ...input, availability: "KEEP" });
   const key = personalNormalizedKey(identity);
-  const clash = await prisma.personalCard.findFirst({
-    where: { ownerId, normalizedKey: key, NOT: { id: current.id } },
-    include: cardInclude,
-  });
-  if (clash) alreadyWritten(clash);
+  const sameKey = key === current.normalizedKey;
+  // A numbered note is one row per key, so a former no-number sibling takes disambiguator 0.
+  // An unchanged no-number key keeps its own disambiguator and is not a clash with its sibling.
+  const disambiguator = identity.noNumber ? current.disambiguator : 0;
 
-  const updated = await prisma.personalCard.update({
-    where: { id: current.id },
-    data: {
-      name: identity.name,
-      game: identity.game,
-      setName: identity.setName,
-      number: identity.number,
-      noNumber: identity.noNumber,
-      setCode: identity.setCode,
-      rarity: identity.rarity,
-      language: identity.language,
-      normalizedKey: key,
-    },
-    include: cardInclude,
-  });
-  return updated;
+  try {
+    return await prisma.$transaction(async (tx) => {
+      if (!sameKey) {
+        const clashes = await notesWithKey(tx, ownerId, key, current.id);
+        if (clashes.length > 1) confirmSame(clashes);
+        if (clashes.length === 1) alreadyWritten(clashes[0]);
+      }
+      return tx.personalCard.update({
+        where: { id: current.id },
+        data: {
+          name: identity.name,
+          game: identity.game,
+          setName: identity.setName,
+          number: identity.number,
+          noNumber: identity.noNumber,
+          setCode: identity.setCode,
+          rarity: identity.rarity,
+          language: identity.language,
+          normalizedKey: key,
+          disambiguator,
+        },
+        include: cardInclude,
+      });
+    });
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (!isUniqueConflict(error)) throw error;
+    const clashes = await notesWithKey(prisma, ownerId, key, current.id);
+    const exact = clashes.find((card) => card.disambiguator === disambiguator);
+    if (exact) alreadyWritten(exact);
+    if (clashes.length > 1) confirmSame(clashes);
+    if (clashes.length === 1) alreadyWritten(clashes[0]);
+    throw error;
+  }
 }
 
 export async function addWrittenCopy(

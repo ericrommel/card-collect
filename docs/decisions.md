@@ -310,6 +310,14 @@ The words from the first save stay stored. Correcting the note changes the worki
 
 Only that account can read or change the note. A guessed id returns the same 404 as a missing copy. Deleting the last copy deletes the note, the original strings, and the key. "For trade" and "Donation" are labels for the owner. They do not create a match and they do not reserve the copy. Home keeps the catalog percent. Under that sentence it says the notes stay on the account. After the first note, "Cards you wrote down" counts notes and extra copies and never shows a percent. A later confirm against a licensed catalog is specified only. It is not built.
 
+## 2026-10-10 — Correcting a note does not treat its own key as a duplicate
+
+Two notes the owner called different cards may share a normalized key when neither has a collector number. Changing set code, rarity, language, or the spacing of that same key saves. It does not ask about a duplicate. A correction that changes the key onto exactly one other note is still refused, and both original texts stay. If more than one note already uses the new key, the page lists those notes so the owner can add a copy to one of them. It does not pick a note and it does not merge them. Giving a note a collector number makes that number one note on the account. A later save of the same number asks to add a copy on that note.
+
+While the add page is asking about a duplicate, the name, game, set, and number stay as they were when the question appeared. Adding the extra copy uses that note. Cancel is what lets the owner type a different card.
+
+The stored original text is the accepted value from the first save, after trimming and the same Unicode normalization. A correction does not change it.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
@@ -322,5 +330,5 @@ Only that account can read or change the note. A guessed id returns the same 404
 | Native apps                            | Not built. A phone can install the website from the browser. That is still the website.                                                                                                                     |
 | Share-link social previews             | Not built. A crawler that does not run JavaScript sees the site description, not one collection. The HTML shell is noindex, so that page is not a public listing.                                           |
 | Email password reset                   | Not built. A signed-in person who knows the current password can change it. That signs out other browsers. There is no reset email.                                                                         |
-| A public list of cards someone typed   | Not built. A written-down card stays on that account. Another person, a public share, and a match do not receive the typed text.                                                                              |
-| Licensed match for a written-down card | Not built. Confirming a licensed catalog row would need a license. No provider is called, and no checklist is scraped.                                                                                       |
+| A public list of cards someone typed   | Not built. A written-down card stays on that account. Another person, a public share, and a match do not receive the typed text.                                                                            |
+| Licensed match for a written-down card | Not built. Confirming a licensed catalog row would need a license. No provider is called, and no checklist is scraped.                                                                                      |

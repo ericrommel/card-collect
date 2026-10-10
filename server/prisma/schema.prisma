@@ -154,7 +154,7 @@ model CopyImage {
 
 /// A real card the signed-in person typed. It is not a catalog row.
 /// Other accounts cannot search it, share it, or match it.
-/// Raw strings stay as typed. Working strings are what the owner sees after a correction.
+/// Raw columns freeze the first accepted value. They are not updated when the owner corrects the working text.
 model PersonalCard {
   id      String @id @default(cuid())
   ownerId String

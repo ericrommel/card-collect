@@ -704,8 +704,10 @@ count is not a list of people, and opening the page yourself counts.
 These routes record a card the sample catalog does not have. They do not
 create a universe, set, collectible, variant, or `UserCopy`. Catalog
 search, matches, exchanges, public shares, and completion do not read
-them. The response never includes the original typed strings or the
-private normalized key. Another account's id is the same `404`
+them. The response never includes the original text or the private
+normalized key. That original text is the accepted value from the first
+save, after trimming and Unicode normalization, and a correction does
+not change it. Another account's id is the same `404`
 `{ "error": "Not found" }` as a missing row.
 
 A field containing `@`, `http://`, `https://`, or `www.` is `400` with
@@ -799,13 +801,28 @@ notes with that same key, is `409` unless `different_card` or
 {
   "error": "You already wrote down a card with this name and no number.",
   "code": "confirm_same",
-  "matches": [{ "id": "...", "name": "Ace", "game": "Sample Game", "set_name": "Notebook Set" }]
+  "matches": [
+    {
+      "id": "...",
+      "name": "Ace",
+      "game": "Sample Game",
+      "set_name": "Notebook Set",
+      "set_code": null,
+      "rarity": null,
+      "language": null,
+      "copy_count": 1
+    }
+  ]
 }
 ```
 
-`same_card_id` adds a copy on that match. `different_card: true` stores
-a separate note. A `same_card_id` that is not one of those matches is
-`400`.
+Matches are ordered by the note's disambiguator, then by when it was
+saved. `set_code`, `rarity`, `language`, and `copy_count` distinguish
+notes that share a name. `same_card_id` adds a copy on that match.
+`different_card: true` stores a separate note. A `same_card_id` that is
+not one of those matches is `400`. Two saves of a no-number card that
+arrive together ask this question again. They do not use the numbered
+copy question.
 
 ### `PATCH /my/personal-cards/:id`
 
@@ -815,9 +832,16 @@ on this body. The original strings do not change.
 
 → `200 { "card": WrittenCard }`
 
-If the new key matches a different note this owner already has, the save
-is `409` with `code: "already_written"`, `card_id`, and `card` for the
-other note. This note is left as it was.
+A correction that keeps the same normalized key is saved. That includes
+a no-number note which shares its key with another note, and a change
+only to set code, rarity, or language. Giving the note a collector
+number stores disambiguator `0`, so that number is one note.
+
+If the new key matches exactly one other note, the save is `409` with
+`code: "already_written"`, `card_id`, and `card` for that note. If it
+matches more than one, the save is `409` with `code: "confirm_same"` and
+the same `matches` list as create. This note is left as it was. A unique
+collision on the save is `409` `already_written`, not `500`.
 
 ### `POST /my/personal-cards/:id/copies`
 

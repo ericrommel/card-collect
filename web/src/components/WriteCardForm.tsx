@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   ApiError,
   CONDITION_GRADES,
+  addWrittenCopy,
   createWrittenCard,
   writtenConflict,
   type Availability,
@@ -11,6 +12,7 @@ import {
   type WrittenConflict,
   type WrittenCreateBody,
   type WrittenIdentityBody,
+  type WrittenSameMatch,
 } from "../lib/api";
 import { AVAILABILITY_LABEL, AVAILABILITY_OPTIONS } from "../lib/labels";
 
@@ -75,6 +77,17 @@ export function identityBody(draft: WrittenDraft): WrittenIdentityBody {
   };
 }
 
+export function writtenMatchLine(match: WrittenSameMatch): string {
+  const parts = [match.game, match.set_name];
+  if (match.set_code) parts.push(match.set_code);
+  if (match.rarity) parts.push(match.rarity);
+  if (match.language) parts.push(match.language);
+  if (typeof match.copy_count === "number") {
+    parts.push(match.copy_count === 1 ? "1 copy" : `${match.copy_count} copies`);
+  }
+  return parts.join(" · ");
+}
+
 function successSentence(card: WrittenCard): string {
   if (card.copy_count > 1) {
     return `Added another copy of ${card.name}. This is your note, not an official card.`;
@@ -127,18 +140,21 @@ export function WrittenIdentityFields({
   onChange,
   includePrinting,
   autoFocusName = false,
+  locked = false,
 }: {
   draft: WrittenDraft;
   onChange: (next: WrittenDraft) => void;
   includePrinting: boolean;
   autoFocusName?: boolean;
+  locked?: boolean;
 }) {
   function patch(partial: Partial<WrittenDraft>) {
+    if (locked) return;
     onChange({ ...draft, ...partial });
   }
 
   return (
-    <>
+    <div className="written-identity">
       <label>
         Card name
         <input
@@ -147,6 +163,7 @@ export function WrittenIdentityFields({
           maxLength={80}
           autoComplete="off"
           autoFocus={autoFocusName}
+          disabled={locked}
           onChange={(event) => patch({ name: event.target.value })}
         />
       </label>
@@ -157,6 +174,7 @@ export function WrittenIdentityFields({
           value={draft.game}
           maxLength={60}
           autoComplete="off"
+          disabled={locked}
           onChange={(event) => patch({ game: event.target.value })}
         />
       </label>
@@ -167,6 +185,7 @@ export function WrittenIdentityFields({
           value={draft.setName}
           maxLength={80}
           autoComplete="off"
+          disabled={locked}
           onChange={(event) => patch({ setName: event.target.value })}
         />
       </label>
@@ -177,7 +196,7 @@ export function WrittenIdentityFields({
           value={draft.noNumber ? "" : draft.number}
           maxLength={16}
           autoComplete="off"
-          disabled={draft.noNumber}
+          disabled={locked || draft.noNumber}
           onChange={(event) => patch({ number: event.target.value })}
         />
       </label>
@@ -185,6 +204,7 @@ export function WrittenIdentityFields({
         <input
           type="checkbox"
           checked={draft.noNumber}
+          disabled={locked}
           onChange={(event) =>
             patch({ noNumber: event.target.checked, number: event.target.checked ? "" : draft.number })
           }
@@ -198,6 +218,7 @@ export function WrittenIdentityFields({
           value={draft.setCode}
           maxLength={40}
           autoComplete="off"
+          disabled={locked}
           onChange={(event) => patch({ setCode: event.target.value })}
         />
       </label>
@@ -208,6 +229,7 @@ export function WrittenIdentityFields({
           value={draft.rarity}
           maxLength={40}
           autoComplete="off"
+          disabled={locked}
           onChange={(event) => patch({ rarity: event.target.value })}
         />
       </label>
@@ -218,6 +240,7 @@ export function WrittenIdentityFields({
           value={draft.language}
           maxLength={40}
           autoComplete="off"
+          disabled={locked}
           onChange={(event) => patch({ language: event.target.value })}
         />
       </label>
@@ -233,7 +256,7 @@ export function WrittenIdentityFields({
           />
         </label>
       )}
-    </>
+    </div>
   );
 }
 
@@ -241,6 +264,7 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
   const conflictRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<WrittenDraft>(emptyWrittenDraft);
   const [conflict, setConflict] = useState<WrittenConflict | null>(null);
+  const [lockedBody, setLockedBody] = useState<WrittenIdentityBody | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -248,30 +272,59 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
     if (conflict) conflictRef.current?.scrollIntoView({ block: "nearest" });
   }, [conflict]);
 
+  function clearConflict() {
+    setConflict(null);
+    setLockedBody(null);
+  }
+
+  function copyBody() {
+    return {
+      availability: draft.availability,
+      condition: draft.condition || null,
+      printing: blankToNull(draft.printing),
+    };
+  }
+
   async function submit(flags?: Pick<WrittenCreateBody, "add_copy" | "different_card" | "same_card_id">) {
     if (busy) return;
     setBusy(true);
     setError(null);
+    const identity = lockedBody ?? identityBody(draft);
     try {
       const res = await createWrittenCard({
-        ...identityBody(draft),
-        printing: blankToNull(draft.printing),
-        availability: draft.availability,
-        condition: draft.condition || null,
+        ...identity,
+        ...copyBody(),
         ...flags,
       });
-      setConflict(null);
+      clearConflict();
       setDraft(emptyWrittenDraft());
       onSaved(successSentence(res.card));
     } catch (err) {
       const found = writtenConflict(err);
       if (found) {
         setConflict(found);
+        setLockedBody(identity);
         setError(null);
       } else {
-        setConflict(null);
+        clearConflict();
         setError(err instanceof ApiError ? err.message : "The note was not saved.");
       }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function addCopyFromConflict() {
+    if (busy || conflict?.code !== "already_written") return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await addWrittenCopy(conflict.card_id, copyBody());
+      clearConflict();
+      setDraft(emptyWrittenDraft());
+      onSaved(successSentence(res.card));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "The copy was not added.");
     } finally {
       setBusy(false);
     }
@@ -291,7 +344,13 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
           Close
         </button>
       </div>
-      <WrittenIdentityFields draft={draft} onChange={setDraft} includePrinting autoFocusName />
+      <WrittenIdentityFields
+        draft={draft}
+        onChange={setDraft}
+        includePrinting
+        autoFocusName
+        locked={conflict !== null}
+      />
       <AvailabilityFields
         availability={draft.availability}
         condition={draft.condition}
@@ -309,12 +368,13 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
       {conflict && (
         <div className="written-conflict" ref={conflictRef} role="status">
           <p>{conflict.message}</p>
+          <p className="muted small">Cancel to change the name, game, set, or number.</p>
           {conflict.code === "already_written" ? (
             <div className="written-actions">
-              <button type="button" className="primary" disabled={busy} onClick={() => void submit({ add_copy: true })}>
+              <button type="button" className="primary" disabled={busy} onClick={() => void addCopyFromConflict()}>
                 Add another physical copy
               </button>
-              <button type="button" className="secondary" disabled={busy} onClick={() => setConflict(null)}>
+              <button type="button" className="secondary" disabled={busy} onClick={clearConflict}>
                 Cancel
               </button>
             </div>
@@ -324,10 +384,7 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
                 {conflict.matches.map((match) => (
                   <li key={match.id}>
                     <p>
-                      <strong>{match.name}</strong>{" "}
-                      <span className="muted">
-                        {match.game} · {match.set_name}
-                      </span>
+                      <strong>{match.name}</strong> <span className="muted">{writtenMatchLine(match)}</span>
                     </p>
                     <button
                       type="button"
@@ -349,7 +406,7 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
                 >
                   A different card?
                 </button>
-                <button type="button" className="secondary" disabled={busy} onClick={() => setConflict(null)}>
+                <button type="button" className="secondary" disabled={busy} onClick={clearConflict}>
                   Cancel
                 </button>
               </div>

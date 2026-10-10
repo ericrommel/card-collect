@@ -2147,6 +2147,17 @@ a.primary {
   }
 }
 
+.written-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-inline-size: 0;
+}
+
+.written-identity input:disabled {
+  opacity: 0.72;
+}
+
 .written-form input:not([type="checkbox"]),
 .written-copy-form input:not([type="checkbox"]) {
   width: 100%;
@@ -2215,6 +2226,8 @@ a.primary {
 .written-form,
 .written-note,
 .written-conflict,
+.written-conflict .primary,
+.written-conflict .secondary,
 .written-save {
   scroll-margin-top: calc(var(--header-h) + 0.5rem);
   scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
