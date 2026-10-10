@@ -318,6 +318,12 @@ While a note is saving, and while the add page is asking about a duplicate, the 
 
 The stored original text is the accepted value from the first save, after trimming and the same Unicode normalization. A correction does not change it.
 
+## 2026-10-11 — A written copy belongs to the same account as its note
+
+A personal copy stores the account that holds it and the note it belongs to. Those were two separate foreign keys, so a row could name one account while its note named another. The routes never write that row. Each create uses the signed-in account for both, and another account's id is a 404. A stored split would still be the wrong shape. The account named on the copy could change that copy, and deleting its last copy would remove the other account's note.
+
+The copy's account now has to be the note's account. The database rejects any other pair. Update and delete also refuse a copy whose note belongs to someone else, and they do not remove that note.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |

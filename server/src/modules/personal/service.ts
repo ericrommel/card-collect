@@ -147,7 +147,7 @@ function newCardData(
     disambiguator,
     copies: {
       create: {
-        ownerId,
+        // ownerId comes from the note. The relation does not accept a second owner.
         availability,
         condition,
         printing,
@@ -173,6 +173,18 @@ async function loadOwnedCard(ownerId: string, cardId: string) {
   const card = await prisma.personalCard.findUnique({ where: { id: cardId }, include: cardInclude });
   if (!card || card.ownerId !== ownerId) throw ApiError.notFound("Not found");
   return card;
+}
+
+async function findOwnedCopy(db: CardDb, ownerId: string, copyId: string) {
+  const copy = await db.personalCopy.findUnique({ where: { id: copyId } });
+  if (!copy || copy.ownerId !== ownerId) return null;
+  // Look up the note by id alone. The copy relation also filters on ownerId, so a split row would throw instead of refusing.
+  const note = await db.personalCard.findUnique({
+    where: { id: copy.personalCardId },
+    select: { ownerId: true },
+  });
+  if (!note || note.ownerId !== ownerId) return null;
+  return copy;
 }
 
 async function addCopyOn(
@@ -377,8 +389,8 @@ export async function updateWrittenCopy(
   copyId: string,
   input: { availability?: Availability; condition?: string | null; printing?: string | null },
 ) {
-  const copy = await prisma.personalCopy.findUnique({ where: { id: copyId } });
-  if (!copy || copy.ownerId !== ownerId) throw ApiError.notFound("Not found");
+  const copy = await findOwnedCopy(prisma, ownerId, copyId);
+  if (!copy) throw ApiError.notFound("Not found");
   const printing = input.printing === undefined ? undefined : requirePrinting(input.printing);
   await prisma.personalCopy.update({
     where: { id: copy.id },
@@ -393,8 +405,8 @@ export async function updateWrittenCopy(
 
 export async function deleteWrittenCopy(ownerId: string, copyId: string) {
   return prisma.$transaction(async (tx) => {
-    const copy = await tx.personalCopy.findUnique({ where: { id: copyId } });
-    if (!copy || copy.ownerId !== ownerId) throw ApiError.notFound("Not found");
+    const copy = await findOwnedCopy(tx, ownerId, copyId);
+    if (!copy) throw ApiError.notFound("Not found");
     await tx.personalCopy.delete({ where: { id: copy.id } });
     const remaining = await tx.personalCopy.count({ where: { personalCardId: copy.personalCardId } });
     if (remaining === 0) {

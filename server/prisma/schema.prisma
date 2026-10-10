@@ -189,6 +189,8 @@ model PersonalCard {
   copies PersonalCopy[]
 
   @@unique([ownerId, normalizedKey, disambiguator])
+  /// Referenced by a copy so that copy's owner is this owner.
+  @@unique([id, ownerId])
   @@index([ownerId])
   @@map("personal_cards")
 }
@@ -208,7 +210,8 @@ model PersonalCopy {
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   personalCardId String
-  personalCard   PersonalCard @relation(fields: [personalCardId], references: [id], onDelete: Cascade)
+  /// ownerId is part of this key so a copy cannot point at another account's note.
+  personalCard   PersonalCard @relation(fields: [personalCardId, ownerId], references: [id, ownerId], onDelete: Cascade)
 
   @@index([ownerId])
   @@index([personalCardId])

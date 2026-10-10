@@ -708,7 +708,10 @@ them. The response never includes the original text or the private
 normalized key. That original text is the accepted value from the first
 save, after trimming and Unicode normalization, and a correction does
 not change it. Another account's id is the same `404`
-`{ "error": "Not found" }` as a missing row.
+`{ "error": "Not found" }` as a missing row. A copy is stored on that
+account's note only. The database rejects a copy whose owner is not the
+note's owner. Updating or deleting such a copy is the same `404`, and it
+does not remove the note.
 
 A field containing `@`, `http://`, `https://`, or `www.` is `400` with
 `{ "error": "Use a name that isn't an email address or a link." }`

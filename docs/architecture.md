@@ -49,8 +49,10 @@ CollectibleUniverse  (e.g. "One Piece Card Game")
   of a card the sample catalog does not have. They are not catalog rows.
   Search, matching, exchanges, sharing, and completion do not read them.
   `UserCopy.variantId` stays required, so a typed card cannot be stored as a
-  catalog copy. Printing is on the copy. The original typed strings and the
-  normalized key are stored and are not part of the API response.
+  catalog copy. Printing is on the copy. The copy's owner is the note's owner,
+  and the database rejects a copy that names a different account. The original
+  typed strings and the normalized key are stored and are not part of the API
+  response.
 - Completion/progress is measured over distinct **Collectibles** owned, not
   `UserCopy` rows or `Variant`s — owning three copies of one card, or two
   different variants of it, still counts once toward completion. This
