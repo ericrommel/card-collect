@@ -463,6 +463,27 @@ describe("private written cards", () => {
     expect(note?.copies.every((copy) => copy.ownerId === owner.userId)).toBe(true);
     expect(note?.copies.find((copy) => copy.id === copyId)?.availability).toBe("TRADE");
 
+    const splitId = `split-${cardId}`;
+    await prisma.$executeRawUnsafe("PRAGMA foreign_keys = OFF");
+    await prisma.$executeRaw`
+      INSERT INTO "personal_copies" ("id", "availability", "ownerId", "personalCardId", "createdAt", "updatedAt")
+      VALUES (${splitId}, 'KEEP', ${other.userId}, ${cardId}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `;
+    await prisma.$executeRawUnsafe("PRAGMA foreign_keys = ON");
+    const splitEdit = await request(app)
+      .patch(`/api/my/personal-copies/${splitId}`)
+      .set(auth(other.token))
+      .send({ availability: "SELL" });
+    expect(splitEdit.status).toBe(404);
+    const splitDelete = await request(app).delete(`/api/my/personal-copies/${splitId}`).set(auth(other.token));
+    expect(splitDelete.status).toBe(404);
+    const split = await prisma.personalCopy.findUnique({ where: { id: splitId } });
+    expect(split?.availability).toBe("KEEP");
+    expect(await prisma.personalCard.findUnique({ where: { id: cardId } })).toMatchObject({ name: "Owned Note" });
+    await prisma.$executeRawUnsafe("PRAGMA foreign_keys = OFF");
+    await prisma.$executeRaw`DELETE FROM "personal_copies" WHERE "id" = ${splitId}`;
+    await prisma.$executeRawUnsafe("PRAGMA foreign_keys = ON");
+
     await prisma.user.delete({ where: { id: other.userId } });
     await prisma.user.delete({ where: { id: owner.userId } });
     expect(await prisma.personalCard.findUnique({ where: { id: cardId } })).toBeNull();

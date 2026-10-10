@@ -1,5 +1,10 @@
 -- A copy's ownerId must be the note's ownerId. Abort if any stored row already disagrees.
-CREATE TABLE "personal_copy_owner_check" ("ok" INTEGER NOT NULL CHECK ("ok" = 1));
+-- The sentinel is temporary, and the drop lets a failed earlier attempt retry.
+DROP TABLE IF EXISTS "personal_copy_owner_check";
+CREATE TEMP TABLE "personal_copy_owner_check" (
+    "ok" INTEGER NOT NULL,
+    CONSTRAINT "personal_copy_owner_must_match_note" CHECK ("ok" = 1)
+);
 INSERT INTO "personal_copy_owner_check" ("ok")
 SELECT CASE
   WHEN EXISTS (
