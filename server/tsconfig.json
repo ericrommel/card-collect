@@ -30,6 +30,7 @@
     "tests/domain/saveCopyPhotos.test.ts",
     "tests/domain/highlightAction.test.ts",
     "tests/domain/bulkConfirm.test.ts",
-    "tests/domain/liftAboveBar.test.ts"
+    "tests/domain/liftAboveBar.test.ts",
+    "tests/domain/writtenCount.test.ts"
   ]
 }

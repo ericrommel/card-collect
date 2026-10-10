@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { CardFace } from "../components/CardFace";
 import { OptionalBackPhoto } from "../components/OptionalBackPhoto";
+import { WriteCardEntry } from "../components/WriteCardForm";
 import { cardMotif } from "../lib/cardMotif";
 import { saveCopyPhotos } from "../lib/saveCopyPhotos";
 import {
@@ -319,6 +320,7 @@ export function AddCopyPage() {
             })}
           </ul>
           {truncated && <p className="muted small">Showing the first 24 matches. Add more of the name.</p>}
+          <WriteCardEntry />
         </div>
 
         <section

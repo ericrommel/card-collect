@@ -108,7 +108,12 @@ catalog, choose availability and condition, and attach a photo if you
 want. The copy is saved only after you confirm. The photo stays on your
 account. Recognition does not pick the card unless a provider is
 configured, and a guess still has to be confirmed. Marking many cards at
-once stays on the set page.
+once stays on the set page. Under that search, including when nothing
+matches, you can write down a card the catalog does not have. That note
+stays on your account. It is not added to the shared catalog, and other
+people cannot match it. Home still shows the catalog percent, plus a
+separate count of those notes and extra copies. "For trade" and "Donation"
+on a written-down card are labels for you only.
 
 The numbers on home open the same set covers: missing cards, extras, cards
 you have, and copies for trade, sale, or donation. A set you have started
