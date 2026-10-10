@@ -5,7 +5,7 @@ import { ApiError } from "./apiError.js";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   if (err instanceof ApiError) {
-    res.status(err.status).json({ error: err.message });
+    res.status(err.status).json({ error: err.message, ...err.extra });
     return;
   }
   if (err instanceof ZodError) {

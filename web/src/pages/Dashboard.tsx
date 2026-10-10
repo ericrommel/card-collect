@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CardFace } from "../components/CardFace";
 import { CardSearch } from "../components/CardSearch";
 import { OfferCards } from "../components/OfferCards";
 import { SetCover } from "../components/SetCover";
-import type { DashboardHighlight, DashboardSetSummary, Exchange } from "../lib/api";
-import { proposeExchange } from "../lib/api";
+import type { DashboardHighlight, DashboardSetSummary, Exchange, WrittenList } from "../lib/api";
+import { listWrittenCards, proposeExchange } from "../lib/api";
 import { cardMotif } from "../lib/cardMotif";
 import { highlightAction, previewCountSentence } from "../lib/highlightAction";
 import { AVAILABILITY_LABEL, EXCHANGE_STATUS_LABEL } from "../lib/labels";
 import { useAuth } from "../state/AuthContext";
 import { orderDashboardSets } from "../lib/dashboardSets";
 import { useDashboard } from "../lib/useDashboard";
+import { writtenCountSentence } from "../lib/writtenCount";
 
 /** Faces for the short home row. Prefer cards you would receive. */
 function exchangeRowFaces(exchange: Exchange) {
@@ -100,6 +101,21 @@ export function DashboardPage() {
   const { data, loading, error, reload } = useDashboard();
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [written, setWritten] = useState<WrittenList | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    listWrittenCards()
+      .then((next) => {
+        if (!cancelled) setWritten(next);
+      })
+      .catch(() => {
+        if (!cancelled) setWritten(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onPropose(item: DashboardHighlight) {
     if (item.open_exchange_id) {
@@ -141,6 +157,9 @@ export function DashboardPage() {
               {totals.set_count} sets started. Untouched sets count as missing, so this number stays honest.
             </p>
           )}
+          <p className="muted">
+            Cards you write down stay on this account. They are not part of the sample catalog and are not matched.
+          </p>
         </div>
         <div
           className="progress-bar-track hero-bar"
@@ -210,6 +229,33 @@ export function DashboardPage() {
           </li>
         )}
       </ul>
+
+      {written && written.note_count > 0 && (
+        <section className="written-home">
+          <div className="section-heading">
+            <h2>Cards you wrote down</h2>
+            <Link to="/written">See them</Link>
+          </div>
+          <p>{writtenCountSentence(written.note_count, written.extra_count)}</p>
+          <ul className="written-home-list">
+            {written.notes.slice(0, 4).map((card) => (
+              <li key={card.id}>
+                <Link to={`/written#written-${card.id}`} className="written-home-link">
+                  <CardFace size="sm" number={card.number ?? ""} name={card.name} rarity={card.rarity} />
+                  <span className="row-copy">
+                    <strong>{card.name}</strong>
+                    <span className="muted small">
+                      {card.game} · {card.set_name}
+                      {card.no_number ? " · No number on this card" : ` · ${card.number}`}
+                      {card.copy_count === 1 ? " · 1 copy" : ` · ${card.copy_count} copies`}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="dash-sets">
         {groups.map((group) => (

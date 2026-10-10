@@ -10,6 +10,7 @@ cookie only.
 
 Error responses have the shape `{ "error": "message" }` (400/401/403/404/409/429)
 or `{ "error": "Invalid request", "details": {...} }` for validation errors.
+A private-note conflict is still a 409 with `error`, and it also includes `code`.
 A body that is not JSON is `400` with `{ "error": "Invalid request" }` and no details.
 
 ## Auth
@@ -697,6 +698,148 @@ successful `GET` adds one to the owner's `view_count` and sets
 not counted again. The process also counts at most 60 opens a minute for
 one link. Further opens still return the page and are not counted. The
 count is not a list of people, and opening the page yourself counts.
+
+## Cards you wrote down (auth required, owner only)
+
+These routes record a card the sample catalog does not have. They do not
+create a universe, set, collectible, variant, or `UserCopy`. Catalog
+search, matches, exchanges, public shares, and completion do not read
+them. The response never includes the original typed strings or the
+private normalized key. Another account's id is the same `404`
+`{ "error": "Not found" }` as a missing row.
+
+A field containing `@`, `http://`, `https://`, or `www.` is `400` with
+`{ "error": "Use a name that isn't an email address or a link." }`
+Empty required text, a blank number without `no_number`, and text over
+the cap are `400` with `{ "error": "message" }`. The caps are 80
+characters for the name, 60 for the game, 80 for the set name, 16 for
+the number, and 40 for set code, rarity, language, and printing.
+
+`WrittenCard` in responses:
+
+```json
+{
+  "id": "...",
+  "name": "working name",
+  "game": "working game",
+  "set_name": "working set",
+  "number": "string or null",
+  "no_number": false,
+  "set_code": "string or null",
+  "rarity": "string or null",
+  "language": "string or null",
+  "copy_count": 1,
+  "copies": [
+    {
+      "id": "...",
+      "availability": "KEEP | TRADE | SELL | GIVE_AWAY",
+      "condition": "Mint | Near Mint | Excellent | Good | Played | Poor | null",
+      "printing": "string or null",
+      "created_at": "ISO-8601",
+      "updated_at": "ISO-8601"
+    }
+  ]
+}
+```
+
+There is no photo on these copies, and availability does not reserve one.
+
+### `GET /my/personal-cards`
+
+→ `200 { "notes": [WrittenCard], "note_count": 1, "extra_count": 0 }`
+
+`note_count` is the number of notes. `extra_count` is the number of
+physical copies beyond one per note. Neither is a completion percent.
+
+### `POST /my/personal-cards`
+
+```json
+{
+  "name": "Ace",
+  "game": "Sample Game",
+  "set_name": "Notebook Set",
+  "number": "001",
+  "no_number": false,
+  "set_code": null,
+  "rarity": null,
+  "language": null,
+  "printing": null,
+  "availability": "KEEP",
+  "condition": null,
+  "add_copy": false,
+  "different_card": false,
+  "same_card_id": null
+}
+```
+
+`no_number: true` stores no collector number even if `number` was sent.
+`add_copy`, `different_card`, and `same_card_id` are optional.
+
+→ `201 { "card": WrittenCard }`
+
+The same owner and the same normalized key, with a number, is `409`:
+
+```json
+{
+  "error": "You already wrote this down. Add another physical copy?",
+  "code": "already_written",
+  "card_id": "...",
+  "card": {}
+}
+```
+
+Send `add_copy: true` to add a physical copy on that note. Printing on
+that request is stored on the new copy only.
+
+A note marked with no number, when this owner already has one or more
+notes with that same key, is `409` unless `different_card` or
+`same_card_id` is set:
+
+```json
+{
+  "error": "You already wrote down a card with this name and no number.",
+  "code": "confirm_same",
+  "matches": [{ "id": "...", "name": "Ace", "game": "Sample Game", "set_name": "Notebook Set" }]
+}
+```
+
+`same_card_id` adds a copy on that match. `different_card: true` stores
+a separate note. A `same_card_id` that is not one of those matches is
+`400`.
+
+### `PATCH /my/personal-cards/:id`
+
+Body is the working identity fields: `name`, `game`, `set_name`,
+`number`, `no_number`, `set_code`, `rarity`, `language`. Printing is not
+on this body. The original strings do not change.
+
+→ `200 { "card": WrittenCard }`
+
+If the new key matches a different note this owner already has, the save
+is `409` with `code: "already_written"`, `card_id`, and `card` for the
+other note. This note is left as it was.
+
+### `POST /my/personal-cards/:id/copies`
+
+```json
+{ "availability": "KEEP", "condition": null, "printing": null }
+```
+
+→ `201 { "card": WrittenCard }`
+
+### `PATCH /my/personal-copies/:id`
+
+Same body as adding a copy. Omitted fields stay as they are. Printing,
+including clearing it with `null`, changes only this copy.
+
+→ `200 { "card": WrittenCard }`
+
+### `DELETE /my/personal-copies/:id`
+
+→ `200 { "deleted_copy_id": "...", "deleted_card": false }`
+
+When that was the last copy, `deleted_card` is `true` and the note, its
+original strings, and its key are removed.
 
 ## Not implemented
 

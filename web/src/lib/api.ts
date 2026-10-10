@@ -7,12 +7,24 @@ export function clearLegacyToken(): void {
 }
 
 export class ApiError extends Error {
+  readonly body: Record<string, unknown>;
+
   constructor(
     public status: number,
     message: string,
+    body: Record<string, unknown> = {},
   ) {
     super(message);
+    this.body = body;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function errorRecord(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -25,9 +37,10 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
   if (res.status === 204) return undefined as T;
 
-  const body = await res.json().catch(() => ({}));
+  const body = errorRecord(await res.json().catch(() => ({})));
   if (!res.ok) {
-    throw new ApiError(res.status, body.error ?? `Request failed (${res.status})`);
+    const message = typeof body.error === "string" ? body.error : `Request failed (${res.status})`;
+    throw new ApiError(res.status, message, body);
   }
   return body as T;
 }
@@ -349,8 +362,11 @@ async function sendPhoto<T>(path: string, file: File): Promise<T> {
     body: file,
     credentials: "include",
   });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body.error ?? `Request failed (${res.status})`);
+  const body = errorRecord(await res.json().catch(() => ({})));
+  if (!res.ok) {
+    const message = typeof body.error === "string" ? body.error : `Request failed (${res.status})`;
+    throw new ApiError(res.status, message, body);
+  }
   return body as T;
 }
 
@@ -567,4 +583,141 @@ export function renewShare(setId: string) {
 
 export function getPublicCollection(shareId: string) {
   return apiFetch<PublicShareView>(`/public/collections/${encodeURIComponent(shareId)}`);
+}
+
+// ---- Cards you wrote down (auth required, owner only, not catalog rows) ----
+
+export interface WrittenCopy {
+  id: string;
+  availability: Availability;
+  condition: string | null;
+  printing: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WrittenCard {
+  id: string;
+  name: string;
+  game: string;
+  set_name: string;
+  number: string | null;
+  no_number: boolean;
+  set_code: string | null;
+  rarity: string | null;
+  language: string | null;
+  copies: WrittenCopy[];
+  copy_count: number;
+}
+
+export interface WrittenList {
+  notes: WrittenCard[];
+  note_count: number;
+  extra_count: number;
+}
+
+export interface WrittenSameMatch {
+  id: string;
+  name: string;
+  game: string;
+  set_name: string;
+}
+
+export interface WrittenIdentityBody {
+  name: string;
+  game: string;
+  set_name: string;
+  number: string | null;
+  no_number: boolean;
+  set_code: string | null;
+  rarity: string | null;
+  language: string | null;
+}
+
+export interface WrittenCreateBody extends WrittenIdentityBody {
+  printing: string | null;
+  availability: Availability;
+  condition: ConditionGrade | null;
+  add_copy?: boolean;
+  different_card?: boolean;
+  same_card_id?: string;
+}
+
+export type WrittenConflict =
+  | { code: "already_written"; message: string; card_id: string; card: WrittenCard }
+  | { code: "confirm_same"; message: string; matches: WrittenSameMatch[] };
+
+function isWrittenCard(value: unknown): value is WrittenCard {
+  if (!isRecord(value)) return false;
+  return typeof value.id === "string" && typeof value.name === "string" && Array.isArray(value.copies);
+}
+
+function isWrittenSameMatch(value: unknown): value is WrittenSameMatch {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    typeof value.game === "string" &&
+    typeof value.set_name === "string"
+  );
+}
+
+/** A 409 from saving a private note. Other errors return null so the caller shows the message. */
+export function writtenConflict(err: unknown): WrittenConflict | null {
+  if (!(err instanceof ApiError) || err.status !== 409) return null;
+  if (err.body.code === "already_written" && typeof err.body.card_id === "string" && isWrittenCard(err.body.card)) {
+    return { code: "already_written", message: err.message, card_id: err.body.card_id, card: err.body.card };
+  }
+  if (err.body.code === "confirm_same" && Array.isArray(err.body.matches)) {
+    const matches = err.body.matches.filter(isWrittenSameMatch);
+    if (matches.length > 0 && matches.length === err.body.matches.length) {
+      return { code: "confirm_same", message: err.message, matches };
+    }
+  }
+  return null;
+}
+
+export function listWrittenCards() {
+  return apiFetch<WrittenList>("/my/personal-cards");
+}
+
+export function createWrittenCard(body: WrittenCreateBody) {
+  return apiFetch<{ card: WrittenCard }>("/my/personal-cards", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function correctWrittenCard(cardId: string, body: WrittenIdentityBody) {
+  return apiFetch<{ card: WrittenCard }>(`/my/personal-cards/${encodeURIComponent(cardId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function addWrittenCopy(
+  cardId: string,
+  body: { availability: Availability; condition: ConditionGrade | null; printing: string | null },
+) {
+  return apiFetch<{ card: WrittenCard }>(`/my/personal-cards/${encodeURIComponent(cardId)}/copies`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function updateWrittenCopy(
+  copyId: string,
+  body: { availability: Availability; condition: ConditionGrade | null; printing: string | null },
+) {
+  return apiFetch<{ card: WrittenCard }>(`/my/personal-copies/${encodeURIComponent(copyId)}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteWrittenCopy(copyId: string) {
+  return apiFetch<{ deleted_copy_id: string; deleted_card: boolean }>(
+    `/my/personal-copies/${encodeURIComponent(copyId)}`,
+    { method: "DELETE" },
+  );
 }

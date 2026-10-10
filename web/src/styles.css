@@ -2147,6 +2147,96 @@ a.primary {
   }
 }
 
+.written-form input:not([type="checkbox"]),
+.written-copy-form input:not([type="checkbox"]) {
+  width: 100%;
+}
+
+.form label.written-check {
+  flex-direction: row;
+  align-items: center;
+  color: inherit;
+  font-size: 1rem;
+}
+
+.form label.written-check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  min-height: 1.15rem;
+  padding: 0;
+  flex: none;
+}
+
+.written-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.written-note-head {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.written-note h2 {
+  margin: 0;
+}
+
+.written-copies,
+.written-matches,
+.written-home-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.written-home-list {
+  margin-top: 0;
+}
+
+.written-home-link {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.35rem 0.5rem;
+}
+
+.written-entry,
+.written-form,
+.written-note,
+.written-conflict,
+.written-save {
+  scroll-margin-top: calc(var(--header-h) + 0.5rem);
+  scroll-margin-bottom: calc(var(--nav-h) + 0.75rem);
+}
+
+.written-form .segmented button,
+.written-note .segmented button,
+.written-form .condition-field select,
+.written-note .condition-field select {
+  min-height: 44px;
+}
+
+.written-form .primary,
+.written-conflict .primary,
+.written-conflict .secondary,
+.written-actions .primary,
+.written-actions .secondary {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;

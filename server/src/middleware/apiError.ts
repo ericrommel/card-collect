@@ -1,10 +1,14 @@
 export class ApiError extends Error {
+  readonly extra: Record<string, unknown>;
+
   constructor(
     public status: number,
     message: string,
+    extra: Record<string, unknown> = {},
   ) {
     super(message);
     this.name = "ApiError";
+    this.extra = extra;
   }
 
   static badRequest(message: string) {

@@ -26,6 +26,8 @@ model User {
 
   copies             UserCopy[]
   copyImages         CopyImage[]
+  personalCards      PersonalCard[]
+  personalCopies     PersonalCopy[]
   collectionShares   CollectionShare[]
   proposedExchanges  Exchange[] @relation("ExchangeProposer")
   receivedExchanges  Exchange[] @relation("ExchangeCounterparty")
@@ -148,6 +150,69 @@ model CopyImage {
   @@unique([copyId, side])
   @@index([ownerId])
   @@map("copy_images")
+}
+
+/// A real card the signed-in person typed. It is not a catalog row.
+/// Other accounts cannot search it, share it, or match it.
+/// Raw strings stay as typed. Working strings are what the owner sees after a correction.
+model PersonalCard {
+  id      String @id @default(cuid())
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  rawName    String
+  rawGame    String
+  rawSetName String
+  rawNumber  String?
+  noNumber   Boolean
+
+  name    String
+  game    String
+  setName String
+  number  String?
+
+  rawSetCode  String?
+  setCode     String?
+  rawRarity   String?
+  rarity      String?
+  rawLanguage String?
+  language    String?
+
+  /// Private duplicate key. Never returned to another account.
+  normalizedKey String
+  /// Zero for the first note with this key. Higher only when the owner said a no-number card is a different card.
+  disambiguator Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  copies PersonalCopy[]
+
+  @@unique([ownerId, normalizedKey, disambiguator])
+  @@index([ownerId])
+  @@map("personal_cards")
+}
+
+/// One physical object the owner typed. It cannot be reserved for an exchange.
+/// A photo of the printed card is not stored here.
+model PersonalCopy {
+  id           String   @id @default(cuid())
+  availability String   @default("KEEP")
+  condition    String?
+  rawPrinting  String?
+  printing     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  personalCardId String
+  personalCard   PersonalCard @relation(fields: [personalCardId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@index([personalCardId])
+  @@map("personal_copies")
 }
 
 /// A user's public-sharing configuration for one Set. At most one row per

@@ -298,6 +298,18 @@ The set line already says "They proposed this." The status under it said that ag
 
 Accept, decline, and cancel used to happen as soon as the button was pressed. Decline and cancel now ask first. Dismissing the question leaves the exchange as it is. Accept does not ask, because the cards still move only after both people confirm that they changed hands.
 
+## 2026-10-10 — A card you write down stays on your account
+
+The sample catalogs are still the only shared lists. A signed-in person can record a card those lists do not have. That record is a private note plus one physical copy. It does not call a catalog provider, scrape a checklist, or store a photo of the printed card.
+
+The note is not a catalog row. It is not inserted into a universe, set, collectible, or variant, and it is not a `UserCopy`. Search, matches, exchanges, public shares, and catalog completion read catalog ids only, so they cannot pick the note up by forgetting a filter. The picture is the existing geometric face, drawn from the typed number and name. There is no field for rules text, an official image URL, an imported checklist, or an art file.
+
+Save requires a card name, a game, a set name, an availability, and either a collector number or "No number on this card." Condition may be unset. Set code, rarity, and language are optional and sit on the note. Printing is optional and sits on the copy, so filling it on one copy does not rewrite the other and does not by itself make a second note. The caps are 80 characters for the name, 60 for the game, 80 for the set name, 16 for the number, and 40 for each optional field. A field containing `@`, `http://`, `https://`, or `www.` is refused with "Use a name that isn't an email address or a link."
+
+The words from the first save stay stored. Correcting the note changes the working text only, and only for that account. The same owner and the same normalized key, when the number is not empty, asks "You already wrote this down. Add another physical copy?" and does not create a second note. Case, extra spaces, and characters that Unicode NFKC treats as the same follow that key. Punctuation and diacritics do not. A card marked "No number on this card" does not merge on the name alone. The page asks "Same card, another copy?" or "A different card?" A different spelling, a different number, another account's identical text, or a sample card stays separate. A correction that would land on a note this owner already has is refused, and both original texts stay.
+
+Only that account can read or change the note. A guessed id returns the same 404 as a missing copy. Deleting the last copy deletes the note, the original strings, and the key. "For trade" and "Donation" are labels for the owner. They do not create a match and they do not reserve the copy. Home keeps the catalog percent. Under that sentence it says the notes stay on the account. After the first note, "Cards you wrote down" counts notes and extra copies and never shows a percent. A later confirm against a licensed catalog is specified only. It is not built.
+
 ## Not done, on purpose
 
 | Item                                   | State                                                                                                                                                                                                       |
@@ -310,3 +322,5 @@ Accept, decline, and cancel used to happen as soon as the button was pressed. De
 | Native apps                            | Not built. A phone can install the website from the browser. That is still the website.                                                                                                                     |
 | Share-link social previews             | Not built. A crawler that does not run JavaScript sees the site description, not one collection. The HTML shell is noindex, so that page is not a public listing.                                           |
 | Email password reset                   | Not built. A signed-in person who knows the current password can change it. That signs out other browsers. There is no reset email.                                                                         |
+| A public list of cards someone typed   | Not built. A written-down card stays on that account. Another person, a public share, and a match do not receive the typed text.                                                                              |
+| Licensed match for a written-down card | Not built. Confirming a licensed catalog row would need a license. No provider is called, and no checklist is scraped.                                                                                       |

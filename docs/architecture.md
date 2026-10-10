@@ -45,6 +45,12 @@ CollectibleUniverse  (e.g. "One Piece Card Game")
   one row per physical copy. Multiple `UserCopy` rows pointing at the same
   `Variant` for the same owner are duplicates by construction — there is no
   separate "quantity" field to keep in sync.
+- **PersonalCard / PersonalCopy** are a private note and the physical copies
+  of a card the sample catalog does not have. They are not catalog rows.
+  Search, matching, exchanges, sharing, and completion do not read them.
+  `UserCopy.variantId` stays required, so a typed card cannot be stored as a
+  catalog copy. Printing is on the copy. The original typed strings and the
+  normalized key are stored and are not part of the API response.
 - Completion/progress is measured over distinct **Collectibles** owned, not
   `UserCopy` rows or `Variant`s — owning three copies of one card, or two
   different variants of it, still counts once toward completion. This
@@ -70,10 +76,12 @@ domain/         Pure, framework-free business logic (no I/O):
                   matching.ts     — WHICH collectibles could move between two collectors (candidate generation)
                   tradeScore.ts   — scores a candidate + ranks/tie-breaks the resulting list (V0.2)
                   sharingView.ts  — builds the public share DTO from a narrow input type
+                  personalCard.ts — normalizes and checks a private written-down card
 modules/
   auth/         registration, login, JWT issuance, password hashing
   catalog/      CatalogProvider abstraction + its local-DB implementation
   collection/   a user's UserCopy CRUD, bulk copy changes, and per-set progress
+  personal/     private written-down cards and their copies, owner only
   dashboard/    home summary assembled from catalog, copies, matches, and exchanges
   matching/     composes catalog + collection data through domain/matching.ts + domain/tradeScore.ts
   sharing/      per-set public share settings (auth) + public read-only lookup (no auth)

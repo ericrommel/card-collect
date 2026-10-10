@@ -10,6 +10,7 @@ import { dashboardRouter } from "./modules/dashboard/routes.js";
 import { mySharingRouter } from "./modules/sharing/routes.js";
 import { publicSharingRouter } from "./modules/sharing/publicRoutes.js";
 import { imageRouter } from "./modules/images/routes.js";
+import { personalCopyRouter, personalRouter } from "./modules/personal/routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 export function createApp() {
@@ -40,6 +41,8 @@ export function createApp() {
   app.use("/api/my/sets", mySharingRouter);
   app.use("/api/my/matches", matchesRouter);
   app.use("/api/my/exchanges", exchangesRouter);
+  app.use("/api/my/personal-cards", personalRouter);
+  app.use("/api/my/personal-copies", personalCopyRouter);
   app.use("/api/public/collections", publicSharingRouter);
 
   app.use((_req, res) => res.status(404).json({ error: "Not found" }));

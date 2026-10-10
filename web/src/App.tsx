@@ -11,6 +11,7 @@ import { ExchangesPage } from "./pages/Exchanges";
 import { PublicCollectionPage } from "./pages/PublicCollection";
 import { AccountPage } from "./pages/Account";
 import { CollectionFocusPage } from "./pages/CollectionFocus";
+import { WrittenCardsPage } from "./pages/WrittenCards";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -118,6 +119,14 @@ export default function App() {
           element={
             <RequireAuth>
               <AddCopyPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/written"
+          element={
+            <RequireAuth>
+              <WrittenCardsPage />
             </RequireAuth>
           }
         />
