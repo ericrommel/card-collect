@@ -88,6 +88,20 @@ export function writtenMatchLine(match: WrittenSameMatch): string {
   return parts.join(" · ");
 }
 
+function withIdentity(current: WrittenDraft, identity: WrittenIdentityBody): WrittenDraft {
+  return {
+    ...current,
+    name: identity.name,
+    game: identity.game,
+    setName: identity.set_name,
+    number: identity.no_number ? current.number : (identity.number ?? ""),
+    noNumber: identity.no_number,
+    setCode: identity.set_code ?? "",
+    rarity: identity.rarity ?? "",
+    language: identity.language ?? "",
+  };
+}
+
 function successSentence(card: WrittenCard): string {
   if (card.copy_count > 1) {
     return `Added another copy of ${card.name}. This is your note, not an official card.`;
@@ -149,7 +163,13 @@ export function WrittenIdentityFields({
   locked?: boolean;
 }) {
   function patch(partial: Partial<WrittenDraft>) {
-    if (locked) return;
+    if (locked) {
+      // Printing is not part of the duplicate key, so it can still change for this copy.
+      if (Object.keys(partial).length === 1 && partial.printing !== undefined) {
+        onChange({ ...draft, printing: partial.printing });
+      }
+      return;
+    }
     onChange({ ...draft, ...partial });
   }
 
@@ -205,9 +225,7 @@ export function WrittenIdentityFields({
           type="checkbox"
           checked={draft.noNumber}
           disabled={locked}
-          onChange={(event) =>
-            patch({ noNumber: event.target.checked, number: event.target.checked ? "" : draft.number })
-          }
+          onChange={(event) => patch({ noNumber: event.target.checked })}
         />
         No number on this card
       </label>
@@ -304,6 +322,7 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
       if (found) {
         setConflict(found);
         setLockedBody(identity);
+        setDraft((current) => withIdentity(current, identity));
         setError(null);
       } else {
         clearConflict();
@@ -349,7 +368,7 @@ function WriteCardFields({ onClose, onSaved }: { onClose: () => void; onSaved: (
         onChange={setDraft}
         includePrinting
         autoFocusName
-        locked={conflict !== null}
+        locked={conflict !== null || busy}
       />
       <AvailabilityFields
         availability={draft.availability}

@@ -118,17 +118,28 @@ function CorrectNote({
   onAddCopyOf: (cardId: string) => void;
 }) {
   const [draft, setDraft] = useState(() => draftFromCard(card));
+  const sent = useRef<WrittenDraft | null>(null);
+
+  useEffect(() => {
+    if (clash && sent.current) setDraft(sent.current);
+  }, [clash]);
 
   return (
     <form
       className="form"
       onSubmit={(event) => {
         event.preventDefault();
-        if (clash) return;
+        if (clash || busy) return;
+        sent.current = draft;
         onSave(draft);
       }}
     >
-      <WrittenIdentityFields draft={draft} onChange={setDraft} includePrinting={false} locked={clash !== null} />
+      <WrittenIdentityFields
+        draft={draft}
+        onChange={setDraft}
+        includePrinting={false}
+        locked={clash !== null || busy}
+      />
       <p className="muted small">This changes your note only. It does not change anyone else's cards.</p>
       {error && <p className="error">{error}</p>}
       {clash && (

@@ -112,7 +112,7 @@ once stays on the set page. Under that search, including when nothing
 matches, you can write down a card the catalog does not have. That note
 stays on your account. It is not added to the shared catalog, and other
 people cannot match it. Home still shows the catalog percent, plus a
-separate count of those notes and extra copies. For trade and Donation
+separate count of those notes and extra copies. "For trade" and "Donation"
 on a written-down card are labels for you only.
 
 The numbers on home open the same set covers: missing cards, extras, cards

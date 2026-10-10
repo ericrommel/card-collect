@@ -102,6 +102,7 @@ export function DashboardPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [written, setWritten] = useState<WrittenList | null>(null);
+  const [writtenError, setWrittenError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,7 +111,7 @@ export function DashboardPage() {
         if (!cancelled) setWritten(next);
       })
       .catch(() => {
-        if (!cancelled) setWritten(null);
+        if (!cancelled) setWrittenError(true);
       });
     return () => {
       cancelled = true;
@@ -230,6 +231,11 @@ export function DashboardPage() {
         )}
       </ul>
 
+      {writtenError && (
+        <p className="notice-line">
+          Cards you wrote down could not be loaded. <Link to="/written">Open them</Link>
+        </p>
+      )}
       {written && written.note_count > 0 && (
         <section className="written-home">
           <div className="section-heading">
