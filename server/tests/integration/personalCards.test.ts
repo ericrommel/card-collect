@@ -418,4 +418,54 @@ describe("private written cards", () => {
     expect(row?.setCode).toBeNull();
     expect(row?.disambiguator).toBe(1);
   });
+
+  it("rejects a copy whose owner is not the note's owner", async () => {
+    const owner = await register("Owner");
+    const other = await register("Other");
+    const created = await request(app)
+      .post("/api/my/personal-cards")
+      .set(auth(owner.token))
+      .send({ ...cardBody, name: "Owned Note", number: "OWN-1" });
+    expect(created.status).toBe(201);
+    const cardId = created.body.card.id as string;
+    const copyId = created.body.card.copies[0].id as string;
+
+    const added = await request(app)
+      .post(`/api/my/personal-cards/${cardId}/copies`)
+      .set(auth(owner.token))
+      .send({ availability: "KEEP", printing: "Holo" });
+    expect(added.status).toBe(201);
+    expect(added.body.card.copy_count).toBe(2);
+
+    const foreignAdd = await request(app)
+      .post(`/api/my/personal-cards/${cardId}/copies`)
+      .set(auth(other.token))
+      .send({ availability: "SELL" });
+    expect(foreignAdd.status).toBe(404);
+    const foreignEdit = await request(app)
+      .patch(`/api/my/personal-copies/${copyId}`)
+      .set(auth(other.token))
+      .send({ availability: "SELL" });
+    expect(foreignEdit.status).toBe(404);
+    const foreignDelete = await request(app).delete(`/api/my/personal-copies/${copyId}`).set(auth(other.token));
+    expect(foreignDelete.status).toBe(404);
+
+    await expect(
+      prisma.personalCopy.create({
+        data: { personalCardId: cardId, ownerId: other.userId, availability: "KEEP" },
+      }),
+    ).rejects.toMatchObject({ code: "P2003" });
+
+    const note = await prisma.personalCard.findUnique({ where: { id: cardId }, include: { copies: true } });
+    expect(note?.ownerId).toBe(owner.userId);
+    expect(note?.name).toBe("Owned Note");
+    expect(note?.copies).toHaveLength(2);
+    expect(note?.copies.every((copy) => copy.ownerId === owner.userId)).toBe(true);
+    expect(note?.copies.find((copy) => copy.id === copyId)?.availability).toBe("TRADE");
+
+    await prisma.user.delete({ where: { id: other.userId } });
+    await prisma.user.delete({ where: { id: owner.userId } });
+    expect(await prisma.personalCard.findUnique({ where: { id: cardId } })).toBeNull();
+    expect(await prisma.personalCopy.count({ where: { personalCardId: cardId } })).toBe(0);
+  });
 });

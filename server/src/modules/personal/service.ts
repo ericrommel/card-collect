@@ -147,7 +147,7 @@ function newCardData(
     disambiguator,
     copies: {
       create: {
-        ownerId,
+        // ownerId comes from the note. The relation does not accept a second owner.
         availability,
         condition,
         printing,
@@ -173,6 +173,13 @@ async function loadOwnedCard(ownerId: string, cardId: string) {
   const card = await prisma.personalCard.findUnique({ where: { id: cardId }, include: cardInclude });
   if (!card || card.ownerId !== ownerId) throw ApiError.notFound("Not found");
   return card;
+}
+
+function copyBelongsToOwner<T extends { ownerId: string; personalCard: { ownerId: string } }>(
+  copy: T | null,
+  ownerId: string,
+): copy is T {
+  return copy !== null && copy.ownerId === ownerId && copy.personalCard.ownerId === ownerId;
 }
 
 async function addCopyOn(
@@ -377,8 +384,11 @@ export async function updateWrittenCopy(
   copyId: string,
   input: { availability?: Availability; condition?: string | null; printing?: string | null },
 ) {
-  const copy = await prisma.personalCopy.findUnique({ where: { id: copyId } });
-  if (!copy || copy.ownerId !== ownerId) throw ApiError.notFound("Not found");
+  const copy = await prisma.personalCopy.findUnique({
+    where: { id: copyId },
+    include: { personalCard: { select: { ownerId: true } } },
+  });
+  if (!copyBelongsToOwner(copy, ownerId)) throw ApiError.notFound("Not found");
   const printing = input.printing === undefined ? undefined : requirePrinting(input.printing);
   await prisma.personalCopy.update({
     where: { id: copy.id },
@@ -393,8 +403,11 @@ export async function updateWrittenCopy(
 
 export async function deleteWrittenCopy(ownerId: string, copyId: string) {
   return prisma.$transaction(async (tx) => {
-    const copy = await tx.personalCopy.findUnique({ where: { id: copyId } });
-    if (!copy || copy.ownerId !== ownerId) throw ApiError.notFound("Not found");
+    const copy = await tx.personalCopy.findUnique({
+      where: { id: copyId },
+      include: { personalCard: { select: { ownerId: true } } },
+    });
+    if (!copyBelongsToOwner(copy, ownerId)) throw ApiError.notFound("Not found");
     await tx.personalCopy.delete({ where: { id: copy.id } });
     const remaining = await tx.personalCopy.count({ where: { personalCardId: copy.personalCardId } });
     if (remaining === 0) {
